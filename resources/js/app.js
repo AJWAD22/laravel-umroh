@@ -4,9 +4,11 @@ import Alpine from 'alpinejs';
 import Chart from 'chart.js/auto';
 import L from 'leaflet';
 import {
-    Bell, BookOpen, Building2, ChevronDown, CircleAlert, CircleCheck, createIcons,
-    Database, Inbox, LayoutDashboard, Map, Menu, Moon, Plane, Settings, ShieldCheck, Siren,
-    TriangleAlert, UserRoundCheck, Users, UsersRound, X,
+    ArrowDown, ArrowUp, ArrowUpDown, Bell, BookOpen, Building2, ChevronDown, ChevronRight,
+    CircleAlert, CircleCheck, createIcons, Database, Inbox, KeyRound, LayoutDashboard,
+    ListFilter, LogOut, Map, Menu, Moon, PanelLeftClose, PanelLeftOpen, Pencil, Plane, Plus,
+    RotateCcw, Save, Search, Settings, ShieldCheck, Siren, Sun, Trash2, TriangleAlert, UserRound,
+    UserRoundCheck, Users, UsersRound, X,
 } from 'lucide';
 
 window.Alpine = Alpine;
@@ -15,9 +17,11 @@ Alpine.start();
 
 createIcons({
     icons: {
-        Bell, BookOpen, Building2, ChevronDown, CircleAlert, CircleCheck, Database, Inbox,
-        LayoutDashboard, Map, Menu, Moon, Plane, Settings, ShieldCheck, Siren,
-        TriangleAlert, UserRoundCheck, Users, UsersRound, X,
+        ArrowDown, ArrowUp, ArrowUpDown, Bell, BookOpen, Building2, ChevronDown, ChevronRight,
+        CircleAlert, CircleCheck, Database, Inbox, KeyRound, LayoutDashboard, ListFilter,
+        LogOut, Map, Menu, Moon, PanelLeftClose, PanelLeftOpen, Pencil, Plane, Plus, RotateCcw,
+        Save, Search, Settings, ShieldCheck, Siren, Sun, Trash2, TriangleAlert, UserRound,
+        UserRoundCheck, Users, UsersRound, X,
     },
 });
 

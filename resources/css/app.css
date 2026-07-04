@@ -6,6 +6,15 @@
 
 @layer base {
     [x-cloak] { display: none !important; }
+
+    :focus-visible {
+        @apply outline-none ring-2 ring-blue-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-950;
+    }
+
+    body {
+        scrollbar-color: rgb(148 163 184 / 55%) transparent;
+        scrollbar-width: thin;
+    }
 }
 
 .monitoring-marker {
@@ -23,14 +32,42 @@
 
 @layer components {
     .sidebar-link {
-        @apply flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 transition hover:bg-slate-800 hover:text-white;
+        @apply relative flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 transition duration-200 hover:bg-white/[0.06] hover:text-white;
     }
 
     .sidebar-link-active {
-        @apply bg-blue-600 text-white shadow-lg shadow-blue-950/30 hover:bg-blue-600;
+        @apply bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-950/30 hover:from-blue-600 hover:to-blue-500;
+    }
+
+    .sidebar-submenu-link {
+        @apply relative block rounded-lg px-3 py-2 text-[13px] font-medium text-slate-400 transition hover:bg-white/[0.05] hover:text-white;
+    }
+
+    .sidebar-submenu-link-active {
+        @apply bg-blue-500/10 text-blue-300 before:absolute before:-left-[17px] before:top-1/2 before:size-1.5 before:-translate-y-1/2 before:rounded-full before:bg-blue-400;
     }
 
     .navbar-button {
-        @apply grid size-10 place-items-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:hover:bg-slate-800 dark:hover:text-white;
+        @apply grid size-10 place-items-center rounded-xl text-slate-500 transition duration-200 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white;
+    }
+
+    .surface-card {
+        @apply rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03),0_8px_24px_rgba(15,23,42,0.035)] dark:border-slate-800 dark:bg-slate-900;
+    }
+
+    .control-field {
+        @apply min-h-11 rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100;
+    }
+
+    .button-primary {
+        @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/15 transition hover:-translate-y-0.5 hover:shadow-blue-600/25 active:translate-y-0;
+    }
+
+    .button-secondary {
+        @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
+    }
+
+    .icon-action {
+        @apply inline-grid size-9 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white;
     }
 }

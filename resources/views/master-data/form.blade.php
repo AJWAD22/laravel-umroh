@@ -58,31 +58,44 @@
 <x-app-layout>
     <x-slot:title>{{ $editing ? 'Edit' : 'Tambah' }} {{ $definition['label'] }}</x-slot:title>
     <x-slot:header>
-        <nav class="mb-2 text-sm text-slate-500">Master Data / {{ $definition['label'] }} / {{ $editing ? 'Edit' : 'Tambah' }}</nav>
-        <h1 class="text-2xl font-bold">{{ $editing ? 'Edit' : 'Tambah' }} {{ $definition['label'] }}</h1>
+        <nav class="mb-1 flex items-center gap-1.5 text-xs font-medium text-slate-500">
+            <a href="{{ route('master-data.index', $resource) }}" class="hover:text-blue-600">Master Data</a>
+            <i data-lucide="chevron-right" class="size-3.5"></i>
+            <a href="{{ route('master-data.index', $resource) }}" class="hover:text-blue-600">{{ $definition['label'] }}</a>
+            <i data-lucide="chevron-right" class="size-3.5"></i>
+            <span class="text-slate-700 dark:text-slate-300">{{ $editing ? 'Edit' : 'Tambah' }}</span>
+        </nav>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-[1.7rem]">{{ $editing ? 'Edit' : 'Tambah' }} {{ $definition['label'] }}</h1>
+        <p class="mt-1 text-sm text-slate-500">Lengkapi informasi di bawah dengan data yang benar.</p>
     </x-slot:header>
 
     <form method="POST" action="{{ $editing ? route('master-data.update', [$resource, $record->id]) : route('master-data.store', $resource) }}"
           enctype="multipart/form-data"
-          class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          class="surface-card overflow-hidden">
         @csrf
         @if ($editing) @method('PUT') @endif
 
+        <div class="p-5 sm:p-7">
         @if (in_array($resource, ['tour-leaders', 'muthawwifs'], true))
-            <div class="mb-6 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100">
-                <p class="font-semibold">Akun login aplikasi dibuat bersama data staf</p>
-                <p class="mt-1 text-blue-700 dark:text-blue-300">
-                    Email dan password digunakan untuk masuk ke aplikasi Mantau Umroh.
-                    @if ($editing && $record->user_id)
-                        Kosongkan password jika tidak ingin menggantinya.
-                    @elseif ($editing)
-                        Data lama ini belum mempunyai akun, sehingga password wajib diisi.
-                    @endif
-                </p>
+            <div class="mb-7 flex gap-3 rounded-2xl border border-blue-200/80 bg-blue-50/70 p-4 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
+                <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-white text-blue-600 shadow-sm dark:bg-blue-950 dark:text-blue-300">
+                    <i data-lucide="shield-check" class="size-4.5"></i>
+                </span>
+                <div>
+                    <p class="font-semibold">Akun login aplikasi dibuat bersama data staf</p>
+                    <p class="mt-1 leading-5 text-blue-700 dark:text-blue-300">
+                        Email dan password digunakan untuk masuk ke aplikasi Mantau Umroh.
+                        @if ($editing && $record->user_id)
+                            Kosongkan password jika tidak ingin menggantinya.
+                        @elseif ($editing)
+                            Data lama ini belum mempunyai akun, sehingga password wajib diisi.
+                        @endif
+                    </p>
+                </div>
             </div>
         @endif
 
-        <div class="grid gap-5 md:grid-cols-2">
+        <div class="grid gap-x-6 gap-y-5 md:grid-cols-2">
             @foreach ($fields as $field)
                 @php
                     [$name, $label, $type] = $field;
@@ -91,41 +104,46 @@
                     $current = $value($name, $default);
                 @endphp
                 <label class="{{ $type === 'textarea' ? 'md:col-span-2' : '' }}">
-                    <span class="mb-1.5 block text-sm font-medium">{{ $label }}</span>
+                    <span class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $label }}</span>
                     @if ($type === 'file')
                         @if ($editing && $record->photo_path)
                             <img src="{{ asset('storage/'.$record->photo_path) }}" alt="Foto {{ $definition['label'] }}" class="mb-3 size-20 rounded-2xl object-cover">
                         @endif
                         <input type="file" name="{{ $name }}" accept="image/jpeg,image/png,image/webp"
-                               class="w-full rounded-xl border border-slate-300 p-2 text-sm dark:border-slate-700 dark:bg-slate-950">
+                               class="control-field w-full border p-2">
                         <span class="mt-1 block text-xs text-slate-500">JPG, PNG, atau WebP. Maksimal 2 MB.</span>
                     @elseif ($type === 'select')
-                        <select name="{{ $name }}" class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">
+                        <select name="{{ $name }}" class="control-field w-full">
                             <option value="">Pilih {{ str($label)->lower() }}</option>
                             @foreach ($choices as $optionValue => $optionLabel)
                                 <option value="{{ $optionValue }}" @selected((string) $current === (string) $optionValue)>{{ $optionLabel }}</option>
                             @endforeach
                         </select>
                     @elseif ($type === 'textarea')
-                        <textarea name="{{ $name }}" rows="3" class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">{{ $current }}</textarea>
+                        <textarea name="{{ $name }}" rows="4" class="control-field w-full">{{ $current }}</textarea>
                     @elseif ($type === 'boolean')
-                        <select name="{{ $name }}" class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">
+                        <select name="{{ $name }}" class="control-field w-full">
                             <option value="1" @selected((string) $current === '1')>Aktif</option>
                             <option value="0" @selected((string) $current === '0')>Nonaktif</option>
                         </select>
                     @else
                         <input type="{{ $type }}" name="{{ $name }}" value="{{ $type === 'password' ? '' : $current }}"
                                @if ($type === 'number') step="any" @endif
-                               class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">
+                               @if ($type === 'password') autocomplete="new-password" @endif
+                               class="control-field w-full">
                     @endif
                     @error($name)<span class="mt-1 block text-xs text-red-600">{{ $message }}</span>@enderror
                 </label>
             @endforeach
         </div>
+        </div>
 
-        <div class="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
-            <a href="{{ route('master-data.index', $resource) }}" class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold">Batal</a>
-            <button class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Simpan</button>
+        <div class="flex flex-col-reverse gap-3 border-t border-slate-100 bg-slate-50/60 px-5 py-4 dark:border-slate-800 dark:bg-slate-900/70 sm:flex-row sm:justify-end sm:px-7">
+            <a href="{{ route('master-data.index', $resource) }}" class="button-secondary">Batal</a>
+            <button class="button-primary px-6">
+                <i data-lucide="save" class="size-4"></i>
+                Simpan Data
+            </button>
         </div>
     </form>
 </x-app-layout>
