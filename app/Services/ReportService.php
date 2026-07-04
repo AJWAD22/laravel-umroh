@@ -68,7 +68,8 @@ class ReportService
                 'rows' => Departure::query()->with('branch:id,name')->withCount('groups')
                     ->when($branchId, fn (Builder $q) => $q->where('branch_id', $branchId))
                     ->when($status, fn (Builder $q) => $q->where('status', $status))
-                    ->whereBetween('departure_date', [$from->toDateString(), $to->toDateString()])
+                    ->whereDate('departure_date', '>=', $from->toDateString())
+                    ->whereDate('departure_date', '<=', $to->toDateString())
                     ->orderBy('departure_date')->get()
                     ->map(fn (Departure $item) => [
                         $item->code, $item->program_name, $item->branch->name,
