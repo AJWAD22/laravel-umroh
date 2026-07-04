@@ -5,8 +5,8 @@
     RewriteRule ^\.well-known/ - [L]
 
     # Laravel's public directory is the only web-accessible entry point.
+    RewriteRule ^public(?:/|$) - [L]
     RewriteRule ^$ public/index.php [L]
-    RewriteCond %{REQUEST_URI} !^/public/
     RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
 
