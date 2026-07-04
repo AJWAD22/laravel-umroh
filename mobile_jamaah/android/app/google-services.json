@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "114119928049",
+    "project_id": "umrah-monitoring",
+    "storage_bucket": "umrah-monitoring.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:114119928049:android:ed7544d22bf0cece4e2150",
+        "android_client_info": {
+          "package_name": "id.umrahmonitor.umrah_jamaah"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0zAdCNKyX63Ky-_8QNlAvMAlPrZ5nQZI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

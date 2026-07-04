@@ -1,0 +1,36 @@
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    [x-cloak] { display: none !important; }
+}
+
+.monitoring-marker {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    border: 3px solid white;
+    border-radius: 9999px;
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+    box-shadow: 0 4px 12px rgb(15 23 42 / 35%);
+}
+
+@layer components {
+    .sidebar-link {
+        @apply flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 transition hover:bg-slate-800 hover:text-white;
+    }
+
+    .sidebar-link-active {
+        @apply bg-blue-600 text-white shadow-lg shadow-blue-950/30 hover:bg-blue-600;
+    }
+
+    .navbar-button {
+        @apply grid size-10 place-items-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:hover:bg-slate-800 dark:hover:text-white;
+    }
+}
