@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\MobileRole;
 use App\Enums\UserRole;
 use App\Models\Branch;
 use App\Models\Departure;
@@ -13,6 +14,7 @@ use App\Models\TourLeader;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class MasterDataService
@@ -36,11 +38,11 @@ class MasterDataService
                 ['registration_number', 'full_name', 'nik', 'passport_number', 'phone'],
                 ['registration_number', 'full_name', 'phone', 'status'], ['branch']),
             'tour-leaders' => $this->definition(TourLeader::class, 'Tour Leader', 'tour-leaders.manage',
-                ['photo_path' => 'Foto', 'employee_number' => 'No. Pegawai', 'full_name' => 'Nama', 'branch.name' => 'Cabang', 'phone' => 'Telepon', 'is_active' => 'Aktif'],
-                ['employee_number', 'full_name', 'phone'], ['employee_number', 'full_name', 'phone', 'is_active'], ['branch']),
+                ['photo_path' => 'Foto', 'employee_number' => 'No. Pegawai', 'full_name' => 'Nama', 'user.email' => 'Email Login', 'branch.name' => 'Cabang', 'phone' => 'Telepon', 'is_active' => 'Aktif'],
+                ['employee_number', 'full_name', 'phone'], ['employee_number', 'full_name', 'phone', 'is_active'], ['branch', 'user']),
             'muthawwifs' => $this->definition(Muthawwif::class, 'Muthawwif', 'muthawwifs.manage',
-                ['photo_path' => 'Foto', 'employee_number' => 'No. Pegawai', 'full_name' => 'Nama', 'branch.name' => 'Cabang', 'phone' => 'Telepon', 'is_active' => 'Aktif'],
-                ['employee_number', 'full_name', 'phone', 'languages'], ['employee_number', 'full_name', 'phone', 'is_active'], ['branch']),
+                ['photo_path' => 'Foto', 'employee_number' => 'No. Pegawai', 'full_name' => 'Nama', 'user.email' => 'Email Login', 'branch.name' => 'Cabang', 'phone' => 'Telepon', 'is_active' => 'Aktif'],
+                ['employee_number', 'full_name', 'phone', 'languages'], ['employee_number', 'full_name', 'phone', 'is_active'], ['branch', 'user']),
             'hotels' => $this->definition(Hotel::class, 'Hotel', 'hotels.manage',
                 ['name' => 'Nama Hotel', 'branch.name' => 'Cabang', 'city' => 'Kota', 'geofence_radius_meters' => 'Radius (m)'],
                 ['name', 'address'], ['name', 'city', 'geofence_radius_meters'], ['branch']),
@@ -85,6 +87,52 @@ class MasterDataService
     {
         $photo = $data['photo'] ?? null;
         unset($data['photo']);
+
+        if (in_array($resource, ['tour-leaders', 'muthawwifs'], true)) {
+            return DB::transaction(function () use ($resource, $data, $record, $photo): Model {
+                $email = $data['email'];
+                $password = $data['password'] ?? null;
+                unset($data['email'], $data['password']);
+
+                /** @var TourLeader|Muthawwif $staff */
+                $staff = $record ?? new ($this->definitionFor($resource)['model']);
+                /** @var User $user */
+                $user = $staff->user ?? new User;
+                $user->fill([
+                    'branch_id' => $data['branch_id'],
+                    'name' => $data['full_name'],
+                    'email' => $email,
+                    'phone_number' => $data['phone'] ?? null,
+                    'is_active' => $data['is_active'],
+                ]);
+                if (filled($password)) {
+                    $user->password = $password;
+                }
+                $user->save();
+                $user->syncRoles(
+                    $resource === 'tour-leaders'
+                        ? MobileRole::TourLeader->value
+                        : MobileRole::Muthawwif->value
+                );
+
+                $data['user_id'] = $user->id;
+                $staff->fill($data)->save();
+
+                if ($photo) {
+                    $photoPath = $this->photos->store(
+                        $photo,
+                        $staff->photo_path,
+                        $resource,
+                    );
+                    $staff->forceFill(['photo_path' => $photoPath])->save();
+                    $user->forceFill(['photo_path' => $photoPath])->save();
+                } elseif ($staff->photo_path !== $user->photo_path) {
+                    $user->forceFill(['photo_path' => $staff->photo_path])->save();
+                }
+
+                return $staff->load(['branch', 'user']);
+            });
+        }
 
         if ($resource === 'branch-admins') {
             if (filled($data['password'] ?? null)) {

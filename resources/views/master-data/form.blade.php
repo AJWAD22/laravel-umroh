@@ -1,6 +1,11 @@
 @php
     $editing = $record !== null;
-    $value = fn (string $key, mixed $default = null) => old($key, data_get($record, $key, $default));
+    $value = fn (string $key, mixed $default = null) => old(
+        $key,
+        $key === 'email' && in_array($resource, ['tour-leaders', 'muthawwifs'], true)
+            ? data_get($record, 'user.email', $default)
+            : data_get($record, $key, $default)
+    );
     $commonBranch = [['branch_id', 'Cabang', 'select', $options['branches']]];
     $fields = match ($resource) {
         'branches' => [
@@ -21,11 +26,15 @@
             ['status','Status','select',['registered'=>'Terdaftar','active'=>'Aktif','completed'=>'Selesai','cancelled'=>'Batal']],
         ],
         'tour-leaders' => [...$commonBranch,
-            ['employee_number','Nomor Pegawai','text'], ['full_name','Nama Lengkap','text'], ['phone','Telepon','text'], ['photo','Foto Profil','file'], ['is_active','Status','boolean'],
+            ['employee_number','Nomor Pegawai','text'], ['full_name','Nama Lengkap','text'], ['phone','Telepon','text'],
+            ['email','Email Login Aplikasi','email'], ['password','Password Aplikasi','password'],
+            ['password_confirmation','Konfirmasi Password','password'], ['photo','Foto Profil','file'], ['is_active','Status','boolean'],
         ],
         'muthawwifs' => [...$commonBranch,
             ['employee_number','Nomor Pegawai','text'], ['full_name','Nama Lengkap','text'], ['phone','Telepon','text'],
-            ['photo','Foto Profil','file'], ['languages','Bahasa yang Dikuasai','textarea'], ['is_active','Status','boolean'],
+            ['email','Email Login Aplikasi','email'], ['password','Password Aplikasi','password'],
+            ['password_confirmation','Konfirmasi Password','password'], ['photo','Foto Profil','file'],
+            ['languages','Bahasa yang Dikuasai','textarea'], ['is_active','Status','boolean'],
         ],
         'hotels' => [...$commonBranch,
             ['name','Nama Hotel','text'], ['city','Kota','select',['makkah'=>'Makkah','madinah'=>'Madinah','other'=>'Lainnya']],
@@ -58,6 +67,20 @@
           class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         @csrf
         @if ($editing) @method('PUT') @endif
+
+        @if (in_array($resource, ['tour-leaders', 'muthawwifs'], true))
+            <div class="mb-6 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100">
+                <p class="font-semibold">Akun login aplikasi dibuat bersama data staf</p>
+                <p class="mt-1 text-blue-700 dark:text-blue-300">
+                    Email dan password digunakan untuk masuk ke aplikasi Mantau Umroh.
+                    @if ($editing && $record->user_id)
+                        Kosongkan password jika tidak ingin menggantinya.
+                    @elseif ($editing)
+                        Data lama ini belum mempunyai akun, sehingga password wajib diisi.
+                    @endif
+                </p>
+            </div>
+        @endif
 
         <div class="grid gap-5 md:grid-cols-2">
             @foreach ($fields as $field)

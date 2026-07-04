@@ -2,9 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Enums\MobileRole;
 use App\Enums\UserRole;
 use App\Models\Branch;
 use App\Models\Departure;
+use App\Models\Muthawwif;
+use App\Models\TourLeader;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -75,6 +78,81 @@ class MasterDataTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_branch_admin_creates_tour_leader_with_a_mobile_login_account(): void
+    {
+        [$admin, $branch] = $this->branchAdmin('TL');
+
+        $this->actingAs($admin)
+            ->post(route('master-data.store', 'tour-leaders'), [
+                'employee_number' => 'TL-001',
+                'full_name' => 'Ahmad Tour Leader',
+                'phone' => '081234567890',
+                'email' => 'ahmad.tl@example.test',
+                'password' => 'password123',
+                'password_confirmation' => 'password123',
+                'is_active' => '1',
+            ])
+            ->assertRedirect(route('master-data.index', 'tour-leaders'))
+            ->assertSessionHasNoErrors();
+
+        $user = User::where('email', 'ahmad.tl@example.test')->firstOrFail();
+        $leader = TourLeader::where('employee_number', 'TL-001')->firstOrFail();
+
+        $this->assertTrue($user->hasRole(MobileRole::TourLeader->value));
+        $this->assertSame($branch->id, $user->branch_id);
+        $this->assertSame($user->id, $leader->user_id);
+        $this->assertSame($leader->full_name, $user->name);
+
+        $this->postJson('/api/mobile/login', [
+            'email' => 'ahmad.tl@example.test',
+            'password' => 'password123',
+            'device_name' => 'Feature Test',
+        ])->assertOk()
+            ->assertJsonPath('role', MobileRole::TourLeader->value)
+            ->assertJsonPath('user.role', MobileRole::TourLeader->value);
+    }
+
+    public function test_branch_admin_creates_and_updates_muthawwif_login_account(): void
+    {
+        [$admin, $branch] = $this->branchAdmin('MTF');
+
+        $this->actingAs($admin)
+            ->post(route('master-data.store', 'muthawwifs'), [
+                'employee_number' => 'MTF-001',
+                'full_name' => 'Ustaz Ibrahim',
+                'phone' => '081298765432',
+                'email' => 'ibrahim@example.test',
+                'password' => 'password123',
+                'password_confirmation' => 'password123',
+                'languages' => 'Indonesia, Arab',
+                'is_active' => '1',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $muthawwif = Muthawwif::where('employee_number', 'MTF-001')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->put(route('master-data.update', ['resource' => 'muthawwifs', 'record' => $muthawwif->id]), [
+                'employee_number' => 'MTF-001',
+                'full_name' => 'Ustaz Ibrahim Updated',
+                'phone' => '081298765433',
+                'email' => 'ibrahim.updated@example.test',
+                'languages' => 'Indonesia, Arab',
+                'is_active' => '0',
+            ])
+            ->assertRedirect(route('master-data.index', 'muthawwifs'))
+            ->assertSessionHasNoErrors();
+
+        $muthawwif->refresh();
+        $user = $muthawwif->user;
+
+        $this->assertSame($branch->id, $user->branch_id);
+        $this->assertSame('Ustaz Ibrahim Updated', $user->name);
+        $this->assertSame('ibrahim.updated@example.test', $user->email);
+        $this->assertFalse($user->is_active);
+        $this->assertTrue($user->hasRole(MobileRole::Muthawwif->value));
+    }
+
     public function test_group_rejects_a_departure_from_another_branch(): void
     {
         $this->seed(RolePermissionSeeder::class);
@@ -110,5 +188,22 @@ class MasterDataTest extends TestCase
         $user->assignRole(UserRole::SuperAdmin->value);
 
         return $user;
+    }
+
+    /**
+     * @return array{User, Branch}
+     */
+    private function branchAdmin(string $code): array
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $branch = Branch::create([
+            'code' => $code,
+            'name' => "Cabang {$code}",
+            'city' => 'Makassar',
+        ]);
+        $admin = User::factory()->create(['branch_id' => $branch->id]);
+        $admin->assignRole(UserRole::BranchAdmin->value);
+
+        return [$admin, $branch];
     }
 }

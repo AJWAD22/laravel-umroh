@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Enums\UserRole;
+use App\Models\Muthawwif;
+use App\Models\TourLeader;
 use App\Services\MasterDataService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -31,6 +33,12 @@ class MasterDataRequest extends FormRequest
         $id = (int) ($this->route('record') ?? 0);
         $branchId = (int) ($this->input('branch_id') ?: $this->user()->branch_id);
         $unique = fn (string $table, string $column) => Rule::unique($table, $column)->ignore($id);
+        $staff = match ($resource) {
+            'tour-leaders' => TourLeader::query()->with('user')->find($id),
+            'muthawwifs' => Muthawwif::query()->with('user')->find($id),
+            default => null,
+        };
+        $staffUserId = $staff?->user_id;
 
         return match ($resource) {
             'branches' => [
@@ -71,6 +79,8 @@ class MasterDataRequest extends FormRequest
                 'employee_number' => ['required', 'string', 'max:40', $unique($resource === 'tour-leaders' ? 'tour_leaders' : 'muthawwifs', 'employee_number')],
                 'full_name' => ['required', 'string', 'max:255'],
                 'phone' => ['nullable', 'string', 'max:30'],
+                'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($staffUserId)],
+                'password' => [! $staffUserId ? 'required' : 'nullable', 'string', 'min:8', 'confirmed'],
                 'languages' => [$resource === 'muthawwifs' ? 'nullable' : 'exclude', 'string'],
                 'is_active' => ['required', 'boolean'],
                 'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],

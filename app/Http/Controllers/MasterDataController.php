@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
 use App\Http\Requests\MasterDataRequest;
+use App\Models\Pilgrim;
 use App\Services\MasterDataService;
 use App\Services\MobileActivationService;
-use App\Models\Pilgrim;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -77,10 +77,14 @@ class MasterDataController extends Controller
             ? $this->activations->generatePin($request->user(), $model)
             : null;
 
+        $message = match (true) {
+            $pin !== null => "Jamaah berhasil ditambahkan. PIN aktivasi: {$pin}",
+            in_array($resource, ['tour-leaders', 'muthawwifs'], true) => "{$this->masterData->definitionFor($resource)['label']} dan akun login aplikasi berhasil dibuat.",
+            default => "{$this->masterData->definitionFor($resource)['label']} berhasil ditambahkan.",
+        };
+
         return redirect()->route('master-data.index', $resource)
-            ->with('success', $pin
-                ? "Jamaah berhasil ditambahkan. PIN aktivasi: {$pin}"
-                : "{$this->masterData->definitionFor($resource)['label']} berhasil ditambahkan.");
+            ->with('success', $message);
     }
 
     public function edit(Request $request, string $resource, int $record): View
@@ -125,7 +129,14 @@ class MasterDataController extends Controller
         Gate::authorize('delete', $model);
 
         try {
+            $staffAccount = in_array($resource, ['tour-leaders', 'muthawwifs'], true)
+                ? $model->user
+                : null;
             $model->delete();
+            if ($staffAccount) {
+                $staffAccount->tokens()->delete();
+                $staffAccount->forceFill(['is_active' => false])->save();
+            }
         } catch (QueryException) {
             return back()->with('error', 'Data masih digunakan dan tidak dapat dihapus.');
         }
