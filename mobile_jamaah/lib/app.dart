@@ -16,6 +16,8 @@ class UmrahJamaahApp extends StatelessWidget {
       title: 'Umrah Jamaah',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.system,
       home: Consumer<AuthProvider>(
         builder: (context, auth, _) {
           if (auth.isInitializing) {

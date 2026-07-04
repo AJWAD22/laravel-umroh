@@ -51,9 +51,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const CircleAvatar(
-                          radius: 34,
-                          child: Icon(Icons.location_on_rounded, size: 36),
+                        Image.asset(
+                          Theme.of(context).brightness == Brightness.dark
+                              ? 'assets/branding/app_icon_dark.png'
+                              : 'assets/branding/app_icon_light.png',
+                          height: 96,
+                          width: 96,
                         ),
                         const SizedBox(height: 20),
                         Text(

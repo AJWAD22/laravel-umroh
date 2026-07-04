@@ -6,7 +6,8 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Umrah Monitor') }}</title>
-        <link rel="icon" type="image/png" href="{{ asset('images/umrah-monitor-logo.png') }}">
+        <link rel="icon" type="image/png" media="(prefers-color-scheme: light)" href="{{ asset('images/mantau-umroh-icon-light.png') }}">
+        <link rel="icon" type="image/png" media="(prefers-color-scheme: dark)" href="{{ asset('images/mantau-umroh-icon-dark.png') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -20,7 +21,7 @@
             <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(37,99,235,0.3),_transparent_38%),radial-gradient(circle_at_bottom_left,_rgba(14,165,233,0.18),_transparent_35%)]"></div>
             <div class="relative w-full sm:max-w-md">
                 <div class="mb-6 text-center text-white">
-                    <img src="{{ asset('images/umrah-monitor-logo.png') }}" alt="Logo Umrah Monitor" class="mx-auto size-24 rounded-3xl object-contain shadow-2xl shadow-blue-950/60">
+                    <img src="{{ asset('images/mantau-umroh-icon-dark.png') }}" alt="Logo Mantau Umroh" class="mx-auto size-24 rounded-3xl object-contain shadow-2xl shadow-blue-950/60">
                     <h1 class="mt-4 text-2xl font-bold">Umrah Monitoring</h1>
                     <p class="mt-1 text-sm text-slate-300">GIS & GPS Control Center</p>
                 </div>

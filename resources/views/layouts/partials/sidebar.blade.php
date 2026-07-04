@@ -3,7 +3,7 @@
 <aside class="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-800 bg-slate-950 text-slate-200 transition-all duration-300"
        :class="[(sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'), (sidebarCollapsed ? 'lg:w-20' : 'lg:w-72')]">
     <div class="flex h-20 items-center gap-3 border-b border-slate-800 px-5">
-        <img src="{{ asset('images/umrah-monitor-logo.png') }}" alt="Logo Umrah Monitor" class="size-11 shrink-0 rounded-2xl object-contain shadow-lg shadow-blue-900/40">
+        <img src="{{ asset('images/mantau-umroh-icon-dark.png') }}" alt="Logo Mantau Umroh" class="size-11 shrink-0 rounded-2xl object-contain shadow-lg shadow-blue-900/40">
         <div x-show="!sidebarCollapsed" x-transition>
             <p class="font-bold text-white">Umrah Monitor</p>
             <p class="text-xs text-slate-400">GIS Control Center</p>

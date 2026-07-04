@@ -28,4 +28,36 @@ class AppTheme {
       ),
     );
   }
+
+  static ThemeData get dark {
+    const primary = Color(0xFF38BDF8);
+    const surface = Color(0xFF0F172A);
+
+    return ThemeData(
+      brightness: Brightness.dark,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primary,
+        brightness: Brightness.dark,
+      ),
+      useMaterial3: true,
+      scaffoldBackgroundColor: const Color(0xFF020617),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+      ),
+      cardTheme: CardTheme(
+        elevation: 0,
+        color: surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+    );
+  }
 }
