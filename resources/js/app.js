@@ -4,10 +4,11 @@ import Alpine from 'alpinejs';
 import Chart from 'chart.js/auto';
 import L from 'leaflet';
 import {
-    ArrowDown, ArrowUp, ArrowUpDown, Bell, BookOpen, Building2, ChevronDown, ChevronRight,
+    ArrowDown, ArrowRight, ArrowUp, ArrowUpDown, Bell, BookOpen, Building2, ChevronDown, ChevronRight,
     CircleAlert, CircleCheck, createIcons, Database, Inbox, KeyRound, LayoutDashboard,
-    ListFilter, LogOut, Map, Menu, Moon, PanelLeftClose, PanelLeftOpen, Pencil, Plane, Plus,
-    RotateCcw, Save, Search, Settings, ShieldCheck, Siren, Sun, Trash2, TriangleAlert, UserRound,
+    Eye, EyeOff, ListFilter, LockKeyhole, LogOut, Mail, Map, MapPinned, Menu, Moon,
+    PanelLeftClose, PanelLeftOpen, Pencil, Plane, Plus, RotateCcw, Save, Search, Settings,
+    ShieldCheck, Siren, Sun, Trash2, TriangleAlert, UserRound,
     UserRoundCheck, Users, UsersRound, X,
 } from 'lucide';
 
@@ -17,9 +18,10 @@ Alpine.start();
 
 createIcons({
     icons: {
-        ArrowDown, ArrowUp, ArrowUpDown, Bell, BookOpen, Building2, ChevronDown, ChevronRight,
-        CircleAlert, CircleCheck, Database, Inbox, KeyRound, LayoutDashboard, ListFilter,
-        LogOut, Map, Menu, Moon, PanelLeftClose, PanelLeftOpen, Pencil, Plane, Plus, RotateCcw,
+        ArrowDown, ArrowRight, ArrowUp, ArrowUpDown, Bell, BookOpen, Building2, ChevronDown,
+        ChevronRight, CircleAlert, CircleCheck, Database, Eye, EyeOff, Inbox, KeyRound,
+        LayoutDashboard, ListFilter, LockKeyhole, LogOut, Mail, Map, MapPinned, Menu, Moon,
+        PanelLeftClose, PanelLeftOpen, Pencil, Plane, Plus, RotateCcw,
         Save, Search, Settings, ShieldCheck, Siren, Sun, Trash2, TriangleAlert, UserRound,
         UserRoundCheck, Users, UsersRound, X,
     },
