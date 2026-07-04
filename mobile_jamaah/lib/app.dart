@@ -13,7 +13,7 @@ class UmrahJamaahApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Umrah Jamaah',
+      title: 'Mantau Umroh',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,

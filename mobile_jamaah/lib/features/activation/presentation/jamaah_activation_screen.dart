@@ -8,14 +8,43 @@ import '../../auth/presentation/auth_provider.dart';
 import '../data/activation_repository.dart';
 import '../domain/activation_models.dart';
 
-class JamaahActivationScreen extends StatefulWidget {
+class JamaahActivationScreen extends StatelessWidget {
   const JamaahActivationScreen({super.key});
 
   @override
-  State<JamaahActivationScreen> createState() => _JamaahActivationScreenState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Aktivasi Jamaah')),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: const JamaahActivationForm(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-class _JamaahActivationScreenState extends State<JamaahActivationScreen> {
+class JamaahActivationForm extends StatefulWidget {
+  const JamaahActivationForm({
+    super.key,
+    this.autofocus = true,
+    this.embedded = false,
+  });
+
+  final bool autofocus;
+  final bool embedded;
+
+  @override
+  State<JamaahActivationForm> createState() => _JamaahActivationFormState();
+}
+
+class _JamaahActivationFormState extends State<JamaahActivationForm> {
   final _formKey = GlobalKey<FormState>();
   final _pin = TextEditingController();
   bool _processing = false;
@@ -39,12 +68,14 @@ class _JamaahActivationScreenState extends State<JamaahActivationScreen> {
     try {
       final claim = await repository.claim(numericCode: _pin.text.trim());
       if (!mounted) return;
-      await Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ActivationWaitingScreen(claim: claim),
-        ),
+      final route = MaterialPageRoute(
+        builder: (_) => ActivationWaitingScreen(claim: claim),
       );
+      if (widget.embedded) {
+        await Navigator.push(context, route);
+      } else {
+        await Navigator.pushReplacement(context, route);
+      }
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -56,104 +87,120 @@ class _JamaahActivationScreenState extends State<JamaahActivationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Aktivasi Jamaah')),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(28),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const CircleAvatar(
-                          radius: 38,
-                          backgroundColor: Color(0xFFE8F5E9),
-                          child: Icon(
-                            Icons.pin_rounded,
-                            size: 42,
-                            color: Colors.green,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Masukkan PIN Jamaah',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'PIN enam digit tersedia dari Admin Cabang dan dapat dilihat oleh Tour Leader rombongan Anda.',
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 28),
-                        TextFormField(
-                          controller: _pin,
-                          autofocus: true,
-                          keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.done,
-                          maxLength: 6,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 10,
-                          ),
-                          decoration: const InputDecoration(
-                            labelText: 'PIN Aktivasi',
-                            hintText: '000000',
-                            counterText: '',
-                          ),
-                          validator:
-                              (value) =>
-                                  value?.length == 6
-                                      ? null
-                                      : 'PIN harus terdiri dari 6 angka.',
-                          onFieldSubmitted: (_) => _activate(),
-                        ),
-                        if (_error != null) ...[
-                          const SizedBox(height: 12),
-                          Text(
-                            _error!,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ],
-                        const SizedBox(height: 22),
-                        FilledButton.icon(
-                          onPressed: _processing ? null : _activate,
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size.fromHeight(56),
-                            backgroundColor: Colors.green.shade700,
-                          ),
-                          icon:
-                              _processing
-                                  ? const SizedBox.square(
-                                    dimension: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                  : const Icon(Icons.lock_open_rounded),
-                          label: const Text('Aktifkan Perangkat'),
-                        ),
-                      ],
-                    ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Card(
+      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF22C55E).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.key_rounded,
+                    size: 28,
+                    color: Color(0xFF22C55E),
                   ),
                 ),
               ),
-            ),
+              const SizedBox(height: 18),
+              Text(
+                'Aktivasi Jamaah',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Masukkan PIN Aktivasi yang diberikan oleh Tour Leader.',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(height: 1.5),
+              ),
+              const SizedBox(height: 22),
+              TextFormField(
+                controller: _pin,
+                autofocus: widget.autofocus,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.done,
+                maxLength: 6,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 9,
+                ),
+                decoration: const InputDecoration(
+                  labelText: 'PIN Aktivasi',
+                  hintText: '000000',
+                  counterText: '',
+                  prefixIcon: Icon(Icons.pin_outlined),
+                ),
+                validator:
+                    (value) =>
+                        value?.length == 6
+                            ? null
+                            : 'PIN harus terdiri dari 6 angka.',
+                onFieldSubmitted: (_) => _activate(),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ],
+              const SizedBox(height: 18),
+              FilledButton.icon(
+                onPressed: _processing ? null : _activate,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(56),
+                  backgroundColor: const Color(0xFF22C55E),
+                  foregroundColor: const Color(0xFF052E16),
+                ),
+                icon:
+                    _processing
+                        ? const SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFF052E16),
+                          ),
+                        )
+                        : const Icon(Icons.verified_user_outlined),
+                label: const Text('Aktivasi Jamaah'),
+              ),
+              const SizedBox(height: 16),
+              Text.rich(
+                const TextSpan(
+                  text: 'Belum memiliki PIN?\n',
+                  children: [
+                    TextSpan(
+                      text: 'Silakan hubungi Tour Leader.',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(height: 1.5),
+              ),
+            ],
           ),
         ),
       ),

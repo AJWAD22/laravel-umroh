@@ -52,7 +52,7 @@ class FirebaseNotificationService {
 
     await _localNotifications.show(
       notification.hashCode,
-      notification.title ?? 'Umrah Monitoring',
+      notification.title ?? 'Mantau Umroh',
       notification.body,
       const NotificationDetails(
         android: AndroidNotificationDetails(
