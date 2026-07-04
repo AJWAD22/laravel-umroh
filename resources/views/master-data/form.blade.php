@@ -7,6 +7,14 @@
             : data_get($record, $key, $default)
     );
     $commonBranch = [['branch_id', 'Cabang', 'select', $options['branches']]];
+    $automaticCodeHelp = match ($resource) {
+        'pilgrims' => 'Nomor registrasi dibuat otomatis, contoh BJM-JMH-00001.',
+        'tour-leaders' => 'Nomor pegawai dibuat otomatis, contoh BJM-TL-001.',
+        'muthawwifs' => 'Nomor pegawai dibuat otomatis, contoh BJM-MTF-001.',
+        'departures' => 'Kode dibuat dari cabang dan tahun keberangkatan, contoh BJM-DEP-2026-001.',
+        'groups' => 'Kode dibuat dari cabang dan tahun keberangkatan, contoh BJM-GRP-2026-001.',
+        default => null,
+    };
     $fields = match ($resource) {
         'branches' => [
             ['code','Kode Cabang','text'], ['name','Nama Cabang','text'], ['city','Kota','text'], ['province','Provinsi','text'],
@@ -102,10 +110,25 @@
                     $choices = $field[3] ?? [];
                     $default = $type === 'boolean' ? true : ($name === 'geofence_radius_meters' ? 250 : null);
                     $current = $value($name, $default);
+                    $isAutomaticCode = $automaticCodeHelp !== null
+                        && in_array($name, ['registration_number', 'employee_number', 'code'], true);
                 @endphp
                 <label class="{{ $type === 'textarea' ? 'md:col-span-2' : '' }}">
-                    <span class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $label }}</span>
-                    @if ($type === 'file')
+                    <span class="mb-1.5 flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                        {{ $label }}
+                        @if ($isAutomaticCode)
+                            <span class="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700 dark:bg-blue-950 dark:text-blue-300">Otomatis</span>
+                        @endif
+                    </span>
+                    @if ($isAutomaticCode)
+                        <span class="control-field flex min-h-11 w-full items-center gap-2 bg-slate-50 text-slate-700 dark:bg-slate-800/70 dark:text-slate-200">
+                            <i data-lucide="wand-sparkles" class="size-4 shrink-0 text-blue-600"></i>
+                            <span class="{{ $editing ? 'font-mono font-semibold' : '' }}">
+                                {{ $editing ? $current : 'Dibuat setelah data disimpan' }}
+                            </span>
+                        </span>
+                        <span class="mt-1.5 block text-xs leading-5 text-slate-500">{{ $automaticCodeHelp }}</span>
+                    @elseif ($type === 'file')
                         @if ($editing && $record->photo_path)
                             <img src="{{ asset('storage/'.$record->photo_path) }}" alt="Foto {{ $definition['label'] }}" class="mb-3 size-20 rounded-2xl object-cover">
                         @endif

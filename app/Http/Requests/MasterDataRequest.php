@@ -62,7 +62,7 @@ class MasterDataRequest extends FormRequest
             ],
             'pilgrims' => [
                 'branch_id' => ['required', 'exists:branches,id'],
-                'registration_number' => ['required', 'string', 'max:40', $unique('pilgrims', 'registration_number')],
+                'registration_number' => ['exclude'],
                 'full_name' => ['required', 'string', 'max:255'],
                 'nik' => ['nullable', 'string', 'max:20', $unique('pilgrims', 'nik')],
                 'passport_number' => ['nullable', 'string', 'max:30', $unique('pilgrims', 'passport_number')],
@@ -76,7 +76,7 @@ class MasterDataRequest extends FormRequest
             ],
             'tour-leaders', 'muthawwifs' => [
                 'branch_id' => ['required', 'exists:branches,id'],
-                'employee_number' => ['required', 'string', 'max:40', $unique($resource === 'tour-leaders' ? 'tour_leaders' : 'muthawwifs', 'employee_number')],
+                'employee_number' => ['exclude'],
                 'full_name' => ['required', 'string', 'max:255'],
                 'phone' => ['nullable', 'string', 'max:30'],
                 'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($staffUserId)],
@@ -96,7 +96,7 @@ class MasterDataRequest extends FormRequest
             ],
             'departures' => [
                 'branch_id' => ['required', 'exists:branches,id'],
-                'code' => ['required', 'string', 'max:40', $unique('departures', 'code')],
+                'code' => ['exclude'],
                 'program_name' => ['required', 'string', 'max:255'],
                 'departure_date' => ['required', 'date'],
                 'return_date' => ['required', 'date', 'after:departure_date'],
@@ -110,7 +110,7 @@ class MasterDataRequest extends FormRequest
                 'departure_id' => ['required', Rule::exists('departures', 'id')->where('branch_id', $branchId)],
                 'tour_leader_id' => ['nullable', Rule::exists('tour_leaders', 'id')->where('branch_id', $branchId)],
                 'muthawwif_id' => ['nullable', Rule::exists('muthawwifs', 'id')->where('branch_id', $branchId)],
-                'code' => ['required', 'string', 'max:40', $unique('groups', 'code')],
+                'code' => ['exclude'],
                 'name' => ['required', 'string', 'max:255'],
                 'capacity' => ['nullable', 'integer', 'min:1'],
                 'notes' => ['nullable', 'string'],

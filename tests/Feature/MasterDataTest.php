@@ -6,7 +6,9 @@ use App\Enums\MobileRole;
 use App\Enums\UserRole;
 use App\Models\Branch;
 use App\Models\Departure;
+use App\Models\Group;
 use App\Models\Muthawwif;
+use App\Models\Pilgrim;
 use App\Models\TourLeader;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -61,7 +63,7 @@ class MasterDataTest extends TestCase
         $this->actingAs($admin)
             ->post(route('master-data.store', 'pilgrims'), [
                 'branch_id' => $branchB->id,
-                'registration_number' => 'JMH-001',
+                'registration_number' => 'KODE-DARI-PENGGUNA-DIABAIKAN',
                 'full_name' => 'Jamaah Cabang A',
                 'gender' => 'male',
                 'status' => 'registered',
@@ -69,7 +71,7 @@ class MasterDataTest extends TestCase
             ->assertRedirect(route('master-data.index', 'pilgrims'));
 
         $this->assertDatabaseHas('pilgrims', [
-            'registration_number' => 'JMH-001',
+            'registration_number' => 'BRA-JMH-00001',
             'branch_id' => $branchA->id,
         ]);
 
@@ -80,11 +82,10 @@ class MasterDataTest extends TestCase
 
     public function test_branch_admin_creates_tour_leader_with_a_mobile_login_account(): void
     {
-        [$admin, $branch] = $this->branchAdmin('TL');
+        [$admin, $branch] = $this->branchAdmin('BJM');
 
         $this->actingAs($admin)
             ->post(route('master-data.store', 'tour-leaders'), [
-                'employee_number' => 'TL-001',
                 'full_name' => 'Ahmad Tour Leader',
                 'phone' => '081234567890',
                 'email' => 'ahmad.tl@example.test',
@@ -96,7 +97,7 @@ class MasterDataTest extends TestCase
             ->assertSessionHasNoErrors();
 
         $user = User::where('email', 'ahmad.tl@example.test')->firstOrFail();
-        $leader = TourLeader::where('employee_number', 'TL-001')->firstOrFail();
+        $leader = TourLeader::where('employee_number', 'BJM-TL-001')->firstOrFail();
 
         $this->assertTrue($user->hasRole(MobileRole::TourLeader->value));
         $this->assertSame($branch->id, $user->branch_id);
@@ -114,11 +115,10 @@ class MasterDataTest extends TestCase
 
     public function test_branch_admin_creates_and_updates_muthawwif_login_account(): void
     {
-        [$admin, $branch] = $this->branchAdmin('MTF');
+        [$admin, $branch] = $this->branchAdmin('MKS');
 
         $this->actingAs($admin)
             ->post(route('master-data.store', 'muthawwifs'), [
-                'employee_number' => 'MTF-001',
                 'full_name' => 'Ustaz Ibrahim',
                 'phone' => '081298765432',
                 'email' => 'ibrahim@example.test',
@@ -129,11 +129,11 @@ class MasterDataTest extends TestCase
             ])
             ->assertSessionHasNoErrors();
 
-        $muthawwif = Muthawwif::where('employee_number', 'MTF-001')->firstOrFail();
+        $muthawwif = Muthawwif::where('employee_number', 'MKS-MTF-001')->firstOrFail();
 
         $this->actingAs($admin)
             ->put(route('master-data.update', ['resource' => 'muthawwifs', 'record' => $muthawwif->id]), [
-                'employee_number' => 'MTF-001',
+                'employee_number' => 'KODE-BARU-TIDAK-BOLEH-MENGUBAH',
                 'full_name' => 'Ustaz Ibrahim Updated',
                 'phone' => '081298765433',
                 'email' => 'ibrahim.updated@example.test',
@@ -151,6 +151,49 @@ class MasterDataTest extends TestCase
         $this->assertSame('ibrahim.updated@example.test', $user->email);
         $this->assertFalse($user->is_active);
         $this->assertTrue($user->hasRole(MobileRole::Muthawwif->value));
+        $this->assertSame('MKS-MTF-001', $muthawwif->employee_number);
+    }
+
+    public function test_operational_codes_are_generated_sequentially_and_use_departure_year(): void
+    {
+        [$admin, $branch] = $this->branchAdmin('BJM');
+
+        foreach (['Jamaah Satu', 'Jamaah Dua'] as $name) {
+            $this->actingAs($admin)
+                ->post(route('master-data.store', 'pilgrims'), [
+                    'full_name' => $name,
+                    'gender' => 'male',
+                    'status' => 'registered',
+                ])
+                ->assertSessionHasNoErrors();
+        }
+
+        $this->actingAs($admin)
+            ->post(route('master-data.store', 'departures'), [
+                'program_name' => 'Umroh Awal Tahun',
+                'departure_date' => '2027-01-10',
+                'return_date' => '2027-01-20',
+                'status' => 'scheduled',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $departure = Departure::where('branch_id', $branch->id)->firstOrFail();
+
+        $this->actingAs($admin)
+            ->post(route('master-data.store', 'groups'), [
+                'departure_id' => $departure->id,
+                'name' => 'Rombongan Satu',
+                'capacity' => 45,
+                'is_active' => '1',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(
+            ['BJM-JMH-00001', 'BJM-JMH-00002'],
+            Pilgrim::orderBy('id')->pluck('registration_number')->all(),
+        );
+        $this->assertSame('BJM-DEP-2027-001', $departure->code);
+        $this->assertSame('BJM-GRP-2027-001', Group::firstOrFail()->code);
     }
 
     public function test_group_rejects_a_departure_from_another_branch(): void

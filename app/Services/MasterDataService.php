@@ -19,7 +19,10 @@ use Illuminate\Support\Facades\Hash;
 
 class MasterDataService
 {
-    public function __construct(private readonly ProfilePhotoService $photos) {}
+    public function __construct(
+        private readonly ProfilePhotoService $photos,
+        private readonly OperationalCodeGenerator $codes,
+    ) {}
 
     /**
      * @return array<string, array<string, mixed>>
@@ -90,6 +93,11 @@ class MasterDataService
 
         if (in_array($resource, ['tour-leaders', 'muthawwifs'], true)) {
             return DB::transaction(function () use ($resource, $data, $record, $photo): Model {
+                if (! $record) {
+                    $generated = $this->codes->generate($resource, $data);
+                    $data[$generated['column']] = $generated['value'];
+                }
+
                 $email = $data['email'];
                 $password = $data['password'] ?? null;
                 unset($data['email'], $data['password']);
@@ -154,22 +162,27 @@ class MasterDataService
             return $admin;
         }
 
-        $modelClass = $this->definitionFor($resource)['model'];
-        $model = $record ?? new $modelClass;
-        $model->fill($data)->save();
-        if ($photo) {
-            $directory = match ($resource) {
-                'pilgrims' => 'pilgrims',
-                'tour-leaders' => 'tour-leaders',
-                'muthawwifs' => 'muthawwifs',
-                default => 'master-data',
-            };
-            $model->forceFill([
-                'photo_path' => $this->photos->store($photo, $model->photo_path, $directory),
-            ])->save();
-        }
+        return DB::transaction(function () use ($resource, $data, $record, $photo): Model {
+            if (! $record && in_array($resource, ['pilgrims', 'departures', 'groups'], true)) {
+                $generated = $this->codes->generate($resource, $data);
+                $data[$generated['column']] = $generated['value'];
+            }
 
-        return $model;
+            $modelClass = $this->definitionFor($resource)['model'];
+            $model = $record ?? new $modelClass;
+            $model->fill($data)->save();
+            if ($photo) {
+                $directory = match ($resource) {
+                    'pilgrims' => 'pilgrims',
+                    default => 'master-data',
+                };
+                $model->forceFill([
+                    'photo_path' => $this->photos->store($photo, $model->photo_path, $directory),
+                ])->save();
+            }
+
+            return $model;
+        });
     }
 
     /**
