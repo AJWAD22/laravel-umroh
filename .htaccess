@@ -1,0 +1,14 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Keep ACME challenges reachable for SSL certificate renewal.
+    RewriteRule ^\.well-known/ - [L]
+
+    # Laravel's public directory is the only web-accessible entry point.
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+<FilesMatch "^(\.env|\.git|composer\.(json|lock)|artisan)$">
+    Require all denied
+</FilesMatch>
