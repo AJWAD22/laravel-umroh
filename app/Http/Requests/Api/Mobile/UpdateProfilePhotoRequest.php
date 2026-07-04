@@ -8,7 +8,7 @@ class UpdateProfilePhotoRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->hasAnyRole(['tour-leader', 'muthawwif']);
+        return false;
     }
 
     public function rules(): array

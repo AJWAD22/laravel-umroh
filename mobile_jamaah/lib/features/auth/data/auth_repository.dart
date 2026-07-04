@@ -1,5 +1,3 @@
-import 'package:dio/dio.dart';
-
 import '../../../core/network/api_client.dart';
 import '../../../core/storage/secure_storage_service.dart';
 import '../../profile/domain/jamaah_profile.dart';
@@ -47,27 +45,6 @@ class AuthRepository {
         throw const FormatException('Role token tidak didukung aplikasi.');
       }
       return JamaahProfile.fromJson(data);
-    } catch (error) {
-      throw _api.errorFrom(error);
-    }
-  }
-
-  Future<JamaahProfile> updateProfilePhoto(String filePath) async {
-    try {
-      final fileName = filePath.split(RegExp(r'[/\\]')).last;
-      final response = await _api.dio.post<Map<String, dynamic>>(
-        '/api/mobile/profile/photo',
-        data: FormData.fromMap({
-          'photo': await MultipartFile.fromFile(
-            filePath,
-            filename: fileName,
-          ),
-        }),
-      );
-
-      return JamaahProfile.fromJson(
-        Map<String, dynamic>.from(response.data!['data'] as Map),
-      );
     } catch (error) {
       throw _api.errorFrom(error);
     }

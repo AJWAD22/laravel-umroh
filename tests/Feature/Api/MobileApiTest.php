@@ -146,6 +146,26 @@ class MobileApiTest extends TestCase
             ->assertJsonStructure(['message', 'errors' => ['latitude', 'longitude']]);
     }
 
+    public function test_staff_can_only_view_profile_photo_and_cannot_replace_it(): void
+    {
+        $context = $this->scenario();
+
+        foreach (['leaderUser', 'muthawwifUser'] as $userKey) {
+            $token = $this->login($context[$userKey]);
+
+            $this->withToken($token)
+                ->getJson('/api/mobile/profile')
+                ->assertOk()
+                ->assertJsonStructure(['data' => ['profile' => ['photo_url']]]);
+
+            $this->withToken($token)
+                ->postJson('/api/mobile/profile/photo')
+                ->assertForbidden();
+
+            $this->app['auth']->forgetGuards();
+        }
+    }
+
     private function login(User $user): string
     {
         $this->withoutToken();

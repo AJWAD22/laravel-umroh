@@ -10,7 +10,6 @@ class AuthProvider extends ChangeNotifier {
   JamaahProfile? profile;
   bool isInitializing = true;
   bool isLoading = false;
-  bool isPhotoUploading = false;
   String? error;
 
   bool get isAuthenticated => profile != null;
@@ -52,22 +51,6 @@ class AuthProvider extends ChangeNotifier {
     profile = activatedProfile;
     error = null;
     notifyListeners();
-  }
-
-  Future<bool> updateProfilePhoto(String filePath) async {
-    isPhotoUploading = true;
-    error = null;
-    notifyListeners();
-    try {
-      profile = await _repository.updateProfilePhoto(filePath);
-      return true;
-    } catch (exception) {
-      error = exception.toString();
-      return false;
-    } finally {
-      isPhotoUploading = false;
-      notifyListeners();
-    }
   }
 
   Future<void> logout() async {
