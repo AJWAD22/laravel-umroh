@@ -6,5 +6,5 @@ class AppConfig {
     defaultValue: 'http://127.0.0.1:8000',
   );
 
-  static const trackingInterval = Duration(seconds: 10);
+  static const trackingInterval = Duration(seconds: 60);
 }

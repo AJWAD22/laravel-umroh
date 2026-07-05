@@ -1,5 +1,5 @@
 import 'package:geolocator/geolocator.dart';
-
+import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
 
 class LocationRepository {
@@ -8,6 +8,34 @@ class LocationRepository {
   final ApiClient _api;
 
   Future<Position> currentPosition() async {
+    await _ensureLocationPermission();
+
+    return Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+    );
+  }
+
+  Future<Stream<Position>> foregroundPositions() async {
+    await _ensureLocationPermission();
+
+    return Geolocator.getPositionStream(
+      locationSettings: AndroidSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 0,
+        intervalDuration: AppConfig.trackingInterval,
+        foregroundNotificationConfig: const ForegroundNotificationConfig(
+          notificationTitle: 'Mantau Umroh',
+          notificationText:
+              'Lokasi Anda sedang dibagikan kepada petugas rombongan.',
+          notificationChannelName: 'Tracking Jamaah',
+          enableWakeLock: true,
+          setOngoing: true,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _ensureLocationPermission() async {
     if (!await Geolocator.isLocationServiceEnabled()) {
       throw Exception('Layanan lokasi perangkat belum aktif.');
     }
@@ -23,10 +51,6 @@ class LocationRepository {
         'Izin lokasi ditolak permanen. Aktifkan melalui pengaturan perangkat.',
       );
     }
-
-    return Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
-    );
   }
 
   Future<void> send(Position position) async {

@@ -17,32 +17,15 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen>
-    with WidgetsBindingObserver {
+class _DashboardScreenState extends State<DashboardScreen> {
   bool _sendingSos = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    final tracking = context.read<TrackingProvider>();
-    if (state == AppLifecycleState.resumed) {
-      tracking.resumeForLifecycle();
-    } else if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.detached) {
-      tracking.pauseForLifecycle();
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<TrackingProvider>().start();
+    });
   }
 
   Future<void> _sendSos() async {
@@ -123,7 +106,8 @@ class _DashboardScreenState extends State<DashboardScreen>
           ),
     );
     if (confirmed != true || !mounted) return;
-    context.read<TrackingProvider>().stop();
+    await context.read<TrackingProvider>().stop();
+    if (!mounted) return;
     await context.read<AuthProvider>().logout();
   }
 

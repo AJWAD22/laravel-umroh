@@ -3,14 +3,13 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 
-import '../../../core/config/app_config.dart';
 import '../data/location_repository.dart';
 
 class TrackingProvider extends ChangeNotifier {
   TrackingProvider(this._repository);
 
   final LocationRepository _repository;
-  Timer? _timer;
+  StreamSubscription<Position>? _positionSubscription;
   bool isTracking = false;
   bool isSending = false;
   String? error;
@@ -22,40 +21,34 @@ class TrackingProvider extends ChangeNotifier {
     isTracking = true;
     error = null;
     notifyListeners();
-    await _sendOnce();
-    _schedule();
-  }
-
-  void stop() {
-    isTracking = false;
-    _timer?.cancel();
-    _timer = null;
-    notifyListeners();
-  }
-
-  void pauseForLifecycle() {
-    _timer?.cancel();
-    _timer = null;
-  }
-
-  void resumeForLifecycle() {
-    if (isTracking && _timer == null) {
-      _sendOnce();
-      _schedule();
+    try {
+      final positions = await _repository.foregroundPositions();
+      _positionSubscription = positions.listen(
+        _send,
+        onError: (Object exception) {
+          error = exception.toString().replaceFirst('Exception: ', '');
+          notifyListeners();
+        },
+      );
+    } catch (exception) {
+      isTracking = false;
+      error = exception.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
     }
   }
 
-  void _schedule() {
-    _timer?.cancel();
-    _timer = Timer.periodic(AppConfig.trackingInterval, (_) => _sendOnce());
+  Future<void> stop() async {
+    isTracking = false;
+    await _positionSubscription?.cancel();
+    _positionSubscription = null;
+    notifyListeners();
   }
 
-  Future<void> _sendOnce() async {
+  Future<void> _send(Position position) async {
     if (isSending) return;
     isSending = true;
     notifyListeners();
     try {
-      final position = await _repository.currentPosition();
       await _repository.send(position);
       lastPosition = position;
       lastSentAt = DateTime.now();
@@ -70,7 +63,7 @@ class TrackingProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _positionSubscription?.cancel();
     super.dispose();
   }
 }
