@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
 use App\Http\Requests\AssignGroupMembersRequest;
+use App\Http\Requests\AssignGroupStaffRequest;
 use App\Models\Group;
 use App\Models\GroupMember;
+use App\Models\Muthawwif;
 use App\Models\Pilgrim;
+use App\Models\TourLeader;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,7 +51,32 @@ class GroupMemberController extends Controller
             ->limit(50)
             ->get();
 
-        return view('groups.members', compact('group', 'members', 'availablePilgrims'));
+        $tourLeaders = TourLeader::query()
+            ->where('branch_id', $group->branch_id)
+            ->where('is_active', true)
+            ->orderBy('full_name')
+            ->pluck('full_name', 'id');
+        $muthawwifs = Muthawwif::query()
+            ->where('branch_id', $group->branch_id)
+            ->where('is_active', true)
+            ->orderBy('full_name')
+            ->pluck('full_name', 'id');
+
+        return view('groups.members', compact(
+            'group',
+            'members',
+            'availablePilgrims',
+            'tourLeaders',
+            'muthawwifs',
+        ));
+    }
+
+    public function updateStaff(AssignGroupStaffRequest $request, Group $group): RedirectResponse
+    {
+        $this->authorizeGroup($request, $group);
+        $group->update($request->validated());
+
+        return back()->with('success', 'Petugas rombongan berhasil ditentukan.');
     }
 
     public function store(AssignGroupMembersRequest $request, Group $group): RedirectResponse

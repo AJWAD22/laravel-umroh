@@ -3,8 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../auth/presentation/auth_provider.dart';
-import 'staff_pilgrim_detail_screen.dart';
 import 'staff_provider.dart';
+import 'staff_sos_map_screen.dart';
 
 class StaffSosScreen extends StatelessWidget {
   const StaffSosScreen({super.key});
@@ -81,9 +81,7 @@ class StaffSosScreen extends StatelessWidget {
                               context,
                               MaterialPageRoute(
                                 builder:
-                                    (_) => StaffPilgrimDetailScreen(
-                                      pilgrim: report.pilgrim,
-                                    ),
+                                    (_) => StaffSosMapScreen(report: report),
                               ),
                             ),
                       ),

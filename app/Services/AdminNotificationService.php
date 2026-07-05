@@ -16,15 +16,22 @@ use Illuminate\Support\Collection;
 
 class AdminNotificationService
 {
+    public function __construct(private readonly FcmPushService $push) {}
+
     public function sos(SosReport $report): void
     {
-        $report->loadMissing('pilgrim:id,full_name,registration_number');
+        $report->loadMissing([
+            'pilgrim:id,full_name,registration_number',
+            'group.tourLeader.user',
+            'group.muthawwif.user',
+        ]);
+        $message = "{$report->pilgrim->full_name} mengirim laporan darurat.";
         $this->send(
             $report->branch_id,
             'sos',
             [
                 'title' => 'SOS Jamaah',
-                'message' => "{$report->pilgrim->full_name} mengirim laporan darurat.",
+                'message' => $message,
                 'pilgrim_id' => $report->pilgrim_id,
                 'pilgrim_name' => $report->pilgrim->full_name,
                 'sos_report_id' => $report->id,
@@ -34,6 +41,23 @@ class AdminNotificationService
                 'url' => route('monitoring.sos.show', $report),
             ],
             SosAlert::class,
+        );
+
+        $staff = collect([
+            $report->group?->tourLeader?->user,
+            $report->group?->muthawwif?->user,
+        ])->filter();
+        $this->push->sendToUsers(
+            $this->recipients($report->branch_id)->concat($staff)->unique('id')->values(),
+            'SOS Jamaah',
+            $message,
+            [
+                'type' => 'sos',
+                'sos_report_id' => $report->id,
+                'pilgrim_id' => $report->pilgrim_id,
+                'latitude' => $report->latitude,
+                'longitude' => $report->longitude,
+            ],
         );
     }
 

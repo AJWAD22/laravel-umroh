@@ -7,7 +7,13 @@
                 <h1 class="text-2xl font-bold">{{ $group->name }}</h1>
                 <p class="mt-1 text-sm text-slate-500">{{ $group->departure->program_name }} · {{ $group->branch->name }}</p>
             </div>
-            <a href="{{ route('master-data.index', 'groups') }}" class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold">Kembali</a>
+            <div class="flex flex-wrap gap-2">
+                <button type="button" data-group-staff-open class="button-primary">
+                    <i data-lucide="user-round-cog" class="size-4"></i>
+                    Tentukan Petugas
+                </button>
+                <a href="{{ route('master-data.index', 'groups') }}" class="button-secondary">Kembali</a>
+            </div>
         </div>
     </x-slot:header>
 
@@ -98,4 +104,56 @@
             </form>
         </section>
     </div>
+
+    <dialog data-group-staff-dialog class="m-auto w-[calc(100%-2rem)] max-w-xl rounded-3xl bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-950/60 dark:bg-slate-900 dark:text-white">
+        <form method="POST" action="{{ route('groups.staff.update', $group) }}">
+            @csrf
+            @method('PATCH')
+            <div class="flex items-start justify-between border-b border-slate-200 p-6 dark:border-slate-800">
+                <div>
+                    <h2 class="text-lg font-bold">Tentukan Petugas Rombongan</h2>
+                    <p class="mt-1 text-sm text-slate-500">Petugas terpilih dapat melihat jamaah, lokasi, dan laporan SOS rombongan ini.</p>
+                </div>
+                <button type="button" data-group-staff-close class="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Tutup">
+                    <i data-lucide="x" class="size-5"></i>
+                </button>
+            </div>
+            <div class="grid gap-5 p-6">
+                <label>
+                    <span class="mb-1.5 block text-sm font-semibold">Tour Leader</span>
+                    <select name="tour_leader_id" class="control-field w-full">
+                        <option value="">Belum ditentukan</option>
+                        @foreach ($tourLeaders as $id => $name)
+                            <option value="{{ $id }}" @selected((string) $group->tour_leader_id === (string) $id)>{{ $name }}</option>
+                        @endforeach
+                    </select>
+                    @if ($tourLeaders->isEmpty())<span class="mt-1.5 block text-xs text-amber-600">Belum ada Tour Leader aktif di cabang ini.</span>@endif
+                </label>
+                <label>
+                    <span class="mb-1.5 block text-sm font-semibold">Muthawwif</span>
+                    <select name="muthawwif_id" class="control-field w-full">
+                        <option value="">Belum ditentukan</option>
+                        @foreach ($muthawwifs as $id => $name)
+                            <option value="{{ $id }}" @selected((string) $group->muthawwif_id === (string) $id)>{{ $name }}</option>
+                        @endforeach
+                    </select>
+                    @if ($muthawwifs->isEmpty())<span class="mt-1.5 block text-xs text-amber-600">Belum ada Muthawwif aktif di cabang ini.</span>@endif
+                </label>
+            </div>
+            <div class="flex justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-950/50">
+                <button type="button" data-group-staff-close class="button-secondary">Batal</button>
+                <button class="button-primary">Simpan Petugas</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dialog = document.querySelector('[data-group-staff-dialog]');
+            document.querySelector('[data-group-staff-open]')?.addEventListener('click', () => dialog?.showModal());
+            document.querySelectorAll('[data-group-staff-close]').forEach((button) => {
+                button.addEventListener('click', () => dialog?.close());
+            });
+        });
+    </script>
 </x-app-layout>

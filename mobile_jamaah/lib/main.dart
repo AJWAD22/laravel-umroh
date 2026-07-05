@@ -23,11 +23,13 @@ Future<void> main() async {
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-  final notificationService = FirebaseNotificationService();
-  await notificationService.initialize();
-
   final storage = SecureStorageService();
   final apiClient = ApiClient(storage);
+  final notificationService = FirebaseNotificationService(
+    apiClient: apiClient,
+    storage: storage,
+  );
+  await notificationService.initialize();
 
   runApp(
     MultiProvider(
@@ -42,8 +44,10 @@ Future<void> main() async {
         Provider.value(value: StaffRepository(apiClient)),
         ChangeNotifierProvider(
           create:
-              (context) =>
-                  AuthProvider(context.read<AuthRepository>())..initialize(),
+              (context) => AuthProvider(
+                context.read<AuthRepository>(),
+                context.read<FirebaseNotificationService>(),
+              )..initialize(),
         ),
         ChangeNotifierProvider(
           create:

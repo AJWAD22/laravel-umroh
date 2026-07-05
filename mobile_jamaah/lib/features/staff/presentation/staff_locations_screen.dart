@@ -34,7 +34,31 @@ class StaffLocationsScreen extends StatelessWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             children: const [
               SizedBox(height: 220),
-              Center(child: Text('Belum ada lokasi jamaah yang tersedia.')),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.location_off_outlined,
+                      size: 54,
+                      color: Colors.blueGrey,
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      'Belum ada lokasi jamaah',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 17,
+                      ),
+                    ),
+                    SizedBox(height: 7),
+                    Text(
+                      'Pastikan petugas sudah ditentukan pada rombongan dan aplikasi jamaah sedang mengirim lokasi.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

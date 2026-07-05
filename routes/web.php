@@ -1,15 +1,15 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GroupMemberController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\MonitoringMapController;
-use App\Http\Controllers\TrackingHistoryController;
-use App\Http\Controllers\SosReportController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\GroupMemberController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SosReportController;
 use App\Http\Controllers\SystemSettingController;
+use App\Http\Controllers\TrackingHistoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -39,6 +39,7 @@ Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->
         ->whereIn('format', ['pdf', 'xlsx'])
         ->name('reports.download');
     Route::get('/groups/{group}/members', [GroupMemberController::class, 'index'])->name('groups.members.index');
+    Route::patch('/groups/{group}/staff', [GroupMemberController::class, 'updateStaff'])->name('groups.staff.update');
     Route::post('/groups/{group}/members', [GroupMemberController::class, 'store'])->name('groups.members.store');
     Route::delete('/groups/{group}/members/{member}', [GroupMemberController::class, 'destroy'])->name('groups.members.destroy');
     Route::post('/master-data/pilgrims/{pilgrim}/regenerate-pin', [MasterDataController::class, 'regeneratePin'])

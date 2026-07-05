@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Api\Mobile\AuthController;
 use App\Http\Controllers\Api\Mobile\ActivationController;
+use App\Http\Controllers\Api\Mobile\AuthController;
 use App\Http\Controllers\Api\Mobile\PilgrimController;
 use App\Http\Controllers\Api\Mobile\ProfileController;
 use App\Http\Controllers\Api\Mobile\StaffGroupController;
@@ -21,6 +21,7 @@ Route::prefix('mobile')->group(function () {
 
     Route::middleware(['auth:sanctum', 'mobile.role:jamaah,tour-leader,muthawwif'])->group(function () {
         Route::get('/profile', [ProfileController::class, 'show'])->name('api.mobile.profile');
+        Route::post('/device-token', [ProfileController::class, 'registerDeviceToken'])->name('api.mobile.device-token');
         Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('api.mobile.profile.photo');
         Route::post('/logout', [AuthController::class, 'logout'])->name('api.mobile.logout');
     });

@@ -245,7 +245,8 @@ class _ActivationWaitingScreenState extends State<ActivationWaitingScreen> {
           .activationStatus(widget.claim);
       if (profile != null && mounted) {
         _timer?.cancel();
-        context.read<AuthProvider>().completeActivation(profile);
+        await context.read<AuthProvider>().completeActivation(profile);
+        if (!mounted) return;
         Navigator.popUntil(context, (route) => route.isFirst);
       }
     } catch (error) {

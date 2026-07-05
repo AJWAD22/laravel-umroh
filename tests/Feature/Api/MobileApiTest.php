@@ -146,6 +146,38 @@ class MobileApiTest extends TestCase
             ->assertJsonStructure(['message', 'errors' => ['latitude', 'longitude']]);
     }
 
+    public function test_authenticated_mobile_user_can_register_and_refresh_its_fcm_token(): void
+    {
+        $context = $this->scenario();
+        $token = $this->login($context['leaderUser']);
+
+        $payload = [
+            'device_uuid' => 'device-tour-leader-001',
+            'device_name' => 'Android Tour Leader',
+            'platform' => 'android',
+            'fcm_token' => 'fcm-token-pertama',
+        ];
+
+        $this->withToken($token)
+            ->postJson('/api/mobile/device-token', $payload)
+            ->assertOk();
+
+        $this->withToken($token)
+            ->postJson('/api/mobile/device-token', [
+                ...$payload,
+                'fcm_token' => 'fcm-token-terbaru',
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseCount('mobile_devices', 1);
+        $this->assertDatabaseHas('mobile_devices', [
+            'user_id' => $context['leaderUser']->id,
+            'device_uuid' => 'device-tour-leader-001',
+            'fcm_token' => 'fcm-token-terbaru',
+            'revoked_at' => null,
+        ]);
+    }
+
     public function test_staff_can_only_view_profile_photo_and_cannot_replace_it(): void
     {
         $context = $this->scenario();

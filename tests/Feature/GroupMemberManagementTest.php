@@ -7,7 +7,9 @@ use App\Models\Branch;
 use App\Models\Departure;
 use App\Models\Group;
 use App\Models\GroupMember;
+use App\Models\Muthawwif;
 use App\Models\Pilgrim;
+use App\Models\TourLeader;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -107,6 +109,34 @@ class GroupMemberManagementTest extends TestCase
             'group_id' => $group->id,
             'pilgrim_id' => $secondPilgrim->id,
         ]);
+    }
+
+    public function test_branch_admin_can_assign_active_staff_from_the_same_branch(): void
+    {
+        [$admin, $group] = $this->scenario();
+        $leader = TourLeader::create([
+            'branch_id' => $group->branch_id,
+            'employee_number' => 'BJM-TL-001',
+            'full_name' => 'Tour Leader Banjarmasin',
+            'is_active' => true,
+        ]);
+        $muthawwif = Muthawwif::create([
+            'branch_id' => $group->branch_id,
+            'employee_number' => 'BJM-MTF-001',
+            'full_name' => 'Muthawwif Banjarmasin',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('groups.staff.update', $group), [
+                'tour_leader_id' => $leader->id,
+                'muthawwif_id' => $muthawwif->id,
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('success');
+
+        $this->assertSame($leader->id, $group->fresh()->tour_leader_id);
+        $this->assertSame($muthawwif->id, $group->fresh()->muthawwif_id);
     }
 
     /**
