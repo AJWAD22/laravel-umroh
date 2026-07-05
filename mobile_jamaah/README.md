@@ -31,15 +31,15 @@ Base URL dibaca dari compile-time config `API_BASE_URL`:
 - iOS Simulator: `http://127.0.0.1:8000`
 - Perangkat fisik via Wi-Fi: gunakan IP LAN komputer, misalnya `http://192.168.1.10:8000`
 
-Default project ini adalah `http://127.0.0.1:8000`, sehingga paling nyaman untuk
-HP Android via USB.
+Default build aplikasi memakai server produksi `https://mantauumroh.web.id`.
+Untuk pengembangan lokal, override URL menggunakan `--dart-define=API_BASE_URL=...`.
 
 HP Android via USB:
 
 ```powershell
 adb devices
 adb reverse tcp:8000 tcp:8000
-flutter run
+flutter run --dart-define=API_BASE_URL=http://127.0.0.1:8000
 ```
 
 Android Emulator:

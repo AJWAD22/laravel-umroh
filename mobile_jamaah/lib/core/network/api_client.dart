@@ -54,8 +54,7 @@ class ApiClient {
       return 'Terjadi kesalahan pada server.';
     }
 
-    return 'Tidak dapat terhubung ke server ${AppConfig.apiBaseUrl}. '
-        'Pastikan Laravel berjalan dan koneksi USB sudah memakai adb reverse '
-        'atau gunakan API_BASE_URL IP laptop.';
+    return 'Tidak dapat terhubung ke server Mantau Umroh. '
+        'Periksa koneksi internet Anda, lalu coba kembali.';
   }
 }
