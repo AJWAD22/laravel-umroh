@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/utils/external_navigation.dart';
 import '../domain/staff_pilgrim.dart';
+import 'staff_pilgrim_map_screen.dart';
 
 class StaffPilgrimDetailScreen extends StatelessWidget {
   const StaffPilgrimDetailScreen({super.key, required this.pilgrim});
@@ -84,6 +85,24 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
                           ),
                         ),
                       if (location != null) ...[
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed:
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (_) => StaffPilgrimMapScreen(
+                                          pilgrim: pilgrim,
+                                        ),
+                                  ),
+                                ),
+                            icon: const Icon(Icons.map_rounded),
+                            label: const Text('Lihat di Peta'),
+                          ),
+                        ),
                         const SizedBox(height: 10),
                         SizedBox(
                           width: double.infinity,
