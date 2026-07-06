@@ -5,75 +5,156 @@ import '../../auth/presentation/auth_provider.dart';
 import 'staff_pilgrim_detail_screen.dart';
 import 'staff_provider.dart';
 
-class StaffPilgrimsScreen extends StatelessWidget {
+class StaffPilgrimsScreen extends StatefulWidget {
   const StaffPilgrimsScreen({super.key});
+
+  @override
+  State<StaffPilgrimsScreen> createState() => _StaffPilgrimsScreenState();
+}
+
+class _StaffPilgrimsScreenState extends State<StaffPilgrimsScreen> {
+  final _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final pilgrims = context.watch<StaffProvider>().pilgrims;
     final role = context.read<AuthProvider>().profile!.role;
+    final query = _query.trim().toLowerCase();
+    final filtered =
+        pilgrims.where((pilgrim) {
+          if (query.isEmpty) return true;
+          return pilgrim.fullName.toLowerCase().contains(query) ||
+              pilgrim.registrationNumber.toLowerCase().contains(query) ||
+              (pilgrim.phone?.toLowerCase().contains(query) ?? false);
+        }).toList();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daftar Jamaah'),
+        title: const Text('Cari Jamaah'),
         actions: [
           IconButton(
-            tooltip: 'Refresh data',
+            tooltip: 'Perbarui data',
             onPressed:
                 () => context.read<StaffProvider>().load(role, force: true),
             icon: const Icon(Icons.refresh_rounded),
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () => context.read<StaffProvider>().load(role, force: true),
-        child:
-            pilgrims.isEmpty
-                ? const _EmptyList(
-                  icon: Icons.groups_outlined,
-                  message: 'Belum ada jamaah yang ditugaskan.',
-                )
-                : ListView.separated(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
-                  itemCount: pilgrims.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    final pilgrim = pilgrims[index];
-                    return Card(
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage:
-                              pilgrim.photoUrl == null
-                                  ? null
-                                  : NetworkImage(pilgrim.photoUrl!),
-                          child:
-                              pilgrim.photoUrl == null
-                                  ? Text(
-                                    pilgrim.fullName
-                                        .substring(0, 1)
-                                        .toUpperCase(),
-                                  )
-                                  : null,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: TextField(
+              controller: _searchController,
+              autofocus: false,
+              textInputAction: TextInputAction.search,
+              onChanged: (value) => setState(() => _query = value),
+              decoration: InputDecoration(
+                hintText: 'Nama, nomor jamaah, atau telepon',
+                prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon:
+                    query.isEmpty
+                        ? null
+                        : IconButton(
+                          tooltip: 'Hapus pencarian',
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _query = '');
+                          },
+                          icon: const Icon(Icons.close_rounded),
                         ),
-                        title: Text(pilgrim.fullName),
-                        subtitle: Text(
-                          '${pilgrim.registrationNumber} • ${pilgrim.monitoringStatus.toUpperCase()}',
-                        ),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap:
-                            () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (_) => StaffPilgrimDetailScreen(
-                                      pilgrim: pilgrim,
-                                    ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 6, 20, 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                query.isEmpty
+                    ? '${pilgrims.length} jamaah dalam penugasan Anda'
+                    : '${filtered.length} hasil ditemukan',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh:
+                  () => context.read<StaffProvider>().load(role, force: true),
+              child:
+                  pilgrims.isEmpty
+                      ? const _EmptyList(
+                        icon: Icons.groups_outlined,
+                        message: 'Belum ada jamaah yang ditugaskan.',
+                      )
+                      : filtered.isEmpty
+                      ? const _EmptyList(
+                        icon: Icons.search_off_rounded,
+                        message: 'Jamaah yang dicari tidak ditemukan.',
+                      )
+                      : ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final pilgrim = filtered[index];
+                          return Card(
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 6,
                               ),
+                              leading: CircleAvatar(
+                                backgroundImage:
+                                    pilgrim.photoUrl == null
+                                        ? null
+                                        : NetworkImage(pilgrim.photoUrl!),
+                                child:
+                                    pilgrim.photoUrl == null
+                                        ? Text(
+                                          pilgrim.fullName
+                                              .substring(0, 1)
+                                              .toUpperCase(),
+                                        )
+                                        : null,
+                              ),
+                              title: Text(
+                                pilgrim.fullName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Text(
+                                '${pilgrim.registrationNumber} • '
+                                '${pilgrim.monitoringStatus.toUpperCase()}',
+                              ),
+                              trailing: const Icon(Icons.chevron_right_rounded),
+                              onTap:
+                                  () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => StaffPilgrimDetailScreen(
+                                            pilgrim: pilgrim,
+                                          ),
+                                    ),
+                                  ),
                             ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -81,6 +162,7 @@ class StaffPilgrimsScreen extends StatelessWidget {
 
 class _EmptyList extends StatelessWidget {
   const _EmptyList({required this.icon, required this.message});
+
   final IconData icon;
   final String message;
 

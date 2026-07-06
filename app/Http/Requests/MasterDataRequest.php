@@ -94,6 +94,17 @@ class MasterDataRequest extends FormRequest
                 'longitude' => ['nullable', 'numeric', 'between:-180,180'],
                 'geofence_radius_meters' => ['required', 'integer', 'min:10', 'max:10000'],
             ],
+            'checkpoints' => [
+                'branch_id' => ['required', 'exists:branches,id'],
+                'name' => ['required', 'string', 'max:255'],
+                'category' => ['required', Rule::in(['ibadah', 'hotel', 'titik_kumpul', 'kesehatan', 'transportasi', 'belanja', 'lainnya'])],
+                'city' => ['required', Rule::in(['makkah', 'madinah', 'jeddah', 'other'])],
+                'address' => ['nullable', 'string'],
+                'latitude' => ['required', 'numeric', 'between:-90,90'],
+                'longitude' => ['required', 'numeric', 'between:-180,180'],
+                'description' => ['nullable', 'string', 'max:1000'],
+                'is_active' => ['required', 'boolean'],
+            ],
             'departures' => [
                 'branch_id' => ['required', 'exists:branches,id'],
                 'code' => ['exclude'],

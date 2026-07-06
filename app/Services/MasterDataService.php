@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\MobileRole;
 use App\Enums\UserRole;
 use App\Models\Branch;
+use App\Models\Checkpoint;
 use App\Models\Departure;
 use App\Models\Group;
 use App\Models\Hotel;
@@ -49,6 +50,9 @@ class MasterDataService
             'hotels' => $this->definition(Hotel::class, 'Hotel', 'hotels.manage',
                 ['name' => 'Nama Hotel', 'branch.name' => 'Cabang', 'city' => 'Kota', 'geofence_radius_meters' => 'Radius (m)'],
                 ['name', 'address'], ['name', 'city', 'geofence_radius_meters'], ['branch']),
+            'checkpoints' => $this->definition(Checkpoint::class, 'Tujuan & Checkpoint', 'hotels.manage',
+                ['name' => 'Nama Tujuan', 'category' => 'Kategori', 'city' => 'Kota', 'branch.name' => 'Cabang', 'is_active' => 'Aktif'],
+                ['name', 'address', 'description'], ['name', 'category', 'city', 'is_active'], ['branch']),
             'departures' => $this->definition(Departure::class, 'Keberangkatan', 'departures.manage',
                 ['code' => 'Kode', 'program_name' => 'Program', 'branch.name' => 'Cabang', 'departure_date' => 'Berangkat', 'status' => 'Status'],
                 ['code', 'program_name', 'departure_airport'], ['code', 'program_name', 'departure_date', 'status'], ['branch']),

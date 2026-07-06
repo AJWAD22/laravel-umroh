@@ -30,6 +30,7 @@
                 ['label' => 'Tour Leader', 'resource' => 'tour-leaders', 'permission' => 'tour-leaders.manage', 'view' => 'tour-leaders.view'],
                 ['label' => 'Muthawwif', 'resource' => 'muthawwifs', 'permission' => 'muthawwifs.manage', 'view' => 'muthawwifs.view'],
                 ['label' => 'Hotel', 'resource' => 'hotels', 'permission' => 'hotels.manage', 'view' => 'hotels.view'],
+                ['label' => 'Tujuan & Checkpoint', 'resource' => 'checkpoints', 'permission' => 'hotels.manage', 'view' => 'hotels.view'],
                 ['label' => 'Keberangkatan', 'resource' => 'departures', 'permission' => 'departures.manage', 'view' => 'departures.view'],
                 ['label' => 'Rombongan', 'resource' => 'groups', 'permission' => 'groups.manage', 'view' => 'groups.view'],
             ];

@@ -9,6 +9,7 @@
             'tour-leaders' => 'user-round-check',
             'muthawwifs' => 'book-open',
             'hotels' => 'building-2',
+            'checkpoints' => 'map-pinned',
             'departures' => 'plane',
             'groups' => 'users-round',
         ];

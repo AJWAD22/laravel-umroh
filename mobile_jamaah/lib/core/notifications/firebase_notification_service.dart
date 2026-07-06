@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -33,13 +36,37 @@ class FirebaseNotificationService {
   final SecureStorageService _storage;
   final FirebaseMessaging _messaging;
   final FlutterLocalNotificationsPlugin _localNotifications;
+  final StreamController<Map<String, dynamic>> _notificationIntents =
+      StreamController<Map<String, dynamic>>.broadcast();
+  Map<String, dynamic>? _pendingIntent;
+
+  Stream<Map<String, dynamic>> get notificationIntents =>
+      _notificationIntents.stream;
+
+  Map<String, dynamic>? takePendingIntent() {
+    final intent = _pendingIntent;
+    _pendingIntent = null;
+    return intent;
+  }
 
   Future<void> initialize() async {
     const initializationSettings = InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
     );
 
-    await _localNotifications.initialize(initializationSettings);
+    await _localNotifications.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (response) {
+        final payload = response.payload;
+        if (payload == null || payload.isEmpty) return;
+        try {
+          final data = jsonDecode(payload);
+          if (data is Map<String, dynamic>) _emitIntent(data);
+        } catch (_) {
+          // Payload notifikasi versi lama diabaikan dengan aman.
+        }
+      },
+    );
     await _localNotifications
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
@@ -49,7 +76,15 @@ class FirebaseNotificationService {
     await _messaging.requestPermission(alert: true, badge: true, sound: true);
 
     FirebaseMessaging.onMessage.listen(_showForegroundNotification);
+    FirebaseMessaging.onMessageOpenedApp.listen(
+      (message) => _emitIntent(message.data),
+    );
     _messaging.onTokenRefresh.listen((_) => syncToken());
+
+    final initialMessage = await _messaging.getInitialMessage();
+    if (initialMessage != null) {
+      _pendingIntent = Map<String, dynamic>.from(initialMessage.data);
+    }
   }
 
   Future<String?> token() => _messaging.getToken();
@@ -94,7 +129,13 @@ class FirebaseNotificationService {
           icon: '@mipmap/ic_launcher',
         ),
       ),
-      payload: message.data['type']?.toString(),
+      payload: jsonEncode(message.data),
     );
+  }
+
+  void _emitIntent(Map<String, dynamic> data) {
+    if (data.isEmpty) return;
+    _pendingIntent = Map<String, dynamic>.from(data);
+    _notificationIntents.add(Map<String, dynamic>.from(data));
   }
 }

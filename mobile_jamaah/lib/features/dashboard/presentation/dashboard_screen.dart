@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../auth/presentation/auth_provider.dart';
 import '../../hotel/presentation/hotel_screen.dart';
+import '../../checkpoint/presentation/checkpoint_screen.dart';
 import '../../location/data/location_repository.dart';
 import '../../location/presentation/tracking_provider.dart';
 import '../../profile/domain/jamaah_profile.dart';
@@ -307,6 +308,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       crossAxisSpacing: 12,
                       childAspectRatio: 1.25,
                       children: [
+                        _MenuCard(
+                          icon: Icons.map_rounded,
+                          label: 'Cari Tujuan',
+                          onTap:
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const CheckpointScreen(),
+                                ),
+                              ),
+                        ),
                         _MenuCard(
                           icon: Icons.hotel_rounded,
                           label: 'Hotel',

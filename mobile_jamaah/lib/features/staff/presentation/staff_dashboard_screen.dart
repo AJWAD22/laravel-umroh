@@ -129,11 +129,11 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                         children: [
                           _DashboardMenu(
                             icon: Icons.groups_rounded,
-                            label: 'Daftar Jamaah',
+                            label: 'Cari Jamaah',
                             description:
                                 isLeader
-                                    ? 'Jamaah dalam rombongan Anda'
-                                    : 'Jamaah dalam bimbingan Anda',
+                                    ? 'Cari dan buka profil jamaah'
+                                    : 'Cari jamaah dalam bimbingan Anda',
                             count: staff.pilgrims.length,
                             onTap:
                                 () =>
