@@ -23,26 +23,30 @@
         </div>
 
         @php
-            $masterMenus = [
-                ['label' => 'Cabang', 'resource' => 'branches', 'permission' => 'branches.manage', 'view' => 'branches.manage'],
+            $userMenus = [
                 ['label' => 'Admin Cabang', 'resource' => 'branch-admins', 'permission' => 'branch-admins.manage', 'view' => 'branch-admins.manage'],
                 ['label' => 'Jamaah', 'resource' => 'pilgrims', 'permission' => 'pilgrims.manage', 'view' => 'pilgrims.view'],
                 ['label' => 'Tour Leader', 'resource' => 'tour-leaders', 'permission' => 'tour-leaders.manage', 'view' => 'tour-leaders.view'],
                 ['label' => 'Muthawwif', 'resource' => 'muthawwifs', 'permission' => 'muthawwifs.manage', 'view' => 'muthawwifs.view'],
-                ['label' => 'Hotel', 'resource' => 'hotels', 'permission' => 'hotels.manage', 'view' => 'hotels.view'],
-                ['label' => 'Tujuan & Checkpoint', 'resource' => 'checkpoints', 'permission' => 'hotels.manage', 'view' => 'hotels.view'],
+            ];
+            $operationalMenus = [
                 ['label' => 'Keberangkatan', 'resource' => 'departures', 'permission' => 'departures.manage', 'view' => 'departures.view'],
                 ['label' => 'Rombongan', 'resource' => 'groups', 'permission' => 'groups.manage', 'view' => 'groups.view'],
+                ['label' => 'Hotel', 'resource' => 'hotels', 'permission' => 'hotels.manage', 'view' => 'hotels.view'],
+                ['label' => 'Tujuan & Titik Penting', 'resource' => 'checkpoints', 'permission' => 'hotels.manage', 'view' => 'hotels.view'],
+            ];
+            $organizationMenus = [
+                ['label' => 'Cabang', 'resource' => 'branches', 'permission' => 'branches.manage', 'view' => 'branches.manage'],
             ];
         @endphp
-        <div x-data="{ open: {{ request()->routeIs('master-data.*') ? 'true' : 'false' }} }">
+        <div x-data="{ open: {{ request()->routeIs('master-data.*') && in_array(request()->route('resource'), array_column($userMenus, 'resource'), true) ? 'true' : 'false' }} }">
             <button @click="open = !open" class="sidebar-link w-full">
                 <i data-lucide="users" class="size-5 shrink-0"></i>
-                <span x-show="!sidebarCollapsed" class="flex-1 text-left">Master Data</span>
+                <span x-show="!sidebarCollapsed" class="flex-1 text-left">Data Pengguna</span>
                 <i x-show="!sidebarCollapsed" data-lucide="chevron-down" class="size-4 transition" :class="{ 'rotate-180': open }"></i>
             </button>
             <div x-cloak x-show="open && !sidebarCollapsed" x-transition class="ml-5 mt-1 space-y-0.5 border-l border-slate-800 pl-5">
-                @foreach ($masterMenus as $menu)
+                @foreach ($userMenus as $menu)
                     @canany([$menu['permission'], $menu['view']])
                         <a href="{{ route('master-data.index', $menu['resource']) }}"
                            class="sidebar-submenu-link {{ request()->route('resource') === $menu['resource'] ? 'sidebar-submenu-link-active' : '' }}">
@@ -52,6 +56,42 @@
                 @endforeach
             </div>
         </div>
+
+        <div x-data="{ open: {{ request()->routeIs('master-data.*') && in_array(request()->route('resource'), array_column($operationalMenus, 'resource'), true) ? 'true' : 'false' }} }">
+            <button @click="open = !open" class="sidebar-link w-full">
+                <i data-lucide="route" class="size-5 shrink-0"></i>
+                <span x-show="!sidebarCollapsed" class="flex-1 text-left">Operasional Umrah</span>
+                <i x-show="!sidebarCollapsed" data-lucide="chevron-down" class="size-4 transition" :class="{ 'rotate-180': open }"></i>
+            </button>
+            <div x-cloak x-show="open && !sidebarCollapsed" x-transition class="ml-5 mt-1 space-y-0.5 border-l border-slate-800 pl-5">
+                @foreach ($operationalMenus as $menu)
+                    @canany([$menu['permission'], $menu['view']])
+                        <a href="{{ route('master-data.index', $menu['resource']) }}"
+                           class="sidebar-submenu-link {{ request()->route('resource') === $menu['resource'] ? 'sidebar-submenu-link-active' : '' }}">
+                            {{ $menu['label'] }}
+                        </a>
+                    @endcanany
+                @endforeach
+            </div>
+        </div>
+
+        @can('branches.manage')
+            <div x-data="{ open: {{ request()->routeIs('master-data.*') && request()->route('resource') === 'branches' ? 'true' : 'false' }} }">
+                <button @click="open = !open" class="sidebar-link w-full">
+                    <i data-lucide="building-2" class="size-5 shrink-0"></i>
+                    <span x-show="!sidebarCollapsed" class="flex-1 text-left">Organisasi</span>
+                    <i x-show="!sidebarCollapsed" data-lucide="chevron-down" class="size-4 transition" :class="{ 'rotate-180': open }"></i>
+                </button>
+                <div x-cloak x-show="open && !sidebarCollapsed" x-transition class="ml-5 mt-1 space-y-0.5 border-l border-slate-800 pl-5">
+                    @foreach ($organizationMenus as $menu)
+                        <a href="{{ route('master-data.index', $menu['resource']) }}"
+                           class="sidebar-submenu-link {{ request()->route('resource') === $menu['resource'] ? 'sidebar-submenu-link-active' : '' }}">
+                            {{ $menu['label'] }}
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        @endcan
 
         <div x-data="{ open: {{ request()->routeIs('monitoring.*') ? 'true' : 'false' }} }">
             <button @click="open = !open" class="sidebar-link w-full">

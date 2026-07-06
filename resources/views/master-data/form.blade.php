@@ -15,6 +15,12 @@
         'groups' => 'Kode dibuat dari cabang dan tahun keberangkatan, contoh BJM-GRP-2026-001.',
         default => null,
     };
+    $sectionLabel = match (true) {
+        in_array($resource, ['branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs'], true) => 'Data Pengguna',
+        in_array($resource, ['departures', 'groups', 'hotels', 'checkpoints'], true) => 'Operasional Umrah',
+        $resource === 'branches' => 'Organisasi',
+        default => 'Data',
+    };
     $fields = match ($resource) {
         'branches' => [
             ['code','Kode Cabang','text'], ['name','Nama Cabang','text'], ['city','Kota','text'], ['province','Provinsi','text'],
@@ -77,7 +83,7 @@
     <x-slot:title>{{ $editing ? 'Edit' : 'Tambah' }} {{ $definition['label'] }}</x-slot:title>
     <x-slot:header>
         <nav class="mb-1 flex items-center gap-1.5 text-xs font-medium text-slate-500">
-            <a href="{{ route('master-data.index', $resource) }}" class="hover:text-blue-600">Master Data</a>
+            <a href="{{ route('master-data.index', $resource) }}" class="hover:text-blue-600">{{ $sectionLabel }}</a>
             <i data-lucide="chevron-right" class="size-3.5"></i>
             <a href="{{ route('master-data.index', $resource) }}" class="hover:text-blue-600">{{ $definition['label'] }}</a>
             <i data-lucide="chevron-right" class="size-3.5"></i>

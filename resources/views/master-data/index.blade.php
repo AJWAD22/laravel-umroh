@@ -14,6 +14,12 @@
             'groups' => 'users-round',
         ];
         $resourceIcon = $resourceIcons[$resource] ?? 'database';
+        $sectionLabel = match (true) {
+            in_array($resource, ['branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs'], true) => 'Data Pengguna',
+            in_array($resource, ['departures', 'groups', 'hotels', 'checkpoints'], true) => 'Operasional Umrah',
+            $resource === 'branches' => 'Organisasi',
+            default => 'Data',
+        };
     @endphp
 
     <x-slot:title>{{ $definition['label'] }}</x-slot:title>
@@ -26,7 +32,7 @@
                 </span>
                 <div class="min-w-0">
                     <nav class="mb-1 flex items-center gap-1.5 text-xs font-medium text-slate-500">
-                        <span>Master Data</span>
+                        <span>{{ $sectionLabel }}</span>
                         <i data-lucide="chevron-right" class="size-3.5"></i>
                         <span class="truncate text-slate-700 dark:text-slate-300">{{ $definition['label'] }}</span>
                     </nav>

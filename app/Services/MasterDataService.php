@@ -50,7 +50,7 @@ class MasterDataService
             'hotels' => $this->definition(Hotel::class, 'Hotel', 'hotels.manage',
                 ['name' => 'Nama Hotel', 'branch.name' => 'Cabang', 'city' => 'Kota', 'geofence_radius_meters' => 'Radius (m)'],
                 ['name', 'address'], ['name', 'city', 'geofence_radius_meters'], ['branch']),
-            'checkpoints' => $this->definition(Checkpoint::class, 'Tujuan & Checkpoint', 'hotels.manage',
+            'checkpoints' => $this->definition(Checkpoint::class, 'Tujuan & Titik Penting', 'hotels.manage',
                 ['name' => 'Nama Tujuan', 'category' => 'Kategori', 'city' => 'Kota', 'branch.name' => 'Cabang', 'is_active' => 'Aktif'],
                 ['name', 'address', 'description'], ['name', 'category', 'city', 'is_active'], ['branch']),
             'departures' => $this->definition(Departure::class, 'Keberangkatan', 'departures.manage',

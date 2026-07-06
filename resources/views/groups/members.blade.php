@@ -3,7 +3,7 @@
     <x-slot:header>
         <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <nav class="mb-2 text-sm text-slate-500">Master Data / Rombongan / Pembagian Jamaah</nav>
+                <nav class="mb-2 text-sm text-slate-500">Operasional Umrah / Rombongan / Pembagian Jamaah</nav>
                 <h1 class="text-2xl font-bold">{{ $group->name }}</h1>
                 <p class="mt-1 text-sm text-slate-500">{{ $group->departure->program_name }} · {{ $group->branch->name }}</p>
             </div>
