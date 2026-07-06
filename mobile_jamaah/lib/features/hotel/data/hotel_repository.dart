@@ -6,10 +6,14 @@ class HotelRepository {
 
   final ApiClient _api;
 
-  Future<List<Hotel>> getHotels() async {
+  Future<List<Hotel>> getHotels({String? staffRole}) async {
     try {
       final response = await _api.dio.get<Map<String, dynamic>>(
-        '/api/mobile/hotel',
+        staffRole == 'tour-leader'
+            ? '/api/mobile/group-hotels'
+            : staffRole == 'muthawwif'
+            ? '/api/mobile/assigned-hotels'
+            : '/api/mobile/hotel',
       );
       final items = response.data?['data'] as List<dynamic>? ?? [];
       return items

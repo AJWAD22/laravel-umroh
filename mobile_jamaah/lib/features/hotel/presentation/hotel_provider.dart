@@ -11,12 +11,12 @@ class HotelProvider extends ChangeNotifier {
   bool isLoading = false;
   String? error;
 
-  Future<void> load() async {
+  Future<void> load({String? staffRole}) async {
     isLoading = true;
     error = null;
     notifyListeners();
     try {
-      hotels = await _repository.getHotels();
+      hotels = await _repository.getHotels(staffRole: staffRole);
     } catch (exception) {
       error = exception.toString();
     } finally {

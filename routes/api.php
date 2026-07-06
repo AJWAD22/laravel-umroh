@@ -38,6 +38,8 @@ Route::prefix('mobile')->group(function () {
         Route::get('/group-pilgrims', [StaffGroupController::class, 'leaderPilgrims'])->name('api.mobile.leader.pilgrims');
         Route::get('/group-locations', [StaffGroupController::class, 'leaderLocations'])->name('api.mobile.leader.locations');
         Route::get('/group-sos', [StaffGroupController::class, 'leaderSos'])->name('api.mobile.leader.sos');
+        Route::get('/group-hotels', [StaffGroupController::class, 'leaderHotels'])->name('api.mobile.leader.hotels');
+        Route::post('/group-sos/{sosReport}/resolve', [StaffGroupController::class, 'leaderResolveSos'])->name('api.mobile.leader.sos.resolve');
         Route::get('/activation-pilgrims', [ActivationController::class, 'pilgrims'])->name('api.mobile.activation.pilgrims');
         Route::get('/activation-requests', [ActivationController::class, 'pending'])->name('api.mobile.activation.pending');
         Route::post('/activation-requests/{session:public_id}/approve', [ActivationController::class, 'approve'])->name('api.mobile.activation.approve');
@@ -47,5 +49,7 @@ Route::prefix('mobile')->group(function () {
         Route::get('/assigned-pilgrims', [StaffGroupController::class, 'muthawwifPilgrims'])->name('api.mobile.muthawwif.pilgrims');
         Route::get('/assigned-locations', [StaffGroupController::class, 'muthawwifLocations'])->name('api.mobile.muthawwif.locations');
         Route::get('/assigned-sos', [StaffGroupController::class, 'muthawwifSos'])->name('api.mobile.muthawwif.sos');
+        Route::get('/assigned-hotels', [StaffGroupController::class, 'muthawwifHotels'])->name('api.mobile.muthawwif.hotels');
+        Route::post('/assigned-sos/{sosReport}/resolve', [StaffGroupController::class, 'muthawwifResolveSos'])->name('api.mobile.muthawwif.sos.resolve');
     });
 });

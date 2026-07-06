@@ -38,6 +38,11 @@ class StaffProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> resolveSos(String role, int reportId) async {
+    await _repository.resolveSos(role, reportId);
+    await load(role, force: true);
+  }
+
   void clear() {
     pilgrims = const [];
     locations = const [];

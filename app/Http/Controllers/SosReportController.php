@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Http\Requests\ResolveSosReportRequest;
 use App\Models\Branch;
 use App\Models\SosReport;
+use App\Services\SosResolutionService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,8 @@ use Illuminate\View\View;
 
 class SosReportController extends Controller
 {
+    public function __construct(private readonly SosResolutionService $resolution) {}
+
     public function index(Request $request): View
     {
         Gate::authorize('viewAny', SosReport::class);
@@ -70,23 +73,11 @@ class SosReportController extends Controller
             return back()->with('success', 'Laporan SOS sudah diselesaikan sebelumnya.');
         }
 
-        $sosReport->update([
-            'status' => 'resolved',
-            'handled_by' => $request->user()->id,
-            'acknowledged_at' => $sosReport->acknowledged_at ?? now(),
-            'resolved_at' => now(),
-            'resolution_notes' => $request->validated('resolution_notes'),
-        ]);
-
-        $hasOtherActiveSos = SosReport::query()
-            ->where('pilgrim_id', $sosReport->pilgrim_id)
-            ->whereKeyNot($sosReport->id)
-            ->whereIn('status', ['active', 'acknowledged'])
-            ->exists();
-
-        if (! $hasOtherActiveSos) {
-            $sosReport->pilgrim()->update(['monitoring_status' => 'normal']);
-        }
+        $this->resolution->resolve(
+            $sosReport,
+            $request->user(),
+            $request->validated('resolution_notes'),
+        );
 
         return redirect()->route('monitoring.sos.show', $sosReport)
             ->with('success', 'Laporan SOS berhasil ditandai selesai.');

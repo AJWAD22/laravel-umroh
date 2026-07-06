@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/utils/external_navigation.dart';
 import '../domain/staff_pilgrim.dart';
 
 class StaffPilgrimDetailScreen extends StatelessWidget {
@@ -70,6 +72,28 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
                               'dd MMM yyyy, HH:mm',
                             ).format(location!.recordedAt!.toLocal()),
                       ),
+                      const SizedBox(height: 18),
+                      if (pilgrim.phone != null &&
+                          pilgrim.phone!.trim().isNotEmpty)
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () => _copyPhone(context),
+                            icon: const Icon(Icons.copy_rounded),
+                            label: const Text('Salin Nomor WhatsApp'),
+                          ),
+                        ),
+                      if (location != null) ...[
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: () => _navigate(context),
+                            icon: const Icon(Icons.directions_rounded),
+                            label: const Text('Navigasi ke Jamaah'),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -79,6 +103,25 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _copyPhone(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: pilgrim.phone!));
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nomor WhatsApp berhasil disalin.')),
+      );
+    }
+  }
+
+  Future<void> _navigate(BuildContext context) async {
+    final location = pilgrim.location!;
+    final opened = await openNavigation(location.latitude, location.longitude);
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aplikasi navigasi tidak dapat dibuka.')),
+      );
+    }
   }
 }
 

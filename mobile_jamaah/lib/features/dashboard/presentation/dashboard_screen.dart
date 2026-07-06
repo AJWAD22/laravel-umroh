@@ -140,65 +140,76 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(22),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF1D4ED8), Color(0xFF2563EB)],
-                        ),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 30,
-                            backgroundColor: Colors.white24,
-                            backgroundImage:
-                                profile.photoUrl == null
-                                    ? null
-                                    : NetworkImage(profile.photoUrl!),
-                            child:
-                                profile.photoUrl == null
-                                    ? Text(
-                                      profile.name
-                                          .split(' ')
-                                          .take(2)
-                                          .map((word) => word[0])
-                                          .join()
-                                          .toUpperCase(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20,
-                                      ),
-                                    )
-                                    : null,
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Assalamu’alaikum,',
-                                  style: TextStyle(color: Colors.white70),
-                                ),
-                                Text(
-                                  profile.name,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  profile.registrationNumber,
-                                  style: const TextStyle(color: Colors.white70),
-                                ),
-                              ],
+                    GestureDetector(
+                      onTap:
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ProfileScreen(),
                             ),
                           ),
-                        ],
+                      child: Container(
+                        padding: const EdgeInsets.all(22),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF1D4ED8), Color(0xFF2563EB)],
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 30,
+                              backgroundColor: Colors.white24,
+                              backgroundImage:
+                                  profile.photoUrl == null
+                                      ? null
+                                      : NetworkImage(profile.photoUrl!),
+                              child:
+                                  profile.photoUrl == null
+                                      ? Text(
+                                        profile.name
+                                            .split(' ')
+                                            .take(2)
+                                            .map((word) => word[0])
+                                            .join()
+                                            .toUpperCase(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 20,
+                                        ),
+                                      )
+                                      : null,
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Assalamu’alaikum,',
+                                    style: TextStyle(color: Colors.white70),
+                                  ),
+                                  Text(
+                                    profile.name,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    profile.registrationNumber,
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -245,29 +256,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    FilledButton.icon(
-                      onPressed:
-                          tracking.isSending
-                              ? null
-                              : tracking.isTracking
-                              ? tracking.stop
-                              : tracking.start,
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(56),
-                        backgroundColor:
-                            tracking.isTracking ? Colors.orange : null,
-                      ),
-                      icon: Icon(
-                        tracking.isTracking
-                            ? Icons.stop_circle_outlined
-                            : Icons.play_circle_outline,
-                      ),
-                      label: Text(
-                        tracking.isTracking
-                            ? 'Hentikan Tracking'
-                            : 'Mulai Tracking',
-                      ),
-                    ),
                     if (tracking.error != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
@@ -327,17 +315,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => const HotelScreen(),
-                                ),
-                              ),
-                        ),
-                        _MenuCard(
-                          icon: Icons.person_rounded,
-                          label: 'Profil',
-                          onTap:
-                              () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const ProfileScreen(),
                                 ),
                               ),
                         ),

@@ -4,11 +4,14 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/widgets/app_error_view.dart';
+import '../../../core/utils/external_navigation.dart';
 import '../domain/hotel.dart';
 import 'hotel_provider.dart';
 
 class HotelScreen extends StatefulWidget {
-  const HotelScreen({super.key});
+  const HotelScreen({super.key, this.staffRole});
+
+  final String? staffRole;
 
   @override
   State<HotelScreen> createState() => _HotelScreenState();
@@ -19,7 +22,7 @@ class _HotelScreenState extends State<HotelScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback(
-      (_) => context.read<HotelProvider>().load(),
+      (_) => context.read<HotelProvider>().load(staffRole: widget.staffRole),
     );
   }
 
@@ -32,7 +35,10 @@ class _HotelScreenState extends State<HotelScreen> {
           provider.isLoading
               ? const Center(child: CircularProgressIndicator())
               : provider.error != null
-              ? AppErrorView(message: provider.error!, onRetry: provider.load)
+              ? AppErrorView(
+                message: provider.error!,
+                onRetry: () => provider.load(staffRole: widget.staffRole),
+              )
               : provider.hotels.isEmpty
               ? const AppErrorView(
                 message: 'Hotel belum ditentukan untuk keberangkatan Anda.',
@@ -112,6 +118,19 @@ class _HotelContent extends StatelessWidget {
                   '${hotel.longitude?.toStringAsFixed(7) ?? '-'}',
                 ),
                 isThreeLine: true,
+                trailing:
+                    hotel.latitude == null || hotel.longitude == null
+                        ? null
+                        : IconButton.filledTonal(
+                          tooltip: 'Navigasi ke hotel',
+                          onPressed:
+                              () => _navigate(
+                                context,
+                                hotel.latitude!,
+                                hotel.longitude!,
+                              ),
+                          icon: const Icon(Icons.directions_rounded),
+                        ),
               ),
             );
           },
@@ -144,6 +163,19 @@ class _HotelContent extends StatelessWidget {
                     '${hotel.longitude?.toStringAsFixed(7) ?? '-'}',
                   ),
                   isThreeLine: true,
+                  trailing:
+                      hotel.latitude == null || hotel.longitude == null
+                          ? null
+                          : IconButton.filledTonal(
+                            tooltip: 'Navigasi ke hotel',
+                            onPressed:
+                                () => _navigate(
+                                  context,
+                                  hotel.latitude!,
+                                  hotel.longitude!,
+                                ),
+                            icon: const Icon(Icons.directions_rounded),
+                          ),
                 ),
               ),
             ),
@@ -151,5 +183,18 @@ class _HotelContent extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _navigate(
+    BuildContext context,
+    double latitude,
+    double longitude,
+  ) async {
+    final opened = await openNavigation(latitude, longitude);
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aplikasi navigasi tidak dapat dibuka.')),
+      );
+    }
   }
 }

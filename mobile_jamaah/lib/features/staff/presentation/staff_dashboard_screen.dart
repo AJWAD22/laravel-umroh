@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../activation/presentation/leader_activation_screen.dart';
 import '../../auth/presentation/auth_provider.dart';
+import '../../hotel/presentation/hotel_screen.dart';
 import '../../profile/presentation/staff_profile_screen.dart';
 import 'staff_locations_screen.dart';
 import 'staff_pilgrims_screen.dart';
@@ -169,12 +170,14 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                                   ),
                             ),
                           _DashboardMenu(
-                            icon: Icons.badge_rounded,
-                            label: 'Profil Saya',
-                            description: 'Lihat identitas dan data petugas',
+                            icon: Icons.hotel_rounded,
+                            label: 'Hotel Rombongan',
+                            description: 'Lihat dan navigasi menuju hotel',
                             onTap:
-                                () =>
-                                    _open(context, const StaffProfileScreen()),
+                                () => _open(
+                                  context,
+                                  HotelScreen(staffRole: profile.role),
+                                ),
                           ),
                         ],
                       ),
@@ -240,75 +243,83 @@ class _StaffHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0F2F6B), Color(0xFF2563EB)],
-        ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1D4ED8).withValues(alpha: 0.2),
-            blurRadius: 26,
-            offset: const Offset(0, 12),
+    return InkWell(
+      borderRadius: BorderRadius.circular(28),
+      onTap:
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const StaffProfileScreen()),
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 32,
-            backgroundColor: Colors.white.withValues(alpha: 0.16),
-            backgroundImage:
-                photoUrl == null || photoUrl!.isEmpty
-                    ? null
-                    : NetworkImage(photoUrl!),
-            child:
-                photoUrl == null || photoUrl!.isEmpty
-                    ? Text(
-                      _initials(name),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    )
-                    : null,
+      child: Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0F2F6B), Color(0xFF2563EB)],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Selamat bertugas,',
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 7),
-                Text(
-                  '$roleName • $branchName',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
-                ),
-              ],
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1D4ED8).withValues(alpha: 0.2),
+              blurRadius: 26,
+              offset: const Offset(0, 12),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 32,
+              backgroundColor: Colors.white.withValues(alpha: 0.16),
+              backgroundImage:
+                  photoUrl == null || photoUrl!.isEmpty
+                      ? null
+                      : NetworkImage(photoUrl!),
+              child:
+                  photoUrl == null || photoUrl!.isEmpty
+                      ? Text(
+                        _initials(name),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      )
+                      : null,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Selamat bertugas,',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+                  Text(
+                    '$roleName • $branchName',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -58,6 +58,23 @@ class StaffRepository {
     }
   }
 
+  Future<void> resolveSos(String role, int reportId) async {
+    try {
+      await _api.dio.post<void>(
+        _endpoint(
+          role,
+          '/api/mobile/group-sos/$reportId/resolve',
+          '/api/mobile/assigned-sos/$reportId/resolve',
+        ),
+        data: {
+          'resolution_notes': 'Jamaah telah diamankan oleh petugas rombongan.',
+        },
+      );
+    } catch (error) {
+      throw _api.errorFrom(error);
+    }
+  }
+
   List<Map<String, dynamic>> _items(Map<String, dynamic>? response) {
     final data = response?['data'];
     if (data is! List) return const [];

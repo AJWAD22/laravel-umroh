@@ -11,6 +11,7 @@ use App\Models\GroupMember;
 use App\Models\Hotel;
 use App\Models\Muthawwif;
 use App\Models\Pilgrim;
+use App\Models\SosReport;
 use App\Models\TourLeader;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -131,6 +132,44 @@ class MobileApiTest extends TestCase
         $this->withToken($muthawwifToken)
             ->postJson('/api/mobile/send-location', ['latitude' => 0, 'longitude' => 0])
             ->assertForbidden();
+    }
+
+    public function test_assigned_staff_can_view_hotels_and_resolve_group_sos(): void
+    {
+        Event::fake([AdminNotificationCreated::class]);
+        $context = $this->scenario();
+        $pilgrimToken = $this->login($context['pilgrimUser']);
+
+        $this->withToken($pilgrimToken)
+            ->postJson('/api/mobile/sos', [
+                'latitude' => 21.422487,
+                'longitude' => 39.826206,
+                'message' => 'Butuh bantuan petugas.',
+            ])
+            ->assertCreated();
+
+        $report = SosReport::where('pilgrim_id', $context['pilgrim']->id)->firstOrFail();
+        $this->app['auth']->forgetGuards();
+        $leaderToken = $this->login($context['leaderUser']);
+
+        $this->withToken($leaderToken)
+            ->getJson('/api/mobile/group-hotels')
+            ->assertOk()
+            ->assertJsonPath('data.0.name', $context['hotel']->name);
+
+        $this->withToken($leaderToken)
+            ->postJson("/api/mobile/group-sos/{$report->id}/resolve")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'resolved');
+
+        $this->assertSame('resolved', $report->fresh()->status);
+        $this->assertSame($context['leaderUser']->id, $report->fresh()->handled_by);
+        $this->assertSame('normal', $context['pilgrim']->fresh()->monitoring_status);
+
+        $this->withToken($leaderToken)
+            ->getJson('/api/mobile/group-sos')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
     }
 
     public function test_mobile_endpoints_require_a_sanctum_token_and_validation_is_json(): void
