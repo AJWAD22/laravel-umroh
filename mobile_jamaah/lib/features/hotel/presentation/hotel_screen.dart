@@ -4,7 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/widgets/app_error_view.dart';
-import '../../../core/utils/external_navigation.dart';
+import '../../../core/widgets/internal_direction_map_screen.dart';
 import '../domain/hotel.dart';
 import 'hotel_provider.dart';
 
@@ -122,14 +122,13 @@ class _HotelContent extends StatelessWidget {
                     hotel.latitude == null || hotel.longitude == null
                         ? null
                         : IconButton.filledTonal(
-                          tooltip: 'Navigasi ke hotel',
+                          tooltip: 'Lihat arah ke hotel',
                           onPressed:
-                              () => _navigate(
+                              () => _openMap(
                                 context,
-                                hotel.latitude!,
-                                hotel.longitude!,
+                                hotel,
                               ),
-                          icon: const Icon(Icons.directions_rounded),
+                          icon: const Icon(Icons.map_rounded),
                         ),
               ),
             );
@@ -167,14 +166,13 @@ class _HotelContent extends StatelessWidget {
                       hotel.latitude == null || hotel.longitude == null
                           ? null
                           : IconButton.filledTonal(
-                            tooltip: 'Navigasi ke hotel',
+                            tooltip: 'Lihat arah ke hotel',
                             onPressed:
-                                () => _navigate(
+                                () => _openMap(
                                   context,
-                                  hotel.latitude!,
-                                  hotel.longitude!,
+                                  hotel,
                                 ),
-                            icon: const Icon(Icons.directions_rounded),
+                            icon: const Icon(Icons.map_rounded),
                           ),
                 ),
               ),
@@ -185,16 +183,20 @@ class _HotelContent extends StatelessWidget {
     );
   }
 
-  Future<void> _navigate(
-    BuildContext context,
-    double latitude,
-    double longitude,
-  ) async {
-    final opened = await openNavigation(latitude, longitude);
-    if (!opened && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aplikasi navigasi tidak dapat dibuka.')),
-      );
-    }
+  void _openMap(BuildContext context, Hotel hotel) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (_) => InternalDirectionMapScreen(
+              title: hotel.name,
+              target: LatLng(hotel.latitude!, hotel.longitude!),
+              targetName: hotel.name,
+              targetSubtitle: hotel.address,
+              targetIcon: Icons.hotel_rounded,
+              targetColor: Colors.indigo,
+            ),
+      ),
+    );
   }
 }

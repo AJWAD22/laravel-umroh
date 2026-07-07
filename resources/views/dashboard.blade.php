@@ -83,8 +83,8 @@
     <section class="mt-6 grid gap-6 xl:grid-cols-2">
         <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div class="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
-                <h2 class="font-semibold">SOS Terbaru</h2>
-                <p class="mt-1 text-sm text-slate-500">Laporan darurat terbaru dalam cakupan Anda.</p>
+                <h2 class="font-semibold">SOS Aktif Terbaru</h2>
+                <p class="mt-1 text-sm text-slate-500">Hanya menampilkan laporan yang belum diamankan.</p>
             </div>
             @forelse ($recentSos as $sos)
                 <div class="flex items-center gap-4 border-b border-slate-100 px-5 py-4 last:border-0 dark:border-slate-800">
@@ -95,12 +95,28 @@
                         <p class="truncate text-sm font-semibold">{{ $sos->pilgrim->full_name }}</p>
                         <p class="truncate text-xs text-slate-500">{{ $sos->branch->name }} · {{ $sos->reported_at->diffForHumans() }}</p>
                     </div>
-                    <x-status-badge :value="$sos->status === 'active' ? 'sos' : $sos->status"
-                                    :label="$sos->status === 'active' ? 'Aktif' : null" class="ml-auto" />
+                    <div class="ml-auto flex shrink-0 items-center gap-3">
+                        <x-status-badge :value="$sos->status === 'active' ? 'sos' : $sos->status"
+                                        :label="$sos->status === 'active' ? 'Aktif' : null" />
+                        <a href="{{ route('monitoring.sos.show', $sos) }}" class="text-sm font-semibold text-blue-600 hover:text-blue-700">
+                            Detail
+                        </a>
+                        @can('update', $sos)
+                            <form method="POST" action="{{ route('monitoring.sos.resolve', $sos) }}"
+                                  data-confirm-title="Tandai Jamaah Aman"
+                                  data-confirm-message="Laporan SOS akan diselesaikan dan otomatis hilang dari dashboard aktif.">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700">
+                                    Aman
+                                </button>
+                            </form>
+                        @endcan
+                    </div>
                 </div>
             @empty
                 <x-empty-state icon="shield-check" title="Tidak ada laporan SOS"
-                               description="Belum ada laporan darurat dalam cakupan Anda." />
+                               description="Semua laporan darurat dalam cakupan Anda sudah aman." />
             @endforelse
         </article>
 

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/utils/external_navigation.dart';
+import '../../../core/widgets/internal_direction_map_screen.dart';
 import '../domain/checkpoint.dart';
 import 'checkpoint_provider.dart';
 
@@ -229,9 +230,9 @@ class _CheckpointCard extends StatelessWidget {
                   ],
                   const SizedBox(height: 12),
                   FilledButton.icon(
-                    onPressed: () => _navigate(context),
-                    icon: const Icon(Icons.directions_rounded),
-                    label: const Text('Navigasi'),
+                    onPressed: () => _openMap(context),
+                    icon: const Icon(Icons.map_rounded),
+                    label: const Text('Lihat Arah di Peta'),
                   ),
                 ],
               ),
@@ -242,16 +243,21 @@ class _CheckpointCard extends StatelessWidget {
     );
   }
 
-  Future<void> _navigate(BuildContext context) async {
-    final opened = await openNavigation(
-      checkpoint.latitude,
-      checkpoint.longitude,
+  void _openMap(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (_) => InternalDirectionMapScreen(
+              title: checkpoint.name,
+              target: LatLng(checkpoint.latitude, checkpoint.longitude),
+              targetName: checkpoint.name,
+              targetSubtitle: checkpoint.address ?? _categoryLabel(checkpoint.category),
+              targetIcon: _categoryIcon(checkpoint.category),
+              targetColor: Colors.blue,
+            ),
+      ),
     );
-    if (!opened && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aplikasi navigasi tidak dapat dibuka.')),
-      );
-    }
   }
 }
 

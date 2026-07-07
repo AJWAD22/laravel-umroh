@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/utils/external_navigation.dart';
 import '../domain/staff_pilgrim.dart';
 import 'staff_pilgrim_map_screen.dart';
 
@@ -100,16 +99,7 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
                                   ),
                                 ),
                             icon: const Icon(Icons.map_rounded),
-                            label: const Text('Lihat di Peta'),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: () => _navigate(context),
-                            icon: const Icon(Icons.directions_rounded),
-                            label: const Text('Navigasi ke Jamaah'),
+                            label: const Text('Lihat Arah di Peta'),
                           ),
                         ),
                       ],
@@ -133,15 +123,6 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _navigate(BuildContext context) async {
-    final location = pilgrim.location!;
-    final opened = await openNavigation(location.latitude, location.longitude);
-    if (!opened && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aplikasi navigasi tidak dapat dibuka.')),
-      );
-    }
-  }
 }
 
 class _Row extends StatelessWidget {

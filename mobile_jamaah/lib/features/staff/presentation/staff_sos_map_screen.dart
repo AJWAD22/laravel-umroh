@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/utils/external_navigation.dart';
+import '../../../core/widgets/internal_direction_map_screen.dart';
 import '../../auth/presentation/auth_provider.dart';
 import '../domain/staff_sos.dart';
 import 'staff_provider.dart';
@@ -33,45 +32,14 @@ class _StaffSosMapScreenState extends State<StaffSosMapScreen> {
               'dd MMM yyyy, HH:mm',
             ).format(report.reportedAt!.toLocal());
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Lokasi SOS')),
-      body: Stack(
-        children: [
-          FlutterMap(
-            options: MapOptions(initialCenter: point, initialZoom: 16),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'id.umrahmonitor.umrah_jamaah',
-              ),
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    point: point,
-                    width: 72,
-                    height: 72,
-                    child: const Icon(
-                      Icons.sos_rounded,
-                      size: 54,
-                      color: Colors.red,
-                      shadows: [Shadow(color: Colors.white, blurRadius: 10)],
-                    ),
-                  ),
-                ],
-              ),
-              RichAttributionWidget(
-                attributions: const [
-                  TextSourceAttribution('OpenStreetMap contributors'),
-                ],
-              ),
-            ],
-          ),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 20,
-            child: SafeArea(
-              child: Card(
+    return InternalDirectionMapScreen(
+      title: 'Lokasi SOS',
+      target: point,
+      targetName: report.pilgrim.fullName,
+      targetSubtitle: time,
+      targetIcon: Icons.sos_rounded,
+      targetColor: Colors.red,
+      bottom: Card(
                 elevation: 8,
                 child: Padding(
                   padding: const EdgeInsets.all(18),
@@ -126,11 +94,10 @@ class _StaffSosMapScreenState extends State<StaffSosMapScreen> {
                           if (report.pilgrim.phone != null &&
                               report.pilgrim.phone!.trim().isNotEmpty)
                             const SizedBox(width: 8),
-                          Expanded(
-                            child: FilledButton.icon(
-                              onPressed: _navigate,
-                              icon: const Icon(Icons.directions_rounded),
-                              label: const Text('Navigasi'),
+                          const Expanded(
+                            child: Text(
+                              'Ikuti titik hijau Anda mendekati titik SOS di peta.',
+                              style: TextStyle(fontWeight: FontWeight.w700),
                             ),
                           ),
                         ],
@@ -161,10 +128,6 @@ class _StaffSosMapScreenState extends State<StaffSosMapScreen> {
                   ),
                 ),
               ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -173,18 +136,6 @@ class _StaffSosMapScreenState extends State<StaffSosMapScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Nomor WhatsApp berhasil disalin.')),
-      );
-    }
-  }
-
-  Future<void> _navigate() async {
-    final opened = await openNavigation(
-      widget.report.latitude,
-      widget.report.longitude,
-    );
-    if (!opened && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aplikasi navigasi tidak dapat dibuka.')),
       );
     }
   }

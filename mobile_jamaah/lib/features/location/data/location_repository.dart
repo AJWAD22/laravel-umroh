@@ -34,6 +34,17 @@ class LocationRepository {
     );
   }
 
+  Future<Stream<Position>> navigationPositions() async {
+    await _ensureLocationPermission();
+
+    return Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 3,
+      ),
+    );
+  }
+
   Future<void> _ensureLocationPermission() async {
     if (!await Geolocator.isLocationServiceEnabled()) {
       throw Exception('Layanan lokasi perangkat belum aktif.');

@@ -122,6 +122,7 @@ class DashboardService
         return SosReport::query()
             ->with(['pilgrim:id,full_name,registration_number', 'branch:id,name'])
             ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
+            ->whereIn('status', ['active', 'acknowledged'])
             ->latest('reported_at')
             ->limit(5)
             ->get();
