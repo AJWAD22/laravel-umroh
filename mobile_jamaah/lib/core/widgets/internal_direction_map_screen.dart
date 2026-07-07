@@ -171,6 +171,8 @@ class _InternalDirectionMapScreenState
                   _DefaultInfoCard(
                     targetName: widget.targetName,
                     targetSubtitle: widget.targetSubtitle,
+                    myPoint: myPoint,
+                    target: widget.target,
                   ),
             ),
           ),
@@ -290,13 +292,25 @@ class _StatusBanner extends StatelessWidget {
 }
 
 class _DefaultInfoCard extends StatelessWidget {
-  const _DefaultInfoCard({required this.targetName, this.targetSubtitle});
+  const _DefaultInfoCard({
+    required this.targetName,
+    required this.target,
+    required this.myPoint,
+    this.targetSubtitle,
+  });
 
   final String targetName;
+  final LatLng target;
+  final LatLng? myPoint;
   final String? targetSubtitle;
 
   @override
   Widget build(BuildContext context) {
+    final distanceText =
+        myPoint == null
+            ? 'Menunggu posisi saya'
+            : _formatDistance(const Distance().as(LengthUnit.Meter, myPoint!, target));
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -312,9 +326,32 @@ class _DefaultInfoCard extends StatelessWidget {
               const SizedBox(height: 6),
               Text(targetSubtitle!),
             ],
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.social_distance_rounded, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Jarak lurus: $distanceText',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  static String _formatDistance(double meters) {
+    if (meters >= 1000) return '${(meters / 1000).toStringAsFixed(2)} km';
+    return '${meters.round()} m';
   }
 }

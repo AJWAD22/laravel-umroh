@@ -73,7 +73,7 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Pilih tujuan, lalu buka navigasi dari lokasi Anda saat ini.',
+              'Pilih tujuan, lalu buka peta dari posisi Anda saat ini.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 18),
@@ -81,7 +81,7 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
               controller: _searchController,
               onChanged: (value) => setState(() => _query = value),
               decoration: const InputDecoration(
-                hintText: 'Cari Masjidil Haram, hotel, rumah sakit...',
+                hintText: 'Cari Masjidil Haram, hotel, klinik...',
                 prefixIcon: Icon(Icons.search_rounded),
               ),
             ),
@@ -137,7 +137,8 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
                       ),
                     ],
                     onChanged:
-                        (value) => setState(() => _category = value ?? 'semua'),
+                        (value) =>
+                            setState(() => _category = value ?? 'semua'),
                   ),
                 ),
               ],
@@ -208,21 +209,41 @@ class _CheckpointCard extends StatelessWidget {
                     checkpoint.name,
                     style: const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${_categoryLabel(checkpoint.category)} • '
-                    '${_cityLabel(checkpoint.city)}',
-                    style: Theme.of(context).textTheme.bodySmall,
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _InfoChip(
+                        icon: Icons.category_rounded,
+                        label:
+                            '${_categoryLabel(checkpoint.category)} • ${_cityLabel(checkpoint.city)}',
+                      ),
+                      _InfoChip(
+                        icon:
+                            checkpoint.groupId != null
+                                ? Icons.groups_rounded
+                                : checkpoint.departureId != null
+                                ? Icons.flight_takeoff_rounded
+                                : Icons.public_rounded,
+                        label:
+                            checkpoint.groupId != null
+                                ? 'Khusus rombongan'
+                                : checkpoint.departureId != null
+                                ? 'Khusus keberangkatan'
+                                : 'Umum cabang',
+                      ),
+                    ],
                   ),
                   if (checkpoint.address?.trim().isNotEmpty ?? false) ...[
-                    const SizedBox(height: 7),
+                    const SizedBox(height: 10),
                     Text(checkpoint.address!),
                   ],
                   if (checkpoint.description?.trim().isNotEmpty ?? false) ...[
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 6),
                     Text(
                       checkpoint.description!,
                       style: Theme.of(context).textTheme.bodySmall,
@@ -252,10 +273,37 @@ class _CheckpointCard extends StatelessWidget {
               title: checkpoint.name,
               target: LatLng(checkpoint.latitude, checkpoint.longitude),
               targetName: checkpoint.name,
-              targetSubtitle: checkpoint.address ?? _categoryLabel(checkpoint.category),
+              targetSubtitle:
+                  checkpoint.address ?? _categoryLabel(checkpoint.category),
               targetIcon: _categoryIcon(checkpoint.category),
               targetColor: Colors.blue,
             ),
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  const _InfoChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14),
+          const SizedBox(width: 6),
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
+        ],
       ),
     );
   }

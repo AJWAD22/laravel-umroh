@@ -2,6 +2,21 @@
 
 @php
     $value = $column === 'activation_pin' ? $record->activationPin() : data_get($record, $column);
+    $categoryLabels = [
+        'ibadah' => 'Tempat Ibadah',
+        'hotel' => 'Hotel',
+        'titik_kumpul' => 'Titik Kumpul',
+        'kesehatan' => 'Kesehatan',
+        'transportasi' => 'Transportasi',
+        'belanja' => 'Belanja',
+        'lainnya' => 'Lainnya',
+    ];
+    $cityLabels = [
+        'makkah' => 'Makkah',
+        'madinah' => 'Madinah',
+        'jeddah' => 'Jeddah',
+        'other' => 'Lainnya',
+    ];
 @endphp
 
 @if ($column === 'photo_path')
@@ -28,6 +43,14 @@
     <x-status-badge :value="$value ? 'yes' : 'no'" />
 @elseif ($column === 'status')
     <x-status-badge :value="$value" />
+@elseif ($column === 'category')
+    <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+        {{ $categoryLabels[$value] ?? (filled($value) ? $value : '—') }}
+    </span>
+@elseif ($column === 'city')
+    <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+        {{ $cityLabels[$value] ?? (filled($value) ? $value : '—') }}
+    </span>
 @elseif ($value instanceof \Carbon\CarbonInterface)
     <span class="text-slate-700 dark:text-slate-200">{{ $value->translatedFormat('d M Y') }}</span>
 @else

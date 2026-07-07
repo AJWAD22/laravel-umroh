@@ -121,11 +121,11 @@ class MobileDemoSeeder extends Seeder
             ]);
         });
 
-        collect([
+        $groups = collect([
             ['code' => 'GRP-MOBILE-001', 'name' => 'Rombongan Demo Al-Ikhlas', 'notes' => 'Demo rombongan utama.'],
             ['code' => 'GRP-MOBILE-002', 'name' => 'Rombongan Demo Al-Amin', 'notes' => 'Demo rombongan keluarga.'],
             ['code' => 'GRP-MOBILE-003', 'name' => 'Rombongan Demo Safwah', 'notes' => 'Demo rombongan lansia.'],
-        ])->each(function (array $data, int $index) use ($branch, $departures, $leaders, $muthawwifs, $pilgrims): void {
+        ])->map(function (array $data, int $index) use ($branch, $departures, $leaders, $muthawwifs, $pilgrims): Group {
             $group = Group::query()->updateOrCreate(
                 ['code' => $data['code']],
                 [
@@ -144,15 +144,18 @@ class MobileDemoSeeder extends Seeder
                 ['group_id' => $group->id, 'pilgrim_id' => $pilgrims[$index]->id],
                 ['status' => 'active', 'joined_at' => now(), 'left_at' => null],
             );
-        });
+            return $group;
+        })->values();
 
         collect([
-            ['name' => 'Masjidil Haram', 'category' => 'ibadah', 'city' => 'makkah', 'address' => 'Makkah', 'lat' => 21.4225000, 'lng' => 39.8262000, 'description' => 'Patokan utama ibadah di Makkah.'],
-            ['name' => 'Masjid Nabawi', 'category' => 'ibadah', 'city' => 'madinah', 'address' => 'Madinah', 'lat' => 24.4672000, 'lng' => 39.6111000, 'description' => 'Patokan utama ibadah di Madinah.'],
-            ['name' => 'Titik Kumpul Bus', 'category' => 'titik_kumpul', 'city' => 'makkah', 'address' => 'Area parkir bus rombongan', 'lat' => 21.4199000, 'lng' => 39.8237000, 'description' => 'Contoh titik kumpul setelah kegiatan.'],
+            ['name' => 'Masjidil Haram', 'category' => 'ibadah', 'city' => 'makkah', 'address' => 'Makkah', 'lat' => 21.4225000, 'lng' => 39.8262000, 'description' => 'Patokan umum ibadah di Makkah.', 'departure' => null, 'group' => null],
+            ['name' => 'Masjid Nabawi', 'category' => 'ibadah', 'city' => 'madinah', 'address' => 'Madinah', 'lat' => 24.4672000, 'lng' => 39.6111000, 'description' => 'Patokan umum ibadah di Madinah.', 'departure' => $departures[1]->id, 'group' => null],
+            ['name' => 'Titik Kumpul Bus Al-Ikhlas', 'category' => 'titik_kumpul', 'city' => 'makkah', 'address' => 'Area parkir bus rombongan Al-Ikhlas', 'lat' => 21.4199000, 'lng' => 39.8237000, 'description' => 'Titik kumpul khusus rombongan Al-Ikhlas setelah kegiatan.', 'departure' => $departures[0]->id, 'group' => $groups[0]->id],
         ])->each(fn (array $data): Checkpoint => Checkpoint::query()->updateOrCreate(
             ['branch_id' => $branch->id, 'name' => $data['name']],
             [
+                'departure_id' => $data['departure'],
+                'group_id' => $data['group'],
                 'category' => $data['category'],
                 'city' => $data['city'],
                 'address' => $data['address'],

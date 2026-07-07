@@ -13,6 +13,8 @@ class Checkpoint extends Model
 
     protected $fillable = [
         'branch_id',
+        'departure_id',
+        'group_id',
         'name',
         'category',
         'city',
@@ -35,5 +37,15 @@ class Checkpoint extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public function departure(): BelongsTo
+    {
+        return $this->belongsTo(Departure::class);
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
     }
 }

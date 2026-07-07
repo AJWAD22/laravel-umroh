@@ -96,6 +96,8 @@ class MasterDataRequest extends FormRequest
             ],
             'checkpoints' => [
                 'branch_id' => ['required', 'exists:branches,id'],
+                'departure_id' => ['nullable', Rule::exists('departures', 'id')->where('branch_id', $branchId)],
+                'group_id' => ['nullable', Rule::exists('groups', 'id')->where('branch_id', $branchId)],
                 'name' => ['required', 'string', 'max:255'],
                 'category' => ['required', Rule::in(['ibadah', 'hotel', 'titik_kumpul', 'kesehatan', 'transportasi', 'belanja', 'lainnya'])],
                 'city' => ['required', Rule::in(['makkah', 'madinah', 'jeddah', 'other'])],

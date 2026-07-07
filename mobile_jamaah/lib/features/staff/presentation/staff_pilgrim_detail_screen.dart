@@ -13,6 +13,8 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final location = pilgrim.location;
+    final isSos = pilgrim.monitoringStatus == 'sos';
+
     return Scaffold(
       appBar: AppBar(title: const Text('Detail Jamaah')),
       body: ListView(
@@ -20,92 +22,184 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
         children: [
           Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 620),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 42,
-                        backgroundImage:
-                            pilgrim.photoUrl == null
-                                ? null
-                                : NetworkImage(pilgrim.photoUrl!),
-                        child:
-                            pilgrim.photoUrl == null
-                                ? Text(
-                                  pilgrim.fullName
-                                      .substring(0, 1)
-                                      .toUpperCase(),
-                                  style: const TextStyle(fontSize: 28),
-                                )
-                                : null,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        pilgrim.fullName,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Divider(height: 32),
-                      _Row('Nomor registrasi', pilgrim.registrationNumber),
-                      _Row('Telepon', pilgrim.phone ?? '-'),
-                      _Row('Cabang', pilgrim.branchName ?? '-'),
-                      _Row('Status', pilgrim.status.toUpperCase()),
-                      _Row(
-                        'Monitoring',
-                        pilgrim.monitoringStatus.toUpperCase(),
-                      ),
-                      _Row(
-                        'Lokasi terakhir',
-                        location == null
-                            ? 'Belum tersedia'
-                            : '${location.latitude}, ${location.longitude}',
-                      ),
-                      _Row(
-                        'Waktu lokasi',
-                        location?.recordedAt == null
-                            ? '-'
-                            : DateFormat(
-                              'dd MMM yyyy, HH:mm',
-                            ).format(location!.recordedAt!.toLocal()),
-                      ),
-                      const SizedBox(height: 18),
-                      if (pilgrim.phone != null &&
-                          pilgrim.phone!.trim().isNotEmpty)
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () => _copyPhone(context),
-                            icon: const Icon(Icons.copy_rounded),
-                            label: const Text('Salin Nomor WhatsApp'),
+              constraints: const BoxConstraints(maxWidth: 680),
+              child: Column(
+                children: [
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 38,
+                            backgroundImage:
+                                pilgrim.photoUrl == null
+                                    ? null
+                                    : NetworkImage(pilgrim.photoUrl!),
+                            child:
+                                pilgrim.photoUrl == null
+                                    ? Text(
+                                      pilgrim.fullName
+                                          .substring(0, 1)
+                                          .toUpperCase(),
+                                      style: const TextStyle(fontSize: 26),
+                                    )
+                                    : null,
                           ),
-                        ),
-                      if (location != null) ...[
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed:
-                                () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => StaffPilgrimMapScreen(
-                                          pilgrim: pilgrim,
-                                        ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  pilgrim.fullName,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w800,
                                   ),
                                 ),
-                            icon: const Icon(Icons.map_rounded),
-                            label: const Text('Lihat Arah di Peta'),
+                                const SizedBox(height: 4),
+                                Text(
+                                  pilgrim.registrationNumber,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                                const SizedBox(height: 10),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    _StatusChip(
+                                      icon:
+                                          isSos
+                                              ? Icons.sos_rounded
+                                              : Icons.verified_user_rounded,
+                                      label: isSos ? 'SOS Aktif' : 'Normal',
+                                      color: isSos ? Colors.red : Colors.green,
+                                    ),
+                                    _StatusChip(
+                                      icon: Icons.location_on_rounded,
+                                      label:
+                                          location == null
+                                              ? 'Belum ada lokasi'
+                                              : 'Lokasi tersedia',
+                                      color:
+                                          location == null
+                                              ? Colors.orange
+                                              : Colors.blue,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ],
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Informasi Kontak',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 8),
+                          _InfoRow(
+                            icon: Icons.phone_outlined,
+                            label: 'WhatsApp',
+                            value: pilgrim.phone ?? '-',
+                          ),
+                          _InfoRow(
+                            icon: Icons.apartment_rounded,
+                            label: 'Cabang',
+                            value: pilgrim.branchName ?? '-',
+                          ),
+                          if (pilgrim.phone != null &&
+                              pilgrim.phone!.trim().isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                onPressed: () => _copyPhone(context),
+                                icon: const Icon(Icons.copy_rounded),
+                                label: const Text('Salin Nomor WhatsApp'),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Status Lokasi',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 8),
+                          if (location == null)
+                            const _EmptyLocation()
+                          else ...[
+                            _InfoRow(
+                              icon: Icons.schedule_rounded,
+                              label: 'Update terakhir',
+                              value:
+                                  location.recordedAt == null
+                                      ? '-'
+                                      : DateFormat(
+                                        'dd MMM yyyy, HH:mm',
+                                      ).format(location.recordedAt!.toLocal()),
+                            ),
+                            _InfoRow(
+                              icon: Icons.gps_fixed_rounded,
+                              label: 'Koordinat',
+                              value:
+                                  '${location.latitude.toStringAsFixed(6)}, ${location.longitude.toStringAsFixed(6)}',
+                            ),
+                            _InfoRow(
+                              icon: Icons.radar_rounded,
+                              label: 'Akurasi GPS',
+                              value:
+                                  location.accuracy == null
+                                      ? '-'
+                                      : '±${location.accuracy!.round()} meter',
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.icon(
+                                onPressed:
+                                    () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (_) => StaffPilgrimMapScreen(
+                                              pilgrim: pilgrim,
+                                            ),
+                                      ),
+                                    ),
+                                icon: const Icon(Icons.map_rounded),
+                                label: const Text('Lihat di Peta Internal'),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -122,18 +216,79 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
       );
     }
   }
-
 }
 
-class _Row extends StatelessWidget {
-  const _Row(this.label, this.value);
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(color: color, fontWeight: FontWeight.w800),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
   final String label;
   final String value;
 
   @override
-  Widget build(BuildContext context) => ListTile(
-    contentPadding: EdgeInsets.zero,
-    title: Text(label),
-    subtitle: Text(value),
-  );
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon),
+      title: Text(label),
+      subtitle: Text(value),
+    );
+  }
+}
+
+class _EmptyLocation extends StatelessWidget {
+  const _EmptyLocation();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Text(
+        'Lokasi jamaah belum tersedia. Minta jamaah membuka aplikasi dan mengaktifkan izin lokasi.',
+      ),
+    );
+  }
 }

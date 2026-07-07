@@ -51,8 +51,8 @@ class MasterDataService
                 ['name' => 'Nama Hotel', 'branch.name' => 'Cabang', 'city' => 'Kota', 'geofence_radius_meters' => 'Radius (m)'],
                 ['name', 'address'], ['name', 'city', 'geofence_radius_meters'], ['branch']),
             'checkpoints' => $this->definition(Checkpoint::class, 'Tujuan & Titik Penting', 'hotels.manage',
-                ['name' => 'Nama Tujuan', 'category' => 'Kategori', 'city' => 'Kota', 'branch.name' => 'Cabang', 'is_active' => 'Aktif'],
-                ['name', 'address', 'description'], ['name', 'category', 'city', 'is_active'], ['branch']),
+                ['name' => 'Nama Tujuan', 'category' => 'Kategori', 'city' => 'Kota', 'branch.name' => 'Cabang', 'departure.program_name' => 'Keberangkatan', 'group.name' => 'Rombongan', 'is_active' => 'Aktif'],
+                ['name', 'address', 'description'], ['name', 'category', 'city', 'is_active'], ['branch', 'departure', 'group']),
             'departures' => $this->definition(Departure::class, 'Keberangkatan', 'departures.manage',
                 ['code' => 'Kode', 'program_name' => 'Program', 'branch.name' => 'Cabang', 'departure_date' => 'Berangkat', 'status' => 'Status'],
                 ['code', 'program_name', 'departure_airport'], ['code', 'program_name', 'departure_date', 'status'], ['branch']),
@@ -208,6 +208,8 @@ class MasterDataService
                 ->where('is_active', true)->orderBy('full_name')->pluck('full_name', 'id')->all(),
             'muthawwifs' => Muthawwif::query()->when($branchId, fn (Builder $q) => $q->where('branch_id', $branchId))
                 ->where('is_active', true)->orderBy('full_name')->pluck('full_name', 'id')->all(),
+            'groups' => Group::query()->when($branchId, fn (Builder $q) => $q->where('branch_id', $branchId))
+                ->where('is_active', true)->orderBy('name')->pluck('name', 'id')->all(),
         ];
     }
 

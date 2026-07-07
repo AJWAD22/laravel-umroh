@@ -56,6 +56,8 @@
             ['geofence_radius_meters','Radius Geofence (meter)','number'],
         ],
         'checkpoints' => [...$commonBranch,
+            ['departure_id','Khusus Keberangkatan','select',$options['departures']],
+            ['group_id','Khusus Rombongan','select',$options['groups']],
             ['name','Nama Tujuan','text'],
             ['category','Kategori','select',[
                 'ibadah'=>'Tempat Ibadah','hotel'=>'Hotel','titik_kumpul'=>'Titik Kumpul',

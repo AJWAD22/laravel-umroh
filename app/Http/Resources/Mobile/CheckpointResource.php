@@ -11,6 +11,8 @@ class CheckpointResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'departure_id' => $this->departure_id,
+            'group_id' => $this->group_id,
             'name' => $this->name,
             'category' => $this->category,
             'city' => $this->city,

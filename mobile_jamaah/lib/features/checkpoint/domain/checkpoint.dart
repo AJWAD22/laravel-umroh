@@ -6,6 +6,8 @@ class Checkpoint {
     required this.city,
     required this.latitude,
     required this.longitude,
+    this.departureId,
+    this.groupId,
     this.address,
     this.description,
   });
@@ -16,6 +18,8 @@ class Checkpoint {
   final String city;
   final double latitude;
   final double longitude;
+  final int? departureId;
+  final int? groupId;
   final String? address;
   final String? description;
 
@@ -26,6 +30,8 @@ class Checkpoint {
     city: json['city']?.toString() ?? 'other',
     latitude: double.tryParse(json['latitude']?.toString() ?? '') ?? 0,
     longitude: double.tryParse(json['longitude']?.toString() ?? '') ?? 0,
+    departureId: int.tryParse(json['departure_id']?.toString() ?? ''),
+    groupId: int.tryParse(json['group_id']?.toString() ?? ''),
     address: json['address']?.toString(),
     description: json['description']?.toString(),
   );
