@@ -22,9 +22,9 @@ class MobileDemoSeeder extends Seeder
         $branch = Branch::query()->where('code', 'BJM')->firstOrFail();
 
         $pilgrims = collect([
-            ['email' => 'jamaah@umrah.test', 'name' => 'Jamaah Mobile 001', 'number' => 'JMH-MOBILE-001', 'gender' => 'male', 'phone' => '081200000001'],
-            ['email' => 'jamaah002@umrah.test', 'name' => 'Jamaah Mobile 002', 'number' => 'JMH-MOBILE-002', 'gender' => 'female', 'phone' => '081200000002'],
-            ['email' => 'jamaah003@umrah.test', 'name' => 'Jamaah Mobile 003', 'number' => 'JMH-MOBILE-003', 'gender' => 'male', 'phone' => '081200000003'],
+            ['email' => 'ahmad.fauzi@umrah.test', 'name' => 'Ahmad Fauzi Rahman', 'number' => 'BJM-JMH-2026-001', 'gender' => 'male', 'phone' => '081234567801'],
+            ['email' => 'siti.aminah@umrah.test', 'name' => 'Siti Aminah Hasanah', 'number' => 'BJM-JMH-2026-002', 'gender' => 'female', 'phone' => '081234567802'],
+            ['email' => 'muhammad.arsyad@umrah.test', 'name' => 'Muhammad Arsyad Al-Banjari', 'number' => 'BJM-JMH-2026-003', 'gender' => 'male', 'phone' => '081234567803'],
         ])->map(function (array $data) use ($branch): Pilgrim {
             $user = $this->user($branch, $data['email'], $data['name'], MobileRole::Pilgrim);
 
@@ -42,9 +42,9 @@ class MobileDemoSeeder extends Seeder
         })->values();
 
         $leaders = collect([
-            ['email' => 'tourleader@umrah.test', 'name' => 'Tour Leader Mobile 001', 'number' => 'TL-MOBILE-001', 'phone' => '082100000001'],
-            ['email' => 'tourleader002@umrah.test', 'name' => 'Tour Leader Mobile 002', 'number' => 'TL-MOBILE-002', 'phone' => '082100000002'],
-            ['email' => 'tourleader003@umrah.test', 'name' => 'Tour Leader Mobile 003', 'number' => 'TL-MOBILE-003', 'phone' => '082100000003'],
+            ['email' => 'rahman.hakim@umrah.test', 'name' => 'H. Rahman Hakim', 'number' => 'BJM-TL-2026-001', 'phone' => '082156780101'],
+            ['email' => 'nurul.hidayah@umrah.test', 'name' => 'Nurul Hidayah, S.E.', 'number' => 'BJM-TL-2026-002', 'phone' => '082156780102'],
+            ['email' => 'zainal.abidin@umrah.test', 'name' => 'Zainal Abidin', 'number' => 'BJM-TL-2026-003', 'phone' => '082156780103'],
         ])->map(function (array $data) use ($branch): TourLeader {
             $user = $this->user($branch, $data['email'], $data['name'], MobileRole::TourLeader);
 
@@ -61,9 +61,9 @@ class MobileDemoSeeder extends Seeder
         })->values();
 
         $muthawwifs = collect([
-            ['email' => 'muthawwif@umrah.test', 'name' => 'Muthawwif Mobile 001', 'number' => 'MTF-MOBILE-001', 'phone' => '083100000001'],
-            ['email' => 'muthawwif002@umrah.test', 'name' => 'Muthawwif Mobile 002', 'number' => 'MTF-MOBILE-002', 'phone' => '083100000002'],
-            ['email' => 'muthawwif003@umrah.test', 'name' => 'Muthawwif Mobile 003', 'number' => 'MTF-MOBILE-003', 'phone' => '083100000003'],
+            ['email' => 'abdullah.hamdan@umrah.test', 'name' => 'Ust. Abdullah Hamdan', 'number' => 'BJM-MTF-2026-001', 'phone' => '083156780201'],
+            ['email' => 'yusuf.banjari@umrah.test', 'name' => 'Ust. Yusuf Al-Banjari', 'number' => 'BJM-MTF-2026-002', 'phone' => '083156780202'],
+            ['email' => 'maryam.salimah@umrah.test', 'name' => 'Ustzh. Maryam Salimah', 'number' => 'BJM-MTF-2026-003', 'phone' => '083156780203'],
         ])->map(function (array $data) use ($branch): Muthawwif {
             $user = $this->user($branch, $data['email'], $data['name'], MobileRole::Muthawwif);
 
@@ -81,9 +81,9 @@ class MobileDemoSeeder extends Seeder
         })->values();
 
         $departures = collect([
-            ['code' => 'DEP-MOBILE-001', 'program' => 'Umrah Reguler Demo', 'month' => 1, 'airport' => 'BDJ', 'arrival' => 'JED', 'quota' => 45],
-            ['code' => 'DEP-MOBILE-002', 'program' => 'Umrah Plus Thaif Demo', 'month' => 2, 'airport' => 'BDJ', 'arrival' => 'MED', 'quota' => 40],
-            ['code' => 'DEP-MOBILE-003', 'program' => 'Umrah Ramadhan Demo', 'month' => 3, 'airport' => 'BDJ', 'arrival' => 'JED', 'quota' => 50],
+            ['code' => 'BJM-DEP-2026-001', 'program' => 'Umrah Reguler 12 Hari - Banjarmasin', 'month' => 1, 'airport' => 'BDJ', 'arrival' => 'JED', 'quota' => 45],
+            ['code' => 'BJM-DEP-2026-002', 'program' => 'Umrah Plus Thaif 13 Hari', 'month' => 2, 'airport' => 'BDJ', 'arrival' => 'MED', 'quota' => 40],
+            ['code' => 'BJM-DEP-2026-003', 'program' => 'Umrah Ramadhan Awal 14 Hari', 'month' => 3, 'airport' => 'BDJ', 'arrival' => 'JED', 'quota' => 50],
         ])->map(fn (array $data): Departure => Departure::query()->updateOrCreate(
             ['code' => $data['code']],
             [
@@ -99,9 +99,9 @@ class MobileDemoSeeder extends Seeder
         ))->values();
 
         $hotels = collect([
-            ['name' => 'Hotel Demo Makkah', 'city' => 'makkah', 'address' => 'Area Ajyad, Makkah', 'lat' => 21.4205000, 'lng' => 39.8245000],
-            ['name' => 'Hotel Demo Madinah', 'city' => 'madinah', 'address' => 'Area Markaziyah, Madinah', 'lat' => 24.4709000, 'lng' => 39.6122000],
-            ['name' => 'Hotel Transit Jeddah', 'city' => 'other', 'address' => 'Dekat Bandara Jeddah', 'lat' => 21.6700000, 'lng' => 39.1520000],
+            ['name' => 'Al Safwah Tower Makkah', 'city' => 'makkah', 'address' => 'Ajyad, sekitar Masjidil Haram, Makkah', 'lat' => 21.4206000, 'lng' => 39.8249000],
+            ['name' => 'Dallah Taibah Madinah', 'city' => 'madinah', 'address' => 'Markaziyah Utara, sekitar Masjid Nabawi, Madinah', 'lat' => 24.4707000, 'lng' => 39.6119000],
+            ['name' => 'Hotel Transit Al Hamra Jeddah', 'city' => 'other', 'address' => 'Area Al Hamra, Jeddah', 'lat' => 21.5269000, 'lng' => 39.1728000],
         ])->map(fn (array $data): Hotel => Hotel::query()->updateOrCreate(
             ['branch_id' => $branch->id, 'name' => $data['name']],
             [
@@ -122,9 +122,9 @@ class MobileDemoSeeder extends Seeder
         });
 
         $groups = collect([
-            ['code' => 'GRP-MOBILE-001', 'name' => 'Rombongan Demo Al-Ikhlas', 'notes' => 'Demo rombongan utama.'],
-            ['code' => 'GRP-MOBILE-002', 'name' => 'Rombongan Demo Al-Amin', 'notes' => 'Demo rombongan keluarga.'],
-            ['code' => 'GRP-MOBILE-003', 'name' => 'Rombongan Demo Safwah', 'notes' => 'Demo rombongan lansia.'],
+            ['code' => 'BJM-GRP-2026-001', 'name' => 'Rombongan Al-Ikhlas Banjarmasin', 'notes' => 'Rombongan reguler keluarga dan jamaah umum.'],
+            ['code' => 'BJM-GRP-2026-002', 'name' => 'Rombongan Al-Amin Martapura', 'notes' => 'Rombongan plus Thaif dengan pendamping intensif.'],
+            ['code' => 'BJM-GRP-2026-003', 'name' => 'Rombongan Safwah Ramadhan', 'notes' => 'Rombongan Ramadhan dengan prioritas jamaah lansia.'],
         ])->map(function (array $data, int $index) use ($branch, $departures, $leaders, $muthawwifs, $pilgrims): Group {
             $group = Group::query()->updateOrCreate(
                 ['code' => $data['code']],
@@ -148,9 +148,9 @@ class MobileDemoSeeder extends Seeder
         })->values();
 
         collect([
-            ['name' => 'Masjidil Haram', 'category' => 'ibadah', 'city' => 'makkah', 'address' => 'Makkah', 'lat' => 21.4225000, 'lng' => 39.8262000, 'description' => 'Patokan umum ibadah di Makkah.', 'departure' => null, 'group' => null],
-            ['name' => 'Masjid Nabawi', 'category' => 'ibadah', 'city' => 'madinah', 'address' => 'Madinah', 'lat' => 24.4672000, 'lng' => 39.6111000, 'description' => 'Patokan umum ibadah di Madinah.', 'departure' => $departures[1]->id, 'group' => null],
-            ['name' => 'Titik Kumpul Bus Al-Ikhlas', 'category' => 'titik_kumpul', 'city' => 'makkah', 'address' => 'Area parkir bus rombongan Al-Ikhlas', 'lat' => 21.4199000, 'lng' => 39.8237000, 'description' => 'Titik kumpul khusus rombongan Al-Ikhlas setelah kegiatan.', 'departure' => $departures[0]->id, 'group' => $groups[0]->id],
+            ['name' => 'Pintu 79 King Fahd - Masjidil Haram', 'category' => 'ibadah', 'city' => 'makkah', 'address' => 'Area Pintu King Fahd, Masjidil Haram, Makkah', 'lat' => 21.4229000, 'lng' => 39.8259000, 'description' => 'Patokan bertemu jamaah setelah thawaf atau shalat berjamaah.', 'departure' => null, 'group' => null],
+            ['name' => 'Pelataran Masjid Nabawi Sisi Utara', 'category' => 'ibadah', 'city' => 'madinah', 'address' => 'Area Markaziyah Utara, Masjid Nabawi, Madinah', 'lat' => 24.4682000, 'lng' => 39.6108000, 'description' => 'Titik berkumpul setelah ziarah dan shalat di Masjid Nabawi.', 'departure' => $departures[1]->id, 'group' => null],
+            ['name' => 'Titik Kumpul Bus Syib Amir - Al-Ikhlas', 'category' => 'titik_kumpul', 'city' => 'makkah', 'address' => 'Area penjemputan bus Syib Amir, Makkah', 'lat' => 21.4254000, 'lng' => 39.8307000, 'description' => 'Titik kumpul khusus rombongan Al-Ikhlas sebelum kembali ke hotel.', 'departure' => $departures[0]->id, 'group' => $groups[0]->id],
         ])->each(fn (array $data): Checkpoint => Checkpoint::query()->updateOrCreate(
             ['branch_id' => $branch->id, 'name' => $data['name']],
             [
