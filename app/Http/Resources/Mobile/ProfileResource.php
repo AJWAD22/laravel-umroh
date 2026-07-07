@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Mobile;
 
 use App\Enums\MobileRole;
+use App\Models\Group;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -28,18 +29,17 @@ class ProfileResource extends JsonResource
                 ->first();
 
             if ($group) {
-                $journey = [
-                    'group_name' => $group->name,
-                    'group_code' => $group->code,
-                    'program_name' => $group->departure->program_name,
-                    'departure_date' => $group->departure->departure_date?->toDateString(),
-                    'return_date' => $group->departure->return_date?->toDateString(),
-                    'departure_airport' => $group->departure->departure_airport,
-                    'arrival_airport' => $group->departure->arrival_airport,
-                    'status' => $group->departure->status,
-                    'tour_leader_name' => $group->tourLeader?->full_name,
-                    'muthawwif_name' => $group->muthawwif?->full_name,
-                ];
+                $journey = $this->journeyFromGroup($group);
+            }
+        } elseif (in_array($role, [MobileRole::TourLeader, MobileRole::Muthawwif], true) && $profile) {
+            $group = $profile->groups()
+                ->where('groups.is_active', true)
+                ->with(['departure', 'tourLeader', 'muthawwif'])
+                ->latest('groups.id')
+                ->first();
+
+            if ($group) {
+                $journey = $this->journeyFromGroup($group);
             }
         }
 
@@ -65,6 +65,25 @@ class ProfileResource extends JsonResource
                     : null,
             ] : null,
             'journey' => $journey,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function journeyFromGroup(Group $group): array
+    {
+        return [
+            'group_name' => $group->name,
+            'group_code' => $group->code,
+            'program_name' => $group->departure->program_name,
+            'departure_date' => $group->departure->departure_date?->toDateString(),
+            'return_date' => $group->departure->return_date?->toDateString(),
+            'departure_airport' => $group->departure->departure_airport,
+            'arrival_airport' => $group->departure->arrival_airport,
+            'status' => $group->departure->status,
+            'tour_leader_name' => $group->tourLeader?->full_name,
+            'muthawwif_name' => $group->muthawwif?->full_name,
         ];
     }
 }

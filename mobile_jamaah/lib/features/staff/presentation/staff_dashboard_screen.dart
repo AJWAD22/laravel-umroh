@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../activation/presentation/leader_activation_screen.dart';
 import '../../auth/presentation/auth_provider.dart';
 import '../../hotel/presentation/hotel_screen.dart';
+import '../../profile/domain/jamaah_profile.dart';
 import '../../profile/presentation/staff_profile_screen.dart';
 import 'staff_locations_screen.dart';
 import 'staff_pilgrims_screen.dart';
@@ -95,6 +97,8 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                       branchName: profile.branchName,
                       photoUrl: profile.photoUrl,
                     ),
+                    const SizedBox(height: 14),
+                    _StaffJourneyCard(journey: profile.journey),
                     const SizedBox(height: 24),
                     Text(
                       'Menu Utama',
@@ -226,6 +230,93 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
   void _open(BuildContext context, Widget screen) {
     Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
+}
+
+class _StaffJourneyCard extends StatelessWidget {
+  const _StaffJourneyCard({required this.journey});
+
+  final JourneyInfo? journey;
+
+  @override
+  Widget build(BuildContext context) {
+    if (journey == null) {
+      return const Card(
+        child: ListTile(
+          leading: Icon(Icons.groups_rounded),
+          title: Text('Rombongan Aktif'),
+          subtitle: Text('Belum ada rombongan aktif yang ditugaskan.'),
+        ),
+      );
+    }
+
+    final dateFormat = DateFormat('dd MMM yyyy');
+    final dateRange =
+        journey!.departureDate == null
+            ? '-'
+            : journey!.returnDate == null
+            ? dateFormat.format(journey!.departureDate!)
+            : '${dateFormat.format(journey!.departureDate!)} – '
+                '${dateFormat.format(journey!.returnDate!)}';
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.assignment_turned_in_rounded, color: Colors.blue),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    journey!.groupName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                Chip(label: Text(journey!.groupCode)),
+              ],
+            ),
+            const Divider(height: 24),
+            _StaffJourneyRow(
+              icon: Icons.flight_takeoff_rounded,
+              label: journey!.programName,
+            ),
+            _StaffJourneyRow(icon: Icons.calendar_month_rounded, label: dateRange),
+            _StaffJourneyRow(
+              icon: Icons.route_rounded,
+              label:
+                  '${journey!.departureAirport ?? '-'} → '
+                  '${journey!.arrivalAirport ?? '-'}',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StaffJourneyRow extends StatelessWidget {
+  const _StaffJourneyRow({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Row(
+      children: [
+        Icon(icon, size: 19, color: Colors.blueGrey),
+        const SizedBox(width: 10),
+        Expanded(child: Text(label)),
+      ],
+    ),
+  );
 }
 
 class _StaffHeader extends StatelessWidget {
