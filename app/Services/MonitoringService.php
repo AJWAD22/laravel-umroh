@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\UserRole;
-use App\Models\Hotel;
 use App\Models\PilgrimLocation;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -68,33 +67,8 @@ class MonitoringService
             )
             ->values();
 
-        $hotels = collect();
-        if (! ($filters['status'] ?? null)) {
-            $hotels = Hotel::query()
-                ->with('branch:id,name')
-                ->whereNotNull('latitude')
-                ->whereNotNull('longitude')
-                ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
-                ->when($groupId, fn (Builder $query) => $query->whereHas(
-                    'departures.groups',
-                    fn (Builder $groupQuery) => $groupQuery->whereKey($groupId),
-                ))
-                ->get()
-                ->map(fn (Hotel $hotel) => [
-                    'id' => "hotel-{$hotel->id}",
-                    'type' => 'hotel',
-                    'name' => $hotel->name,
-                    'branch_id' => $hotel->branch_id,
-                    'branch' => $hotel->branch->name,
-                    'status' => 'hotel',
-                    'latitude' => (float) $hotel->latitude,
-                    'longitude' => (float) $hotel->longitude,
-                    'address' => $hotel->address,
-                ]);
-        }
-
         return [
-            'markers' => $pilgrims->concat($hotels)->values(),
+            'markers' => $pilgrims->values(),
             'summary' => [
                 'total' => $pilgrims->count(),
                 'online' => $pilgrims->where('status', 'online')->count(),

@@ -121,7 +121,6 @@ if (monitoringMapElement) {
     })[character]);
 
     const markerStyle = (marker) => {
-        if (marker.type === 'hotel') return ['#7c3aed', 'H'];
         if (marker.type === 'muthawwif') return ['#0891b2', 'M'];
         if (marker.status === 'sos') return ['#dc2626', '!'];
         if (marker.status === 'offline') return ['#64748b', 'J'];
@@ -129,11 +128,6 @@ if (monitoringMapElement) {
     };
 
     const popup = (marker) => {
-        if (marker.type === 'hotel') {
-            return `<div class="min-w-48"><strong>${escapeHtml(marker.name)}</strong><br>
-                <span>${escapeHtml(marker.branch)}</span><br><small>${escapeHtml(marker.address || '-')}</small></div>`;
-        }
-
         return `<div class="min-w-52">
             <strong>${escapeHtml(marker.name)}</strong><br>
             <span>${escapeHtml(marker.branch)} · ${escapeHtml(marker.group || '-')}</span><br>

@@ -5,7 +5,7 @@
             <div>
                 <nav class="mb-2 text-sm text-slate-500">Monitoring / Live Map</nav>
                 <h1 class="text-2xl font-bold">Monitoring Jamaah</h1>
-                <p class="mt-1 text-sm text-slate-500">Simulasi posisi jamaah, hotel, dan muthawwif di Tanah Suci.</p>
+                <p class="mt-1 text-sm text-slate-500">Pantau posisi terakhir jamaah berdasarkan data GPS aplikasi.</p>
             </div>
             <span class="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">Data GPS Langsung</span>
         </div>
@@ -81,7 +81,6 @@
                     <span><i class="mr-1 inline-block size-2.5 rounded-full bg-emerald-500"></i> Online</span>
                     <span><i class="mr-1 inline-block size-2.5 rounded-full bg-slate-500"></i> Offline</span>
                     <span><i class="mr-1 inline-block size-2.5 rounded-full bg-red-500"></i> SOS</span>
-                    <span><i class="mr-1 inline-block size-2.5 rounded-full bg-violet-500"></i> Hotel</span>
                 </div>
             </div>
         </div>
