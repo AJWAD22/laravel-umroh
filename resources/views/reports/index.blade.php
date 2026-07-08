@@ -1,8 +1,7 @@
 @php
-    $reportLabels = ['pilgrims' => 'Jamaah', 'tracking' => 'Tracking', 'sos' => 'SOS'];
+    $reportLabels = ['pilgrims' => 'Jamaah', 'tracking' => 'Tracking'];
     $statuses = match($type) {
         'pilgrims' => ['registered' => 'Terdaftar', 'active' => 'Aktif', 'completed' => 'Selesai', 'cancelled' => 'Batal'],
-        'sos' => ['active' => 'Aktif', 'acknowledged' => 'Ditangani', 'resolved' => 'Selesai', 'cancelled' => 'Dibatalkan'],
         default => [],
     };
     $downloadQuery = array_filter([

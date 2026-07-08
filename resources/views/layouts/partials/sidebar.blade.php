@@ -79,7 +79,6 @@
             <div x-cloak x-show="open && !sidebarCollapsed" x-transition class="ml-5 mt-1 space-y-0.5 border-l border-slate-800 pl-5">
                 <a href="{{ route('monitoring.map.index') }}" class="sidebar-submenu-link {{ request()->routeIs('monitoring.map.*') ? 'sidebar-submenu-link-active' : '' }}">Live Map</a>
                 <a href="{{ route('monitoring.tracking.index') }}" class="sidebar-submenu-link {{ request()->routeIs('monitoring.tracking.*') ? 'sidebar-submenu-link-active' : '' }}">Histori Tracking</a>
-                <a href="{{ route('monitoring.sos.index') }}" class="sidebar-submenu-link {{ request()->routeIs('monitoring.sos.*') ? 'sidebar-submenu-link-active' : '' }}">SOS</a>
             </div>
         </div>
 
@@ -90,7 +89,7 @@
                 <i x-show="!sidebarCollapsed" data-lucide="chevron-down" class="size-4 transition" :class="{ 'rotate-180': open }"></i>
             </button>
             <div x-cloak x-show="open && !sidebarCollapsed" x-transition class="ml-5 mt-1 space-y-0.5 border-l border-slate-800 pl-5">
-                @foreach (['pilgrims' => 'Jamaah', 'tracking' => 'Tracking', 'sos' => 'SOS'] as $reportType => $reportLabel)
+                @foreach (['pilgrims' => 'Jamaah', 'tracking' => 'Tracking'] as $reportType => $reportLabel)
                     <a href="{{ route('reports.index', $reportType) }}" class="sidebar-submenu-link {{ request()->route('type') === $reportType ? 'sidebar-submenu-link-active' : '' }}">{{ $reportLabel }}</a>
                 @endforeach
             </div>

@@ -8,7 +8,6 @@ use App\Models\Group;
 use App\Models\Muthawwif;
 use App\Models\Pilgrim;
 use App\Models\PilgrimLocation;
-use App\Models\SosReport;
 use App\Models\TourLeader;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -30,7 +29,6 @@ class DashboardService
             'cards' => $this->cards($branchId),
             'chart' => $this->chart($branchId),
             'monitoring' => $this->monitoring($branchId),
-            'recentSos' => $this->recentSos($branchId),
         ];
     }
 
@@ -48,7 +46,6 @@ class DashboardService
             ['label' => 'Tour Leader', 'value' => $scopedCount(TourLeader::class), 'icon' => 'user-round-check', 'color' => 'emerald'],
             ['label' => 'Muthawwif', 'value' => $scopedCount(Muthawwif::class), 'icon' => 'book-open', 'color' => 'violet'],
             ['label' => 'Total Rombongan', 'value' => $scopedCount(Group::class), 'icon' => 'users-round', 'color' => 'amber'],
-            ['label' => 'Total SOS', 'value' => $scopedCount(SosReport::class), 'icon' => 'siren', 'color' => 'red'],
         ];
 
         if ($branchId) {
@@ -68,7 +65,7 @@ class DashboardService
     }
 
     /**
-     * @return array{labels: list<string>, pilgrims: list<int>, groups: list<int>, sos: list<int>}
+     * @return array{labels: list<string>, pilgrims: list<int>, groups: list<int>}
      */
     private function chart(?int $branchId): array
     {
@@ -85,15 +82,11 @@ class DashboardService
                 ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
                 ->whereBetween('created_at', [$month, $month->endOfMonth()])
                 ->count())->all(),
-            'sos' => $months->map(fn (CarbonImmutable $month) => SosReport::query()
-                ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
-                ->whereBetween('reported_at', [$month, $month->endOfMonth()])
-                ->count())->all(),
         ];
     }
 
     /**
-     * @return array{online: int, offline: int, unknown: int, active_sos: int}
+     * @return array{online: int, offline: int, unknown: int}
      */
     private function monitoring(?int $branchId): array
     {
@@ -107,22 +100,6 @@ class DashboardService
             'online' => (clone $locations)->where('gps_status', 'online')->count(),
             'offline' => (clone $locations)->where('gps_status', 'offline')->count(),
             'unknown' => (clone $locations)->where('gps_status', 'unknown')->count(),
-            'active_sos' => SosReport::query()
-                ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
-                ->whereIn('status', ['active', 'acknowledged'])
-                ->count(),
         ];
     }
-
-    private function recentSos(?int $branchId)
-    {
-        return SosReport::query()
-            ->with(['pilgrim:id,full_name,registration_number', 'branch:id,name'])
-            ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
-            ->whereIn('status', ['active', 'acknowledged'])
-            ->latest('reported_at')
-            ->limit(5)
-            ->get();
-    }
-
 }

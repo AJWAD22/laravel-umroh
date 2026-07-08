@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\LocationHistory;
 use App\Models\Pilgrim;
-use App\Models\SosReport;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -47,23 +46,6 @@ class ReportService
                         $item->pilgrim?->branch?->name ?? '-',
                         $item->latitude,
                         $item->longitude, $item->accuracy ?: '-', $item->battery_level ?? '-',
-                    ]),
-                'filters' => $filters,
-            ],
-            'sos' => [
-                'title' => 'Laporan SOS',
-                'headings' => ['Waktu', 'No. Registrasi', 'Nama Jamaah', 'Cabang', 'Koordinat', 'Status', 'Ditangani Oleh', 'Selesai'],
-                'rows' => SosReport::query()->with(['pilgrim:id,registration_number,full_name', 'branch:id,name', 'handler:id,name'])
-                    ->when($branchId, fn (Builder $q) => $q->where('branch_id', $branchId))
-                    ->when($status, fn (Builder $q) => $q->where('status', $status))
-                    ->whereBetween('reported_at', [$from, $to])->orderBy('reported_at')->get()
-                    ->map(fn (SosReport $item) => [
-                        $item->reported_at?->format('d-m-Y H:i:s') ?? '-',
-                        $item->pilgrim?->registration_number ?? '-',
-                        $item->pilgrim?->full_name ?? 'Jamaah tidak ditemukan',
-                        $item->branch?->name ?? '-',
-                        "{$item->latitude}, {$item->longitude}",
-                        $item->status, $item->handler?->name ?? '-', $item->resolved_at?->format('d-m-Y H:i:s') ?? '-',
                     ]),
                 'filters' => $filters,
             ],

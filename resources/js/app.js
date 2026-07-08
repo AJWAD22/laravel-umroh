@@ -68,13 +68,6 @@ if (chartElement && window.dashboardChartData) {
                     backgroundColor: 'rgba(245, 158, 11, .08)',
                     tension: .35,
                 },
-                {
-                    label: 'SOS',
-                    data: data.sos,
-                    borderColor: '#dc2626',
-                    backgroundColor: 'rgba(220, 38, 38, .08)',
-                    tension: .35,
-                },
             ],
         },
         options: {

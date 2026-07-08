@@ -13,7 +13,7 @@
                     <nav class="mb-2 text-sm font-medium text-slate-500">Beranda / Dashboard</nav>
                     <h1 class="text-3xl font-black tracking-tight text-slate-950 dark:text-white">Dashboard {{ $scopeLabel }}</h1>
                     <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                        Ringkasan jamaah, petugas, rombongan, monitoring GPS, dan laporan darurat dalam satu panel.
+                        Ringkasan jamaah, petugas, rombongan, dan monitoring GPS dalam satu panel.
                     </p>
                 </div>
                 <div class="inline-flex items-center gap-2 self-start rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700 shadow-sm dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300">
@@ -61,7 +61,7 @@
         <article class="surface-card p-5 sm:p-6">
             <div>
                 <h2 class="font-semibold">Statistik 6 Bulan</h2>
-                <p class="mt-1 text-sm text-slate-500">Jamaah baru, rombongan baru, dan laporan SOS.</p>
+                <p class="mt-1 text-sm text-slate-500">Jamaah baru dan rombongan baru.</p>
             </div>
             <div class="mt-6 h-80">
                 <canvas id="dashboard-statistics-chart" aria-label="Grafik statistik enam bulan"></canvas>
@@ -77,7 +77,6 @@
                     ['label' => 'GPS Online', 'value' => $monitoring['online'], 'dot' => 'bg-emerald-500'],
                     ['label' => 'GPS Offline', 'value' => $monitoring['offline'], 'dot' => 'bg-red-500'],
                     ['label' => 'Status Belum Diketahui', 'value' => $monitoring['unknown'], 'dot' => 'bg-slate-400'],
-                    ['label' => 'SOS Aktif', 'value' => $monitoring['active_sos'], 'dot' => 'bg-amber-500'],
                 ] as $item)
                     <div class="flex items-center rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-800/70">
                         <span class="size-2.5 rounded-full {{ $item['dot'] }}"></span>
@@ -89,47 +88,6 @@
         </article>
     </section>
 
-    <section class="mt-6">
-        <article class="surface-card overflow-hidden">
-            <div class="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
-                <h2 class="font-semibold">SOS Aktif Terbaru</h2>
-                <p class="mt-1 text-sm text-slate-500">Hanya menampilkan laporan yang belum diamankan.</p>
-            </div>
-            @forelse ($recentSos as $sos)
-                <div class="flex items-center gap-4 border-b border-slate-100 px-5 py-4 last:border-0 dark:border-slate-800">
-                    <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-red-50 text-red-600 dark:bg-red-950/60">
-                        <i data-lucide="siren" class="size-5"></i>
-                    </span>
-                    <div class="min-w-0">
-                        <p class="truncate text-sm font-semibold">{{ $sos->pilgrim->full_name }}</p>
-                        <p class="truncate text-xs text-slate-500">{{ $sos->branch->name }} · {{ $sos->reported_at->diffForHumans() }}</p>
-                    </div>
-                    <div class="ml-auto flex shrink-0 items-center gap-3">
-                        <x-status-badge :value="$sos->status === 'active' ? 'sos' : $sos->status"
-                                        :label="$sos->status === 'active' ? 'Aktif' : null" />
-                        <a href="{{ route('monitoring.sos.show', $sos) }}" class="text-sm font-semibold text-blue-600 hover:text-blue-700">
-                            Detail
-                        </a>
-                        @can('update', $sos)
-                            <form method="POST" action="{{ route('monitoring.sos.resolve', $sos) }}"
-                                  data-confirm-title="Tandai Jamaah Aman"
-                                  data-confirm-message="Laporan SOS akan diselesaikan dan otomatis hilang dari dashboard aktif.">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit" class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700">
-                                    Aman
-                                </button>
-                            </form>
-                        @endcan
-                    </div>
-                </div>
-            @empty
-                <x-empty-state icon="shield-check" title="Tidak ada laporan SOS"
-                               description="Semua laporan darurat dalam cakupan Anda sudah aman." />
-            @endforelse
-        </article>
-
-    </section>
 
     <script>
         window.dashboardChartData = {{ Illuminate\Support\Js::from($chart) }};

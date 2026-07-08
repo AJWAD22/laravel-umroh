@@ -8,7 +8,6 @@ use App\Models\Departure;
 use App\Models\Group;
 use App\Models\Pilgrim;
 use App\Models\PilgrimLocation;
-use App\Models\SosReport;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -32,7 +31,6 @@ class DashboardTest extends TestCase
 
         $this->assertCardValue($response, 'Total Cabang', 2);
         $this->assertCardValue($response, 'Total Jamaah', 3);
-        $this->assertCardValue($response, 'Total SOS', 2);
     }
 
     public function test_branch_admin_dashboard_is_strictly_scoped_to_its_branch(): void
@@ -45,20 +43,13 @@ class DashboardTest extends TestCase
             ->assertOk()
             ->assertSee('Dashboard Cabang A')
             ->assertDontSee('Jamaah Rahasia Cabang B')
-            ->assertViewHas('scopeLabel', 'Cabang A')
-            ->assertViewHas(
-                'recentSos',
-                fn ($reports) => $reports->count() === 1
-                    && $reports->every(fn (SosReport $report) => $report->branch_id === $branchAdmin->branch_id),
-            );
+            ->assertViewHas('scopeLabel', 'Cabang A');
 
         $this->assertCardValue($response, 'Total Jamaah', 2);
-        $this->assertCardValue($response, 'Total SOS', 1);
         $response->assertViewHas('monitoring', fn (array $monitoring) => $monitoring === [
             'online' => 1,
             'offline' => 0,
             'unknown' => 0,
-            'active_sos' => 1,
         ]);
     }
 
@@ -112,9 +103,6 @@ class DashboardTest extends TestCase
             'recorded_at' => now(),
         ]);
 
-        $this->sos($branchA, $pilgrimA1, $groupA);
-        $this->sos($branchB, $pilgrimB, $groupB);
-
         return [$superAdmin, $branchAdmin];
     }
 
@@ -147,16 +135,4 @@ class DashboardTest extends TestCase
         ]);
     }
 
-    private function sos(Branch $branch, Pilgrim $pilgrim, Group $group): void
-    {
-        SosReport::create([
-            'branch_id' => $branch->id,
-            'pilgrim_id' => $pilgrim->id,
-            'group_id' => $group->id,
-            'latitude' => 21.4224870,
-            'longitude' => 39.8262060,
-            'status' => 'active',
-            'reported_at' => now(),
-        ]);
-    }
 }
