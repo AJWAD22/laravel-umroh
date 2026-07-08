@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../activation/presentation/leader_activation_screen.dart';
 import '../../auth/presentation/auth_provider.dart';
+import '../../checkpoint/presentation/checkpoint_screen.dart';
 import '../../hotel/presentation/hotel_screen.dart';
 import '../../location/presentation/tracking_provider.dart';
 import '../../profile/domain/jamaah_profile.dart';
@@ -186,6 +187,17 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                                   ),
                             ),
                           _DashboardMenu(
+                            icon: Icons.add_location_alt_rounded,
+                            label: 'Titik Kumpul',
+                            description:
+                                'Buat dan lihat titik berkumpul rombongan',
+                            onTap:
+                                () => _open(
+                                  context,
+                                  const CheckpointScreen(allowCreate: true),
+                                ),
+                          ),
+                          _DashboardMenu(
                             icon: Icons.hotel_rounded,
                             label: 'Hotel Rombongan',
                             description: 'Lihat dan navigasi menuju hotel',
@@ -319,7 +331,10 @@ class _StaffJourneyCard extends StatelessWidget {
               icon: Icons.flight_takeoff_rounded,
               label: journey!.programName,
             ),
-            _StaffJourneyRow(icon: Icons.calendar_month_rounded, label: dateRange),
+            _StaffJourneyRow(
+              icon: Icons.calendar_month_rounded,
+              label: dateRange,
+            ),
             _StaffJourneyRow(
               icon: Icons.route_rounded,
               label:
@@ -508,13 +523,15 @@ class _OperationalHintCard extends StatelessWidget {
               hasError
                   ? 'Tracking lokasi petugas belum aktif: $error'
                   : isTracking
-                      ? 'Tracking petugas aktif${sentText == null ? '' : ' • terakhir $sentText'}. Jamaah dapat melihat posisi terakhir Anda saat membutuhkan bantuan.'
-                      : isLeader
-                          ? 'Prioritaskan pengecekan lokasi jamaah dan laporan SOS. Aktivasi jamaah tersedia untuk perangkat baru.'
-                          : 'Pantau jamaah bimbingan Anda, cek lokasi terakhir, dan bantu jika ada laporan SOS.',
+                  ? 'Tracking petugas aktif${sentText == null ? '' : ' • terakhir $sentText'}. Jamaah dapat melihat posisi terakhir Anda saat membutuhkan bantuan.'
+                  : isLeader
+                  ? 'Prioritaskan pengecekan lokasi jamaah dan laporan SOS. Aktivasi jamaah tersedia untuk perangkat baru.'
+                  : 'Pantau jamaah bimbingan Anda, cek lokasi terakhir, dan bantu jika ada laporan SOS.',
               style: TextStyle(
                 color:
-                    hasError ? const Color(0xFF991B1B) : const Color(0xFF14532D),
+                    hasError
+                        ? const Color(0xFF991B1B)
+                        : const Color(0xFF14532D),
                 fontWeight: FontWeight.w600,
                 height: 1.35,
               ),

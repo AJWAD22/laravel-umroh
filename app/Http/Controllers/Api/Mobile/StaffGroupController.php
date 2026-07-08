@@ -6,10 +6,14 @@ use App\Enums\MobileRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Mobile\SendLocationRequest;
 use App\Http\Requests\Api\Mobile\StaffListRequest;
+use App\Http\Requests\Api\Mobile\StoreStaffCheckpointRequest;
+use App\Http\Resources\Mobile\CheckpointResource;
 use App\Http\Resources\Mobile\HotelResource;
 use App\Http\Resources\Mobile\LocationResource;
 use App\Http\Resources\Mobile\PilgrimResource;
 use App\Http\Resources\Mobile\SosReportResource;
+use App\Models\Checkpoint;
+use App\Models\Group;
 use App\Models\Hotel;
 use App\Models\StaffLocation;
 use App\Models\SosReport;
@@ -100,6 +104,41 @@ class StaffGroupController extends Controller
             'message' => 'Lokasi petugas berhasil disimpan.',
             'location' => new LocationResource($location),
         ], 201);
+    }
+
+    public function storeCheckpoint(StoreStaffCheckpointRequest $request)
+    {
+        $user = $request->user();
+        $role = $user->hasRole(MobileRole::TourLeader->value)
+            ? MobileRole::TourLeader
+            : MobileRole::Muthawwif;
+        $groupIds = $this->access->groupIdsForStaff($user, $role);
+        abort_if($groupIds->isEmpty(), 422, 'Petugas belum ditugaskan ke rombongan aktif.');
+
+        $groupId = $request->integer('group_id') ?: (int) $groupIds->first();
+        abort_unless($groupIds->contains($groupId), 403, 'Rombongan tidak dapat diakses.');
+
+        $group = Group::query()->findOrFail($groupId);
+        $data = $request->validated();
+
+        $checkpoint = Checkpoint::query()->create([
+            'branch_id' => $user->branch_id,
+            'departure_id' => $group->departure_id,
+            'group_id' => $group->id,
+            'name' => $data['name'],
+            'category' => 'titik_kumpul',
+            'city' => $data['city'] ?? 'other',
+            'address' => $data['address'] ?? null,
+            'latitude' => $data['latitude'],
+            'longitude' => $data['longitude'],
+            'description' => $data['description'] ?? 'Dibuat oleh petugas melalui aplikasi.',
+            'is_active' => true,
+        ]);
+
+        return (new CheckpointResource($checkpoint->load(['branch', 'departure', 'group'])))
+            ->additional(['message' => 'Titik kumpul berhasil dibuat.'])
+            ->response()
+            ->setStatusCode(201);
     }
 
     private function pilgrims(Request $request, MobileRole $role)

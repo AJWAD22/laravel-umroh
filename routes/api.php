@@ -39,6 +39,7 @@ Route::prefix('mobile')->group(function () {
 
     Route::middleware(['auth:sanctum', 'mobile.role:tour-leader,muthawwif'])->group(function () {
         Route::post('/staff-location', [StaffGroupController::class, 'sendLocation'])->name('api.mobile.staff.location');
+        Route::post('/staff-checkpoints', [StaffGroupController::class, 'storeCheckpoint'])->name('api.mobile.staff.checkpoints.store');
     });
 
     Route::middleware(['auth:sanctum', 'mobile.role:tour-leader'])->group(function () {

@@ -3,11 +3,14 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/widgets/internal_direction_map_screen.dart';
+import '../../location/data/location_repository.dart';
 import '../domain/checkpoint.dart';
 import 'checkpoint_provider.dart';
 
 class CheckpointScreen extends StatefulWidget {
-  const CheckpointScreen({super.key});
+  const CheckpointScreen({super.key, this.allowCreate = false});
+
+  final bool allowCreate;
 
   @override
   State<CheckpointScreen> createState() => _CheckpointScreenState();
@@ -52,6 +55,12 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
       appBar: AppBar(
         title: const Text('Tujuan Perjalanan'),
         actions: [
+          if (widget.allowCreate)
+            IconButton(
+              tooltip: 'Tambah titik kumpul',
+              onPressed: () => _openCreateForm(context),
+              icon: const Icon(Icons.add_location_alt_rounded),
+            ),
           IconButton(
             tooltip: 'Perbarui tujuan',
             onPressed: provider.load,
@@ -137,8 +146,7 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
                       ),
                     ],
                     onChanged:
-                        (value) =>
-                            setState(() => _category = value ?? 'semua'),
+                        (value) => setState(() => _category = value ?? 'semua'),
                   ),
                 ),
               ],
@@ -183,6 +191,249 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openCreateForm(BuildContext context) async {
+    final created = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const MeetingPointFormScreen()),
+    );
+    if (created == true && mounted) {
+      await context.read<CheckpointProvider>().load();
+    }
+  }
+}
+
+class MeetingPointFormScreen extends StatefulWidget {
+  const MeetingPointFormScreen({super.key});
+
+  @override
+  State<MeetingPointFormScreen> createState() => _MeetingPointFormScreenState();
+}
+
+class _MeetingPointFormScreenState extends State<MeetingPointFormScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  String _city = 'other';
+  String? _error;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _addressController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isSaving = context.watch<CheckpointProvider>().isCreating;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Tambah Titik Kumpul')),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+          children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 46,
+                          height: 46,
+                          decoration: BoxDecoration(
+                            color: const Color(
+                              0xFF3B82F6,
+                            ).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(
+                            Icons.groups_2_rounded,
+                            color: Color(0xFF2563EB),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Buat patokan berkumpul',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              SizedBox(height: 3),
+                              Text(
+                                'Lokasi yang tersimpan memakai GPS perangkat ini.',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _nameController,
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                              labelText: 'Nama titik kumpul',
+                              hintText: 'Contoh: Depan Lobby Hotel',
+                              prefixIcon: Icon(Icons.place_rounded),
+                            ),
+                            validator:
+                                (value) =>
+                                    value == null || value.trim().isEmpty
+                                        ? 'Nama titik kumpul wajib diisi.'
+                                        : null,
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            value: _city,
+                            decoration: const InputDecoration(
+                              labelText: 'Kota',
+                              prefixIcon: Icon(Icons.location_city_rounded),
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'makkah',
+                                child: Text('Makkah'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'madinah',
+                                child: Text('Madinah'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'jeddah',
+                                child: Text('Jeddah'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'other',
+                                child: Text('Lainnya'),
+                              ),
+                            ],
+                            onChanged:
+                                (value) =>
+                                    setState(() => _city = value ?? 'other'),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _addressController,
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                              labelText: 'Catatan lokasi',
+                              hintText: 'Contoh: dekat pintu utama',
+                              prefixIcon: Icon(Icons.notes_rounded),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _descriptionController,
+                            minLines: 2,
+                            maxLines: 4,
+                            decoration: const InputDecoration(
+                              labelText: 'Keterangan',
+                              hintText:
+                                  'Contoh: titik kumpul setelah shalat Isya',
+                              prefixIcon: Icon(Icons.info_outline_rounded),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_error != null) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEF2F2),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFFECACA)),
+                        ),
+                        child: Text(
+                          _error!,
+                          style: const TextStyle(
+                            color: Color(0xFF991B1B),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: isSaving ? null : _save,
+                        icon:
+                            isSaving
+                                ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : const Icon(Icons.my_location_rounded),
+                        label: Text(
+                          isSaving
+                              ? 'Menyimpan titik...'
+                              : 'Gunakan Lokasi Saat Ini & Simpan',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Pastikan petugas sedang berada di titik kumpul sebelum menyimpan.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _error = null);
+    try {
+      final position =
+          await context.read<LocationRepository>().currentPosition();
+      if (!mounted) return;
+      await context.read<CheckpointProvider>().createMeetingPoint(
+        name: _nameController.text.trim(),
+        city: _city,
+        address: _addressController.text.trim(),
+        description: _descriptionController.text.trim(),
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Titik kumpul berhasil disimpan.')),
+      );
+      Navigator.pop(context, true);
+    } catch (exception) {
+      if (!mounted) return;
+      setState(() => _error = exception.toString());
+    }
   }
 }
 
