@@ -21,6 +21,9 @@
 /storage/*.key
 /storage/pail
 /vendor
+/mobile_jamaah/android/key.properties
+/mobile_jamaah/android/app/*.jks
+/mobile_jamaah/android/app/*.keystore
 /deployment/package_*/
 _ide_helper.php
 Homestead.json

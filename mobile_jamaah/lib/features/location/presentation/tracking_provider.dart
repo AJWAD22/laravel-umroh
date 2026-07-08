@@ -11,14 +11,18 @@ class TrackingProvider extends ChangeNotifier {
   final LocationRepository _repository;
   StreamSubscription<Position>? _positionSubscription;
   bool isTracking = false;
+  bool isStaffTracking = false;
   bool isSending = false;
   String? error;
   Position? lastPosition;
   DateTime? lastSentAt;
+  bool _sendAsStaff = false;
 
-  Future<void> start() async {
+  Future<void> start({bool asStaff = false}) async {
     if (isTracking) return;
     isTracking = true;
+    isStaffTracking = asStaff;
+    _sendAsStaff = asStaff;
     error = null;
     notifyListeners();
     try {
@@ -32,6 +36,7 @@ class TrackingProvider extends ChangeNotifier {
       );
     } catch (exception) {
       isTracking = false;
+      isStaffTracking = false;
       error = exception.toString().replaceFirst('Exception: ', '');
       notifyListeners();
     }
@@ -39,6 +44,7 @@ class TrackingProvider extends ChangeNotifier {
 
   Future<void> stop() async {
     isTracking = false;
+    isStaffTracking = false;
     await _positionSubscription?.cancel();
     _positionSubscription = null;
     notifyListeners();
@@ -49,7 +55,11 @@ class TrackingProvider extends ChangeNotifier {
     isSending = true;
     notifyListeners();
     try {
-      await _repository.send(position);
+      if (_sendAsStaff) {
+        await _repository.sendStaff(position);
+      } else {
+        await _repository.send(position);
+      }
       lastPosition = position;
       lastSentAt = DateTime.now();
       error = null;

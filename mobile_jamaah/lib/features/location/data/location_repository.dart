@@ -64,9 +64,17 @@ class LocationRepository {
   }
 
   Future<void> send(Position position) async {
+    await _sendTo('/api/mobile/send-location', position);
+  }
+
+  Future<void> sendStaff(Position position) async {
+    await _sendTo('/api/mobile/staff-location', position);
+  }
+
+  Future<void> _sendTo(String endpoint, Position position) async {
     try {
       await _api.dio.post<void>(
-        '/api/mobile/send-location',
+        endpoint,
         data: {
           'latitude': position.latitude,
           'longitude': position.longitude,

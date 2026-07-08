@@ -63,6 +63,11 @@ class User extends Authenticatable
         return $this->hasOne(Muthawwif::class);
     }
 
+    public function staffLocation(): HasOne
+    {
+        return $this->hasOne(StaffLocation::class);
+    }
+
     public function handledSosReports(): HasMany
     {
         return $this->hasMany(SosReport::class, 'handled_by');

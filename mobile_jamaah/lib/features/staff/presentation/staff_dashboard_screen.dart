@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../activation/presentation/leader_activation_screen.dart';
 import '../../auth/presentation/auth_provider.dart';
 import '../../hotel/presentation/hotel_screen.dart';
+import '../../location/presentation/tracking_provider.dart';
 import '../../profile/domain/jamaah_profile.dart';
 import '../../profile/presentation/staff_profile_screen.dart';
 import 'staff_locations_screen.dart';
@@ -27,6 +28,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
       context.read<StaffProvider>().load(
         context.read<AuthProvider>().profile!.role,
       );
+      context.read<TrackingProvider>().start(asStaff: true);
     });
   }
 
@@ -53,6 +55,8 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
           ),
     );
     if (confirmed != true || !mounted) return;
+    await context.read<TrackingProvider>().stop();
+    if (!mounted) return;
     context.read<StaffProvider>().clear();
     await context.read<AuthProvider>().logout();
   }
@@ -61,6 +65,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
   Widget build(BuildContext context) {
     final profile = context.watch<AuthProvider>().profile!;
     final staff = context.watch<StaffProvider>();
+    final tracking = context.watch<TrackingProvider>();
     final isLeader = profile.role == 'tour-leader';
     final roleName = isLeader ? 'Tour Leader' : 'Muthawwif';
 
@@ -100,7 +105,12 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                     const SizedBox(height: 14),
                     _StaffJourneyCard(journey: profile.journey),
                     const SizedBox(height: 14),
-                    _OperationalHintCard(isLeader: isLeader),
+                    _OperationalHintCard(
+                      isLeader: isLeader,
+                      isTracking: tracking.isTracking,
+                      lastSentAt: tracking.lastSentAt,
+                      error: tracking.error,
+                    ),
                     const SizedBox(height: 24),
                     Text(
                       'Akses Cepat',
@@ -450,18 +460,33 @@ class _StaffHeader extends StatelessWidget {
 }
 
 class _OperationalHintCard extends StatelessWidget {
-  const _OperationalHintCard({required this.isLeader});
+  const _OperationalHintCard({
+    required this.isLeader,
+    required this.isTracking,
+    required this.lastSentAt,
+    required this.error,
+  });
 
   final bool isLeader;
+  final bool isTracking;
+  final DateTime? lastSentAt;
+  final String? error;
 
   @override
   Widget build(BuildContext context) {
+    final hasError = error != null;
+    final sentText =
+        lastSentAt == null
+            ? null
+            : DateFormat('HH:mm').format(lastSentAt!.toLocal());
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFECFDF5),
+        color: hasError ? const Color(0xFFFEF2F2) : const Color(0xFFECFDF5),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFBBF7D0)),
+        border: Border.all(
+          color: hasError ? const Color(0xFFFECACA) : const Color(0xFFBBF7D0),
+        ),
       ),
       child: Row(
         children: [
@@ -473,18 +498,23 @@ class _OperationalHintCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Icon(
-              Icons.support_agent_rounded,
+              Icons.location_searching_rounded,
               color: Color(0xFF15803D),
             ),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Text(
-              isLeader
-                  ? 'Prioritaskan pengecekan lokasi jamaah dan laporan SOS. Aktivasi jamaah tersedia untuk perangkat baru.'
-                  : 'Pantau jamaah bimbingan Anda, cek lokasi terakhir, dan bantu jika ada laporan SOS.',
-              style: const TextStyle(
-                color: Color(0xFF14532D),
+              hasError
+                  ? 'Tracking lokasi petugas belum aktif: $error'
+                  : isTracking
+                      ? 'Tracking petugas aktif${sentText == null ? '' : ' • terakhir $sentText'}. Jamaah dapat melihat posisi terakhir Anda saat membutuhkan bantuan.'
+                      : isLeader
+                          ? 'Prioritaskan pengecekan lokasi jamaah dan laporan SOS. Aktivasi jamaah tersedia untuk perangkat baru.'
+                          : 'Pantau jamaah bimbingan Anda, cek lokasi terakhir, dan bantu jika ada laporan SOS.',
+              style: TextStyle(
+                color:
+                    hasError ? const Color(0xFF991B1B) : const Color(0xFF14532D),
                 fontWeight: FontWeight.w600,
                 height: 1.35,
               ),

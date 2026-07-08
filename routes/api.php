@@ -33,7 +33,12 @@ Route::prefix('mobile')->group(function () {
         Route::post('/sos', [PilgrimController::class, 'sos'])->name('api.mobile.pilgrim.sos');
         Route::get('/hotel', [PilgrimController::class, 'hotel'])->name('api.mobile.pilgrim.hotel');
         Route::get('/muthawwif-location', [PilgrimController::class, 'muthawwifLocation'])->name('api.mobile.pilgrim.muthawwif');
+        Route::get('/staff-locations', [PilgrimController::class, 'staffLocations'])->name('api.mobile.pilgrim.staff-locations');
         Route::get('/my-location-history', [PilgrimController::class, 'history'])->name('api.mobile.pilgrim.history');
+    });
+
+    Route::middleware(['auth:sanctum', 'mobile.role:tour-leader,muthawwif'])->group(function () {
+        Route::post('/staff-location', [StaffGroupController::class, 'sendLocation'])->name('api.mobile.staff.location');
     });
 
     Route::middleware(['auth:sanctum', 'mobile.role:tour-leader'])->group(function () {

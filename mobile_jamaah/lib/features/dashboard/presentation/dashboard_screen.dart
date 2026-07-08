@@ -6,10 +6,12 @@ import '../../auth/presentation/auth_provider.dart';
 import '../../checkpoint/presentation/checkpoint_screen.dart';
 import '../../hotel/presentation/hotel_screen.dart';
 import '../../location/data/location_repository.dart';
+import '../../location/presentation/location_permission_guide_screen.dart';
 import '../../location/presentation/tracking_provider.dart';
 import '../../profile/domain/jamaah_profile.dart';
 import '../../profile/presentation/profile_screen.dart';
 import '../../sos/data/sos_repository.dart';
+import '../../staff_contact/presentation/staff_contact_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -227,6 +229,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => const ProfileScreen(),
+                                ),
+                              ),
+                        ),
+                        _MenuCard(
+                          icon: Icons.support_agent_rounded,
+                          title: 'Petugas',
+                          subtitle: 'TL & Muthawwif',
+                          color: const Color(0xFF7C3AED),
+                          onTap:
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const StaffContactScreen(),
+                                ),
+                              ),
+                        ),
+                        _MenuCard(
+                          icon: Icons.location_searching_rounded,
+                          title: 'Izin Lokasi',
+                          subtitle: 'Panduan GPS',
+                          color: const Color(0xFFF59E0B),
+                          onTap:
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) =>
+                                          const LocationPermissionGuideScreen(),
                                 ),
                               ),
                         ),

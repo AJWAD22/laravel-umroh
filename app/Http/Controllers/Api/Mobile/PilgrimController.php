@@ -107,6 +107,37 @@ class PilgrimController extends Controller
         ]);
     }
 
+    public function staffLocations(Request $request): JsonResponse
+    {
+        $group = $this->access->activeGroupForPilgrim($request->user()->pilgrim);
+        $group?->loadMissing([
+            'tourLeader.user.staffLocation',
+            'muthawwif.user.staffLocation',
+        ]);
+
+        $staff = collect([
+            ['role' => 'tour-leader', 'label' => 'Tour Leader', 'profile' => $group?->tourLeader],
+            ['role' => 'muthawwif', 'label' => 'Muthawwif', 'profile' => $group?->muthawwif],
+        ])->map(function (array $item) use ($request): array {
+            $profile = $item['profile'];
+            $location = $profile?->user?->staffLocation;
+
+            return [
+                'role' => $item['role'],
+                'label' => $item['label'],
+                'id' => $profile?->id,
+                'full_name' => $profile?->full_name,
+                'phone' => $profile?->phone,
+                'location_available' => $location !== null,
+                'location' => $location
+                    ? (new LocationResource($location))->resolve($request)
+                    : null,
+            ];
+        })->values();
+
+        return response()->json(['data' => $staff]);
+    }
+
     public function history(LocationHistoryRequest $request)
     {
         $filters = $request->validated();

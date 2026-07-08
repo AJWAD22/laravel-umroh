@@ -4,17 +4,20 @@ namespace App\Http\Controllers\Api\Mobile;
 
 use App\Enums\MobileRole;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Mobile\SendLocationRequest;
 use App\Http\Requests\Api\Mobile\StaffListRequest;
 use App\Http\Resources\Mobile\HotelResource;
 use App\Http\Resources\Mobile\LocationResource;
 use App\Http\Resources\Mobile\PilgrimResource;
 use App\Http\Resources\Mobile\SosReportResource;
 use App\Models\Hotel;
+use App\Models\StaffLocation;
 use App\Models\SosReport;
 use App\Services\MobileGroupAccessService;
 use App\Services\SosResolutionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class StaffGroupController extends Controller
 {
@@ -71,6 +74,32 @@ class StaffGroupController extends Controller
     public function muthawwifResolveSos(Request $request, SosReport $sosReport): JsonResponse
     {
         return $this->resolveSos($request, $sosReport, MobileRole::Muthawwif);
+    }
+
+    public function sendLocation(SendLocationRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $role = $user->hasRole(MobileRole::TourLeader->value)
+            ? MobileRole::TourLeader->value
+            : MobileRole::Muthawwif->value;
+        $data = $request->validated();
+        $recordedAt = isset($data['recorded_at']) ? Carbon::parse($data['recorded_at']) : now();
+        unset($data['recorded_at']);
+
+        $location = StaffLocation::query()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'branch_id' => $user->branch_id,
+                'role' => $role,
+                ...$data,
+                'recorded_at' => $recordedAt,
+            ],
+        );
+
+        return response()->json([
+            'message' => 'Lokasi petugas berhasil disimpan.',
+            'location' => new LocationResource($location),
+        ], 201);
     }
 
     private function pilgrims(Request $request, MobileRole $role)

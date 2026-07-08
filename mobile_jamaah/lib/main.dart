@@ -18,6 +18,7 @@ import 'features/location/presentation/tracking_provider.dart';
 import 'features/sos/data/sos_repository.dart';
 import 'features/staff/data/staff_repository.dart';
 import 'features/staff/presentation/staff_provider.dart';
+import 'features/staff_contact/data/staff_contact_repository.dart';
 import 'features/activation/data/activation_repository.dart';
 
 Future<void> main() async {
@@ -45,6 +46,7 @@ Future<void> main() async {
         Provider.value(value: SosRepository(apiClient)),
         Provider.value(value: HotelRepository(apiClient)),
         Provider.value(value: StaffRepository(apiClient)),
+        Provider.value(value: StaffContactRepository(apiClient)),
         ChangeNotifierProvider(
           create:
               (context) => AuthProvider(
