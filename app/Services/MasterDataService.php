@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\Checkpoint;
 use App\Models\Departure;
 use App\Models\Group;
+use App\Models\GroupMember;
 use App\Models\Hotel;
 use App\Models\Muthawwif;
 use App\Models\Pilgrim;
@@ -38,9 +39,9 @@ class MasterDataService
                 ['photo_path' => 'Foto', 'name' => 'Nama', 'email' => 'Email', 'branch.name' => 'Cabang', 'is_active' => 'Aktif'],
                 ['name', 'email', 'phone_number'], ['name', 'email', 'is_active'], ['branch']),
             'pilgrims' => $this->definition(Pilgrim::class, 'Jamaah', 'pilgrims.manage',
-                ['photo_path' => 'Foto', 'registration_number' => 'No. Registrasi', 'full_name' => 'Nama', 'branch.name' => 'Cabang', 'phone' => 'Telepon', 'activation_pin' => 'PIN Aktivasi', 'status' => 'Status'],
+                ['photo_path' => 'Foto', 'registration_number' => 'No. Registrasi', 'full_name' => 'Nama', 'active_group' => 'Rombongan', 'branch.name' => 'Cabang', 'phone' => 'Telepon', 'activation_pin' => 'PIN Aktivasi', 'status' => 'Status'],
                 ['registration_number', 'full_name', 'nik', 'passport_number', 'phone'],
-                ['registration_number', 'full_name', 'phone', 'status'], ['branch']),
+                ['registration_number', 'full_name', 'phone', 'status'], ['branch', 'groupMemberships.group']),
             'tour-leaders' => $this->definition(TourLeader::class, 'Tour Leader', 'tour-leaders.manage',
                 ['photo_path' => 'Foto', 'employee_number' => 'No. Pegawai', 'full_name' => 'Nama', 'user.email' => 'Email Login', 'branch.name' => 'Cabang', 'phone' => 'Telepon', 'is_active' => 'Aktif'],
                 ['employee_number', 'full_name', 'phone'], ['employee_number', 'full_name', 'phone', 'is_active'], ['branch', 'user']),
@@ -167,6 +168,12 @@ class MasterDataService
         }
 
         return DB::transaction(function () use ($resource, $data, $record, $photo): Model {
+            $groupId = null;
+            if ($resource === 'pilgrims') {
+                $groupId = $data['group_id'] ?? null;
+                unset($data['group_id']);
+            }
+
             if (! $record && in_array($resource, ['pilgrims', 'departures', 'groups'], true)) {
                 $generated = $this->codes->generate($resource, $data);
                 $data[$generated['column']] = $generated['value'];
@@ -185,8 +192,44 @@ class MasterDataService
                 ])->save();
             }
 
+            if ($resource === 'pilgrims') {
+                $this->syncPilgrimGroup($model, $groupId);
+            }
+
             return $model;
         });
+    }
+
+    private function syncPilgrimGroup(Model $pilgrim, int|string|null $groupId): void
+    {
+        if (! $pilgrim instanceof Pilgrim) {
+            return;
+        }
+
+        GroupMember::query()
+            ->where('pilgrim_id', $pilgrim->id)
+            ->where('status', 'active')
+            ->when($groupId, fn (Builder $query) => $query->where('group_id', '!=', $groupId))
+            ->update([
+                'status' => 'left',
+                'left_at' => now(),
+            ]);
+
+        if (! $groupId) {
+            return;
+        }
+
+        GroupMember::query()->updateOrCreate(
+            [
+                'group_id' => (int) $groupId,
+                'pilgrim_id' => $pilgrim->id,
+            ],
+            [
+                'joined_at' => now(),
+                'left_at' => null,
+                'status' => 'active',
+            ],
+        );
     }
 
     /**

@@ -62,6 +62,7 @@ class MasterDataRequest extends FormRequest
             ],
             'pilgrims' => [
                 'branch_id' => ['required', 'exists:branches,id'],
+                'group_id' => ['nullable', Rule::exists('groups', 'id')->where('branch_id', $branchId)],
                 'registration_number' => ['exclude'],
                 'full_name' => ['required', 'string', 'max:255'],
                 'nik' => ['nullable', 'string', 'max:20', $unique('pilgrims', 'nik')],

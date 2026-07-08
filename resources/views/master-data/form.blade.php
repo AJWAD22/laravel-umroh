@@ -4,7 +4,9 @@
         $key,
         $key === 'email' && in_array($resource, ['tour-leaders', 'muthawwifs'], true)
             ? data_get($record, 'user.email', $default)
-            : data_get($record, $key, $default)
+            : ($resource === 'pilgrims' && $key === 'group_id'
+                ? data_get($record?->groupMemberships?->firstWhere('status', 'active'), 'group_id', $default)
+                : data_get($record, $key, $default))
     );
     $commonBranch = [['branch_id', 'Cabang', 'select', $options['branches']]];
     $automaticCodeHelp = match ($resource) {
@@ -32,6 +34,7 @@
             ['password','Password','password'], ['password_confirmation','Konfirmasi Password','password'], ['is_active','Status','boolean'],
         ],
         'pilgrims' => [...$commonBranch,
+            ['group_id','Rombongan','select',$options['groups']],
             ['registration_number','Nomor Registrasi','text'], ['full_name','Nama Lengkap','text'], ['nik','NIK','text'],
             ['passport_number','Nomor Paspor','text'], ['passport_expired_at','Masa Berlaku Paspor','date'],
             ['gender','Jenis Kelamin','select',['male'=>'Laki-laki','female'=>'Perempuan']], ['phone','Telepon','text'],

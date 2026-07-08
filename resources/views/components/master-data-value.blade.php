@@ -1,7 +1,11 @@
 @props(['record', 'column', 'label' => null, 'canManage' => false])
 
 @php
-    $value = $column === 'activation_pin' ? $record->activationPin() : data_get($record, $column);
+    $value = match ($column) {
+        'activation_pin' => $record->activationPin(),
+        'active_group' => $record->groupMemberships?->firstWhere('status', 'active')?->group?->name,
+        default => data_get($record, $column),
+    };
     $categoryLabels = [
         'ibadah' => 'Tempat Ibadah',
         'hotel' => 'Hotel',
