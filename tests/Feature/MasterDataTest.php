@@ -23,10 +23,16 @@ class MasterDataTest extends TestCase
     {
         $superAdmin = $this->superAdmin();
 
-        foreach (['branches', 'branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs', 'hotels', 'departures', 'groups'] as $resource) {
+        foreach (['branches', 'branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs', 'groups'] as $resource) {
             $this->actingAs($superAdmin)
                 ->get(route('master-data.index', $resource))
                 ->assertOk();
+        }
+
+        foreach (['hotels', 'checkpoints', 'departures'] as $resource) {
+            $this->actingAs($superAdmin)
+                ->get("/master-data/{$resource}")
+                ->assertNotFound();
         }
     }
 
@@ -168,16 +174,14 @@ class MasterDataTest extends TestCase
                 ->assertSessionHasNoErrors();
         }
 
-        $this->actingAs($admin)
-            ->post(route('master-data.store', 'departures'), [
-                'program_name' => 'Umroh Awal Tahun',
-                'departure_date' => '2027-01-10',
-                'return_date' => '2027-01-20',
-                'status' => 'scheduled',
-            ])
-            ->assertSessionHasNoErrors();
-
-        $departure = Departure::where('branch_id', $branch->id)->firstOrFail();
+        $departure = Departure::create([
+            'branch_id' => $branch->id,
+            'code' => 'BJM-DEP-2027-001',
+            'program_name' => 'Umroh Awal Tahun',
+            'departure_date' => '2027-01-10',
+            'return_date' => '2027-01-20',
+            'status' => 'scheduled',
+        ]);
 
         $this->actingAs($admin)
             ->post(route('master-data.store', 'groups'), [
@@ -192,7 +196,6 @@ class MasterDataTest extends TestCase
             ['BJM-JMH-00001', 'BJM-JMH-00002'],
             Pilgrim::orderBy('id')->pluck('registration_number')->all(),
         );
-        $this->assertSame('BJM-DEP-2027-001', $departure->code);
         $this->assertSame('BJM-GRP-2027-001', Group::firstOrFail()->code);
     }
 

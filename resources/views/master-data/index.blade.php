@@ -15,8 +15,8 @@
         ];
         $resourceIcon = $resourceIcons[$resource] ?? 'database';
         $sectionLabel = match (true) {
-            in_array($resource, ['branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs'], true) => 'Data Pengguna',
-            in_array($resource, ['departures', 'groups', 'hotels', 'checkpoints'], true) => 'Operasional Umrah',
+            in_array($resource, ['branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs', 'groups'], true) => 'Data Master',
+            in_array($resource, ['departures', 'hotels', 'checkpoints'], true) => 'Data Pendukung Sistem',
             $resource === 'branches' => 'Organisasi',
             default => 'Data',
         };
