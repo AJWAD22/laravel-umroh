@@ -10,16 +10,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ isset($title) ? $title.' · ' : '' }}{{ config('app.name', 'Umrah Monitor') }}</title>
+    <title>{{ isset($title) ? $title.' · ' : '' }}{{ config('app.name', 'Mantau Umroh') }}</title>
     <link rel="icon" type="image/png" media="(prefers-color-scheme: light)" href="{{ asset('images/mantau-umroh-icon-light.png') }}">
     <link rel="icon" type="image/png" media="(prefers-color-scheme: dark)" href="{{ asset('images/mantau-umroh-icon-dark.png') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800,900&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
 <body class="bg-slate-50 font-sans text-slate-900 antialiased selection:bg-blue-200 selection:text-blue-950 dark:bg-slate-950 dark:text-slate-100 dark:selection:bg-blue-800">
-    <div class="min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(37,99,235,0.045),_transparent_28rem)] dark:bg-[radial-gradient(circle_at_top_right,_rgba(37,99,235,0.09),_transparent_30rem)]">
+    <div class="min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(37,99,235,0.08),_transparent_30rem),radial-gradient(circle_at_top_left,_rgba(20,184,166,0.06),_transparent_24rem)] dark:bg-[radial-gradient(circle_at_top_right,_rgba(37,99,235,0.13),_transparent_30rem),radial-gradient(circle_at_top_left,_rgba(20,184,166,0.08),_transparent_24rem)]">
         @include('layouts.partials.sidebar')
 
         <div class="min-h-screen transition-[padding] duration-300" :class="sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-[17rem]'">

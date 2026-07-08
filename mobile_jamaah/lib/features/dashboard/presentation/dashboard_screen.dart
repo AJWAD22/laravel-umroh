@@ -3,8 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../auth/presentation/auth_provider.dart';
-import '../../hotel/presentation/hotel_screen.dart';
 import '../../checkpoint/presentation/checkpoint_screen.dart';
+import '../../hotel/presentation/hotel_screen.dart';
 import '../../location/data/location_repository.dart';
 import '../../location/presentation/tracking_provider.dart';
 import '../../profile/domain/jamaah_profile.dart';
@@ -34,10 +34,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder:
           (context) => AlertDialog(
-            icon: const Icon(Icons.sos_rounded, color: Colors.red, size: 42),
-            title: const Text('Kirim SOS?'),
+            icon: const Icon(Icons.sos_rounded, color: Color(0xFFDC2626)),
+            title: const Text('Kirim SOS sekarang?'),
             content: const Text(
-              'Lokasi terkini Anda akan dikirim ke Admin Cabang dan petugas group.',
+              'Gunakan hanya saat membutuhkan bantuan. Lokasi Anda akan dikirim ke petugas rombongan.',
               textAlign: TextAlign.center,
             ),
             actions: [
@@ -46,9 +46,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: const Text('Batal'),
               ),
               FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFDC2626),
+                  foregroundColor: Colors.white,
+                ),
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Kirim SOS'),
+                child: const Text('Ya, Kirim SOS'),
               ),
             ],
           ),
@@ -68,8 +71,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('SOS berhasil dikirim. Bantuan sedang diproses.'),
-            backgroundColor: Colors.green,
+            content: Text('SOS terkirim. Petugas sedang menerima laporan.'),
+            backgroundColor: Color(0xFF16A34A),
           ),
         );
       }
@@ -78,7 +81,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(error.toString()),
-            backgroundColor: Colors.red,
+            backgroundColor: const Color(0xFFDC2626),
           ),
         );
       }
@@ -121,18 +124,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard Jamaah'),
+        title: const Text('Beranda Jamaah'),
         actions: [
+          IconButton(
+            tooltip: 'Profil Saya',
+            onPressed:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                ),
+            icon: const Icon(Icons.person_rounded),
+          ),
           IconButton(
             tooltip: 'Logout',
             onPressed: _logout,
             icon: const Icon(Icons.logout_rounded),
           ),
+          const SizedBox(width: 6),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: auth.refreshProfile,
         child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
           children: [
             Center(
@@ -141,176 +155,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    GestureDetector(
-                      onTap:
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const ProfileScreen(),
-                            ),
-                          ),
-                      child: Container(
-                        padding: const EdgeInsets.all(22),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF1D4ED8), Color(0xFF2563EB)],
-                          ),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 30,
-                              backgroundColor: Colors.white24,
-                              backgroundImage:
-                                  profile.photoUrl == null
-                                      ? null
-                                      : NetworkImage(profile.photoUrl!),
-                              child:
-                                  profile.photoUrl == null
-                                      ? Text(
-                                        profile.name
-                                            .split(' ')
-                                            .take(2)
-                                            .map((word) => word[0])
-                                            .join()
-                                            .toUpperCase(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 20,
-                                        ),
-                                      )
-                                      : null,
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Assalamu’alaikum,',
-                                    style: TextStyle(color: Colors.white70),
-                                  ),
-                                  Text(
-                                    profile.name,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    profile.registrationNumber,
-                                    style: const TextStyle(
-                                      color: Colors.white70,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                    _WelcomeHero(profile: profile),
+                    const SizedBox(height: 14),
+                    _MonitoringStatusCard(
+                      isSos: isSos,
+                      isTracking: tracking.isTracking,
+                      isSending: tracking.isSending,
+                      lastSentAt: tracking.lastSentAt,
+                      error: tracking.error,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
+                    _SosButton(
+                      isSending: _sendingSos,
+                      isSos: isSos,
+                      onPressed: _sendSos,
+                    ),
+                    const SizedBox(height: 18),
                     _JourneyCard(journey: profile.journey),
-                    const SizedBox(height: 12),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(18),
-                        child: Row(
-                          children: [
-                            Icon(
-                              isSos
-                                  ? Icons.warning_rounded
-                                  : Icons.verified_user_rounded,
-                              color: isSos ? Colors.red : Colors.green,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('Status Monitoring'),
-                                  Text(
-                                    isSos ? 'SOS Aktif' : 'Normal',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: isSos ? Colors.red : Colors.green,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (tracking.isTracking)
-                              const Chip(
-                                avatar: Icon(
-                                  Icons.gps_fixed,
-                                  size: 16,
-                                  color: Colors.green,
-                                ),
-                                label: Text('Tracking'),
-                              ),
-                          ],
-                        ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'Menu Jamaah',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    if (tracking.error != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Text(
-                          tracking.error!,
-                          style: const TextStyle(color: Colors.red),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    if (tracking.lastSentAt != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Text(
-                          'Lokasi terakhir terkirim ${DateFormat.Hms().format(tracking.lastSentAt!)}',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ),
-                    const SizedBox(height: 12),
-                    FilledButton.icon(
-                      onPressed: _sendingSos ? null : _sendSos,
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(64),
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                      ),
-                      icon:
-                          _sendingSos
-                              ? const SizedBox.square(
-                                dimension: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                              : const Icon(Icons.sos_rounded, size: 30),
-                      label: const Text(
-                        'TOMBOL DARURAT SOS',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    GridView.count(
-                      crossAxisCount:
-                          MediaQuery.sizeOf(context).width >= 600 ? 3 : 2,
+                    const SizedBox(height: 8),
+                    GridView(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: 1.25,
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 260,
+                            mainAxisExtent: 132,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                          ),
                       children: [
                         _MenuCard(
-                          icon: Icons.map_rounded,
-                          label: 'Cari Tujuan',
+                          icon: Icons.place_rounded,
+                          title: 'Tujuan',
+                          subtitle: 'Cari titik penting',
+                          color: const Color(0xFF2563EB),
                           onTap:
                               () => Navigator.push(
                                 context,
@@ -321,7 +206,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         _MenuCard(
                           icon: Icons.hotel_rounded,
-                          label: 'Hotel',
+                          title: 'Hotel',
+                          subtitle: 'Lihat lokasi hotel',
+                          color: const Color(0xFF0891B2),
                           onTap:
                               () => Navigator.push(
                                 context,
@@ -331,18 +218,261 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                         ),
                         _MenuCard(
-                          icon: Icons.logout_rounded,
-                          label: 'Logout',
-                          onTap: _logout,
+                          icon: Icons.badge_rounded,
+                          title: 'Profil',
+                          subtitle: 'Data jamaah',
+                          color: const Color(0xFF16A34A),
+                          onTap:
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const ProfileScreen(),
+                                ),
+                              ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    const _HelpCard(),
                   ],
                 ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _WelcomeHero extends StatelessWidget {
+  const _WelcomeHero({required this.profile});
+
+  final JamaahProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0B1F45), Color(0xFF1D4ED8)],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1D4ED8).withValues(alpha: 0.22),
+            blurRadius: 30,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 34,
+            backgroundColor: Colors.white.withValues(alpha: 0.16),
+            backgroundImage:
+                profile.photoUrl == null ? null : NetworkImage(profile.photoUrl!),
+            child:
+                profile.photoUrl == null
+                    ? Text(
+                      _initials(profile.name),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    )
+                    : null,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Assalamu’alaikum',
+                  style: TextStyle(
+                    color: Color(0xFFBFDBFE),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  profile.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    height: 1.2,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    profile.registrationNumber,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MonitoringStatusCard extends StatelessWidget {
+  const _MonitoringStatusCard({
+    required this.isSos,
+    required this.isTracking,
+    required this.isSending,
+    required this.lastSentAt,
+    required this.error,
+  });
+
+  final bool isSos;
+  final bool isTracking;
+  final bool isSending;
+  final DateTime? lastSentAt;
+  final String? error;
+
+  @override
+  Widget build(BuildContext context) {
+    final isHealthy = error == null && isTracking;
+    final statusColor =
+        isSos
+            ? const Color(0xFFDC2626)
+            : isHealthy
+            ? const Color(0xFF16A34A)
+            : const Color(0xFFF59E0B);
+    final statusText =
+        isSos
+            ? 'SOS Aktif'
+            : isHealthy
+            ? 'Aman & Terpantau'
+            : 'Perlu Cek Lokasi';
+    final subtitle =
+        error != null
+            ? error!
+            : lastSentAt != null
+            ? 'Lokasi terkirim ${DateFormat.Hm().format(lastSentAt!)}'
+            : isSending
+            ? 'Sedang mengirim lokasi...'
+            : 'Menunggu update lokasi pertama.';
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Icon(
+                isSos ? Icons.sos_rounded : Icons.gps_fixed_rounded,
+                color: statusColor,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    statusText,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SosButton extends StatelessWidget {
+  const _SosButton({
+    required this.isSending,
+    required this.isSos,
+    required this.onPressed,
+  });
+
+  final bool isSending;
+  final bool isSos;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton(
+      onPressed: isSending ? null : onPressed,
+      style: FilledButton.styleFrom(
+        minimumSize: const Size.fromHeight(78),
+        backgroundColor: const Color(0xFFDC2626),
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (isSending)
+            const SizedBox.square(
+              dimension: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: Colors.white,
+              ),
+            )
+          else
+            const Icon(Icons.sos_rounded, size: 34),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              isSos ? 'SOS SUDAH TERKIRIM' : 'DARURAT / SOS',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.4,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -358,8 +488,8 @@ class _JourneyCard extends StatelessWidget {
     if (journey == null) {
       return const Card(
         child: ListTile(
-          leading: Icon(Icons.flight_outlined),
-          title: Text('Informasi Perjalanan'),
+          leading: Icon(Icons.flight_takeoff_rounded),
+          title: Text('Perjalanan Umroh'),
           subtitle: Text('Belum ada keberangkatan aktif.'),
         ),
       );
@@ -382,17 +512,19 @@ class _JourneyCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.flight_takeoff_rounded, color: Colors.blue),
+                const Icon(
+                  Icons.flight_takeoff_rounded,
+                  color: Color(0xFF2563EB),
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     journey!.programName,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
                 ),
-                Chip(label: Text(journey!.status.toUpperCase())),
               ],
             ),
             const Divider(height: 24),
@@ -430,12 +562,17 @@ class _JourneyRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
+    padding: const EdgeInsets.only(bottom: 10),
     child: Row(
       children: [
-        Icon(icon, size: 19, color: Colors.blueGrey),
+        Icon(icon, size: 20, color: Colors.blueGrey),
         const SizedBox(width: 10),
-        Expanded(child: Text(label)),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
       ],
     ),
   );
@@ -444,12 +581,16 @@ class _JourneyRow extends StatelessWidget {
 class _MenuCard extends StatelessWidget {
   const _MenuCard({
     required this.icon,
-    required this.label,
+    required this.title,
+    required this.subtitle,
+    required this.color,
     required this.onTap,
   });
 
   final IconData icon;
-  final String label;
+  final String title;
+  final String subtitle;
+  final Color color;
   final VoidCallback onTap;
 
   @override
@@ -458,15 +599,72 @@ class _MenuCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 34, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(height: 8),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon, color: color, size: 27),
+              ),
+              const Spacer(),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
+
+class _HelpCard extends StatelessWidget {
+  const _HelpCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF16A34A).withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_rounded, color: Color(0xFF16A34A)),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Jika tersesat, tetap tenang. Tekan SOS hanya untuk keadaan darurat, atau hubungi Tour Leader melalui nomor yang diberikan.',
+              style: TextStyle(fontWeight: FontWeight.w700, height: 1.45),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _initials(String name) {
+  final parts = name.trim().split(RegExp(r'\s+')).where((e) => e.isNotEmpty);
+  return parts.take(2).map((e) => e[0]).join().toUpperCase();
 }

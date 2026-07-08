@@ -1,20 +1,28 @@
 <x-app-layout>
     <x-slot:title>Dashboard {{ $scopeLabel }}</x-slot:title>
     <x-slot:header>
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-                <nav class="mb-2 text-sm text-slate-500">Beranda / Dashboard</nav>
-                <h1 class="text-2xl font-bold tracking-tight">Dashboard {{ $scopeLabel }}</h1>
-                <p class="mt-1 text-sm text-slate-500">
-                    Ringkasan operasional dan kondisi monitoring terkini.
-                </p>
-            </div>
-            <div class="inline-flex items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <span class="relative flex size-2">
-                    <span class="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                    <span class="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
-                </span>
-                Diperbarui {{ now()->format('H:i') }} WITA
+        <div class="travel-panel overflow-hidden p-5 sm:p-6">
+            <div class="absolute -right-12 -top-16 size-44 rounded-full bg-blue-400/20 blur-3xl"></div>
+            <div class="absolute right-24 top-8 size-28 rounded-full bg-emerald-300/20 blur-2xl"></div>
+            <div class="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <div class="travel-chip mb-4 w-fit">
+                        <i data-lucide="plane" class="size-4 text-blue-600"></i>
+                        Travel Operations Center
+                    </div>
+                    <nav class="mb-2 text-sm font-medium text-slate-500">Beranda / Dashboard</nav>
+                    <h1 class="text-3xl font-black tracking-tight text-slate-950 dark:text-white">Dashboard {{ $scopeLabel }}</h1>
+                    <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                        Ringkasan operasional travel, keberangkatan, monitoring jamaah, dan laporan darurat dalam satu panel.
+                    </p>
+                </div>
+                <div class="inline-flex items-center gap-2 self-start rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700 shadow-sm dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+                    <span class="relative flex size-2.5">
+                        <span class="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex size-2.5 rounded-full bg-emerald-500"></span>
+                    </span>
+                    Diperbarui {{ now()->format('H:i') }} WITA
+                </div>
             </div>
         </div>
     </x-slot:header>
@@ -33,8 +41,9 @@
 
     <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         @foreach ($cards as $card)
-            <article class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-                <div class="absolute inset-x-0 top-0 h-1 {{ $colorClasses[$card['color']]['accent'] }}"></div>
+            <article class="surface-card relative overflow-hidden p-5 transition hover:-translate-y-0.5 hover:shadow-xl dark:bg-slate-900">
+                <div class="absolute inset-x-0 top-0 h-1.5 {{ $colorClasses[$card['color']]['accent'] }}"></div>
+                <div class="absolute -right-8 -top-10 size-24 rounded-full {{ $colorClasses[$card['color']]['accent'] }} opacity-10 blur-2xl"></div>
                 <div class="flex items-start justify-between">
                     <div>
                         <p class="text-sm font-medium text-slate-500">{{ $card['label'] }}</p>
@@ -49,7 +58,7 @@
     </section>
 
     <section class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
-        <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
+        <article class="surface-card p-5 sm:p-6">
             <div>
                 <h2 class="font-semibold">Statistik 6 Bulan</h2>
                 <p class="mt-1 text-sm text-slate-500">Jamaah baru, jadwal keberangkatan, dan laporan SOS.</p>
@@ -59,7 +68,7 @@
             </div>
         </article>
 
-        <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
+        <article class="surface-card p-5 sm:p-6">
             <h2 class="font-semibold">Ringkasan Monitoring</h2>
             <p class="mt-1 text-sm text-slate-500">Status GPS terakhir dari perangkat jamaah.</p>
 
@@ -81,7 +90,7 @@
     </section>
 
     <section class="mt-6 grid gap-6 xl:grid-cols-2">
-        <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <article class="surface-card overflow-hidden">
             <div class="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
                 <h2 class="font-semibold">SOS Aktif Terbaru</h2>
                 <p class="mt-1 text-sm text-slate-500">Hanya menampilkan laporan yang belum diamankan.</p>
@@ -120,7 +129,7 @@
             @endforelse
         </article>
 
-        <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <article class="surface-card overflow-hidden">
             <div class="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
                 <h2 class="font-semibold">Keberangkatan Mendatang</h2>
                 <p class="mt-1 text-sm text-slate-500">Lima jadwal terdekat yang belum berangkat.</p>

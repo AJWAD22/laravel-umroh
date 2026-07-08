@@ -67,7 +67,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Beranda',
+          'Beranda Petugas',
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
         actions: [
@@ -87,7 +87,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
           children: [
             Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 820),
+                constraints: const BoxConstraints(maxWidth: 860),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -99,16 +99,18 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                     ),
                     const SizedBox(height: 14),
                     _StaffJourneyCard(journey: profile.journey),
+                    const SizedBox(height: 14),
+                    _OperationalHintCard(isLeader: isLeader),
                     const SizedBox(height: 24),
                     Text(
-                      'Menu Utama',
+                      'Akses Cepat',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      'Pilih layanan yang ingin Anda buka.',
+                      'Kelola jamaah, lokasi, dan laporan darurat dari satu tempat.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 14),
@@ -258,15 +260,33 @@ class _StaffJourneyCard extends StatelessWidget {
             : '${dateFormat.format(journey!.departureDate!)} – '
                 '${dateFormat.format(journey!.returnDate!)}';
 
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.45),
+        ),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.assignment_turned_in_rounded, color: Colors.blue),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.assignment_turned_in_rounded,
+                    color: Color(0xFF2563EB),
+                  ),
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -278,7 +298,10 @@ class _StaffJourneyCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Chip(label: Text(journey!.groupCode)),
+                Chip(
+                  avatar: const Icon(Icons.verified_rounded, size: 16),
+                  label: Text(journey!.groupCode),
+                ),
               ],
             ),
             const Divider(height: 24),
@@ -423,6 +446,53 @@ class _StaffHeader extends StatelessWidget {
         .where((part) => part.isNotEmpty)
         .map((part) => part[0].toUpperCase())
         .join();
+  }
+}
+
+class _OperationalHintCard extends StatelessWidget {
+  const _OperationalHintCard({required this.isLeader});
+
+  final bool isLeader;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFFECFDF5),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFBBF7D0)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: const Color(0xFF22C55E).withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(
+              Icons.support_agent_rounded,
+              color: Color(0xFF15803D),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              isLeader
+                  ? 'Prioritaskan pengecekan lokasi jamaah dan laporan SOS. Aktivasi jamaah tersedia untuk perangkat baru.'
+                  : 'Pantau jamaah bimbingan Anda, cek lokasi terakhir, dan bantu jika ada laporan SOS.',
+              style: const TextStyle(
+                color: Color(0xFF14532D),
+                fontWeight: FontWeight.w600,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

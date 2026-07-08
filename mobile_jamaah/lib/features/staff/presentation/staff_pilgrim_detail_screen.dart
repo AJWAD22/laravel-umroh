@@ -16,7 +16,12 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
     final isSos = pilgrim.monitoringStatus == 'sos';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Detail Jamaah')),
+      appBar: AppBar(
+        title: const Text(
+          'Detail Jamaah',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -25,13 +30,37 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
               constraints: const BoxConstraints(maxWidth: 680),
               child: Column(
                 children: [
-                  Card(
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors:
+                            isSos
+                                ? const [Color(0xFF991B1B), Color(0xFFEF4444)]
+                                : const [
+                                  Color(0xFF0F2F6B),
+                                  Color(0xFF2563EB),
+                                ],
+                      ),
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (isSos ? Colors.red : Colors.blue).withValues(
+                            alpha: 0.18,
+                          ),
+                          blurRadius: 28,
+                          offset: const Offset(0, 14),
+                        ),
+                      ],
+                    ),
                     child: Padding(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(22),
                       child: Row(
                         children: [
                           CircleAvatar(
                             radius: 38,
+                            backgroundColor: Colors.white.withValues(alpha: 0.16),
                             backgroundImage:
                                 pilgrim.photoUrl == null
                                     ? null
@@ -53,16 +82,17 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   pilgrim.fullName,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                  ),
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.titleLarge?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
                                 ),
+                              ),
                                 const SizedBox(height: 4),
                                 Text(
                                   pilgrim.registrationNumber,
-                                  style: Theme.of(context).textTheme.bodySmall,
+                                  style: const TextStyle(color: Colors.white70),
                                 ),
                                 const SizedBox(height: 10),
                                 Wrap(
@@ -100,7 +130,7 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(18),
+                      padding: const EdgeInsets.all(20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -139,7 +169,7 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(18),
+                      padding: const EdgeInsets.all(20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -191,7 +221,7 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
                                       ),
                                     ),
                                 icon: const Icon(Icons.map_rounded),
-                                label: const Text('Lihat di Peta Internal'),
+                                label: const Text('Buka Peta Internal'),
                               ),
                             ),
                           ],

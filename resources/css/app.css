@@ -14,6 +14,7 @@
     body {
         scrollbar-color: rgb(148 163 184 / 55%) transparent;
         scrollbar-width: thin;
+        @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100;
     }
 }
 
@@ -32,7 +33,7 @@
 
 @layer components {
     .sidebar-link {
-        @apply relative flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 transition duration-200 hover:bg-white/[0.06] hover:text-white;
+        @apply relative flex min-h-11 items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold text-slate-400 transition duration-200 hover:bg-white/[0.07] hover:text-white;
     }
 
     .sidebar-link-active {
@@ -40,7 +41,7 @@
     }
 
     .sidebar-submenu-link {
-        @apply relative block rounded-lg px-3 py-2 text-[13px] font-medium text-slate-400 transition hover:bg-white/[0.05] hover:text-white;
+        @apply relative block rounded-xl px-3 py-2.5 text-[13px] font-semibold text-slate-400 transition hover:bg-white/[0.06] hover:text-white;
     }
 
     .sidebar-submenu-link-active {
@@ -48,23 +49,31 @@
     }
 
     .navbar-button {
-        @apply grid size-10 place-items-center rounded-xl text-slate-500 transition duration-200 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white;
+        @apply grid size-11 place-items-center rounded-2xl text-slate-500 transition duration-200 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white;
     }
 
     .surface-card {
-        @apply rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03),0_8px_24px_rgba(15,23,42,0.035)] dark:border-slate-800 dark:bg-slate-900;
+        @apply rounded-[1.35rem] border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.035),0_14px_36px_rgba(15,23,42,0.055)] dark:border-slate-800 dark:bg-slate-900;
+    }
+
+    .travel-panel {
+        @apply relative rounded-[1.35rem] border border-slate-200/80 bg-white shadow-[0_18px_46px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-900;
+    }
+
+    .travel-chip {
+        @apply inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300;
     }
 
     .control-field {
-        @apply min-h-11 rounded-xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100;
+        @apply min-h-11 rounded-2xl border-slate-300 bg-white text-sm text-slate-800 shadow-sm transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100;
     }
 
     .button-primary {
-        @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/15 transition hover:-translate-y-0.5 hover:shadow-blue-600/25 active:translate-y-0;
+        @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 to-blue-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-600/15 transition hover:-translate-y-0.5 hover:shadow-blue-600/25 active:translate-y-0;
     }
 
     .button-secondary {
-        @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
+        @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
     }
 
     .icon-action {

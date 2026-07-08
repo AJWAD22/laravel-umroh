@@ -27,6 +27,6 @@
             @endforelse
         </tbody>
     </table>
-    <div class="footer">Total data: {{ number_format($rows->count()) }} · Umrah Monitor</div>
+    <div class="footer">Total data: {{ number_format($rows->count()) }} · Mantau Umroh</div>
 </body>
 </html>

@@ -37,7 +37,10 @@ class _StaffPilgrimsScreenState extends State<StaffPilgrimsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cari Jamaah'),
+        title: const Text(
+          'Cari Jamaah',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
         actions: [
           IconButton(
             tooltip: 'Perbarui data',
@@ -51,25 +54,35 @@ class _StaffPilgrimsScreenState extends State<StaffPilgrimsScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: TextField(
-              controller: _searchController,
-              autofocus: false,
-              textInputAction: TextInputAction.search,
-              onChanged: (value) => setState(() => _query = value),
-              decoration: InputDecoration(
-                hintText: 'Nama, nomor jamaah, atau telepon',
-                prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon:
-                    query.isEmpty
-                        ? null
-                        : IconButton(
-                          tooltip: 'Hapus pencarian',
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _query = '');
-                          },
-                          icon: const Icon(Icons.close_rounded),
-                        ),
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Theme.of(context).dividerColor.withValues(alpha: 0.45),
+                ),
+              ),
+              child: TextField(
+                controller: _searchController,
+                autofocus: false,
+                textInputAction: TextInputAction.search,
+                onChanged: (value) => setState(() => _query = value),
+                decoration: InputDecoration(
+                  hintText: 'Cari nama, nomor jamaah, atau WhatsApp',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon:
+                      query.isEmpty
+                          ? null
+                          : IconButton(
+                            tooltip: 'Hapus pencarian',
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _query = '');
+                            },
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                ),
               ),
             ),
           ),
