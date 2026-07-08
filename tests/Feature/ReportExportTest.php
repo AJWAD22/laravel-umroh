@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Enums\UserRole;
 use App\Events\AdminNotificationCreated;
 use App\Models\Branch;
-use App\Models\Departure;
 use App\Models\LocationHistory;
 use App\Models\Pilgrim;
 use App\Models\SosReport;
@@ -53,7 +52,6 @@ class ReportExportTest extends TestCase
             'pilgrims' => ['Jamaah Laporan A', 'Jamaah Rahasia B'],
             'tracking' => ['Jamaah Laporan A', 'Jamaah Rahasia B'],
             'sos' => ['Jamaah Laporan A', 'Jamaah Rahasia B'],
-            'departures' => ['Program Laporan A', 'Program Rahasia B'],
         ];
 
         foreach ($expectations as $type => [$visible, $hidden]) {
@@ -65,11 +63,11 @@ class ReportExportTest extends TestCase
         }
     }
 
-    public function test_all_four_report_pages_render_with_default_filters(): void
+    public function test_all_report_pages_render_with_default_filters(): void
     {
         [$superAdmin] = $this->scenario();
 
-        foreach (['pilgrims', 'tracking', 'sos', 'departures'] as $type) {
+        foreach (['pilgrims', 'tracking', 'sos'] as $type) {
             $this->actingAs($superAdmin)
                 ->get(route('reports.index', $type))
                 ->assertOk()
@@ -99,8 +97,6 @@ class ReportExportTest extends TestCase
         $this->tracking($pilgrimB, 24.4672, 39.6111);
         $this->sos($branchA, $pilgrimA);
         $this->sos($branchB, $pilgrimB);
-        $this->departure($branchA, 'RPT-DEP-A', 'Program Laporan A');
-        $this->departure($branchB, 'RPT-DEP-B', 'Program Rahasia B');
 
         return [$superAdmin, $branchAdmin, $branchB];
     }
@@ -140,14 +136,4 @@ class ReportExportTest extends TestCase
         ]);
     }
 
-    private function departure(Branch $branch, string $code, string $program): void
-    {
-        Departure::firstOrCreate(['code' => $code], [
-            'branch_id' => $branch->id,
-            'program_name' => $program,
-            'departure_date' => today(),
-            'return_date' => today()->addDays(10),
-            'status' => 'scheduled',
-        ]);
-    }
 }

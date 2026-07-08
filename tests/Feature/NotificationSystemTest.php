@@ -95,6 +95,33 @@ class NotificationSystemTest extends TestCase
         $this->assertNull($foreignNotification->fresh()->read_at);
     }
 
+    public function test_admin_can_delete_own_notifications_but_not_another_users(): void
+    {
+        Event::fake([AdminNotificationCreated::class]);
+        [, $branchAdmin, $foreignAdmin, $pilgrim] = $this->scenario();
+        app(AdminNotificationService::class)->geofenceExit($pilgrim, 21.4, 39.8, 'Area Aman');
+
+        $ownNotification = Notification::where('notifiable_id', $branchAdmin->id)->firstOrFail();
+        $foreignNotification = Notification::create([
+            'id' => fake()->uuid(),
+            'branch_id' => $foreignAdmin->branch_id,
+            'type' => 'gps_offline',
+            'notifiable_type' => User::class,
+            'notifiable_id' => $foreignAdmin->id,
+            'data' => ['title' => 'Rahasia', 'message' => 'Data cabang lain'],
+        ]);
+
+        $this->actingAs($branchAdmin)
+            ->delete(route('notifications.destroy', $ownNotification))
+            ->assertRedirect();
+        $this->assertDatabaseMissing('notifications', ['id' => $ownNotification->id]);
+
+        $this->actingAs($branchAdmin)
+            ->delete(route('notifications.destroy', $foreignNotification))
+            ->assertForbidden();
+        $this->assertDatabaseHas('notifications', ['id' => $foreignNotification->id]);
+    }
+
     /**
      * @return array{User, User, User, Pilgrim}
      */

@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Departure;
 use App\Models\LocationHistory;
 use App\Models\Pilgrim;
 use App\Models\SosReport;
@@ -30,7 +29,7 @@ class ReportService
                     ->when($status, fn (Builder $q) => $q->where('status', $status))
                     ->whereBetween('created_at', [$from, $to])->orderBy('full_name')->get()
                     ->map(fn (Pilgrim $item) => [
-                        $item->registration_number, $item->full_name, $item->branch->name,
+                        $item->registration_number, $item->full_name, $item->branch?->name ?? '-',
                         $item->phone ?: '-', $item->gender, $item->status, $item->created_at->format('d-m-Y'),
                     ]),
                 'filters' => $filters,
@@ -42,8 +41,11 @@ class ReportService
                     ->when($branchId, fn (Builder $q) => $q->whereHas('pilgrim', fn (Builder $p) => $p->where('branch_id', $branchId)))
                     ->whereBetween('recorded_at', [$from, $to])->orderBy('recorded_at')->get()
                     ->map(fn (LocationHistory $item) => [
-                        $item->recorded_at->format('d-m-Y H:i:s'), $item->pilgrim->registration_number,
-                        $item->pilgrim->full_name, $item->pilgrim->branch->name, $item->latitude,
+                        $item->recorded_at?->format('d-m-Y H:i:s') ?? '-',
+                        $item->pilgrim?->registration_number ?? '-',
+                        $item->pilgrim?->full_name ?? 'Jamaah tidak ditemukan',
+                        $item->pilgrim?->branch?->name ?? '-',
+                        $item->latitude,
                         $item->longitude, $item->accuracy ?: '-', $item->battery_level ?? '-',
                     ]),
                 'filters' => $filters,
@@ -56,25 +58,12 @@ class ReportService
                     ->when($status, fn (Builder $q) => $q->where('status', $status))
                     ->whereBetween('reported_at', [$from, $to])->orderBy('reported_at')->get()
                     ->map(fn (SosReport $item) => [
-                        $item->reported_at->format('d-m-Y H:i:s'), $item->pilgrim->registration_number,
-                        $item->pilgrim->full_name, $item->branch->name, "{$item->latitude}, {$item->longitude}",
+                        $item->reported_at?->format('d-m-Y H:i:s') ?? '-',
+                        $item->pilgrim?->registration_number ?? '-',
+                        $item->pilgrim?->full_name ?? 'Jamaah tidak ditemukan',
+                        $item->branch?->name ?? '-',
+                        "{$item->latitude}, {$item->longitude}",
                         $item->status, $item->handler?->name ?? '-', $item->resolved_at?->format('d-m-Y H:i:s') ?? '-',
-                    ]),
-                'filters' => $filters,
-            ],
-            'departures' => [
-                'title' => 'Laporan Keberangkatan',
-                'headings' => ['Kode', 'Program', 'Cabang', 'Berangkat', 'Pulang', 'Bandara', 'Kuota', 'Jumlah Group', 'Status'],
-                'rows' => Departure::query()->with('branch:id,name')->withCount('groups')
-                    ->when($branchId, fn (Builder $q) => $q->where('branch_id', $branchId))
-                    ->when($status, fn (Builder $q) => $q->where('status', $status))
-                    ->whereDate('departure_date', '>=', $from->toDateString())
-                    ->whereDate('departure_date', '<=', $to->toDateString())
-                    ->orderBy('departure_date')->get()
-                    ->map(fn (Departure $item) => [
-                        $item->code, $item->program_name, $item->branch->name,
-                        $item->departure_date->format('d-m-Y'), $item->return_date->format('d-m-Y'),
-                        $item->departure_airport ?: '-', $item->quota ?: '-', $item->groups_count, $item->status,
                     ]),
                 'filters' => $filters,
             ],

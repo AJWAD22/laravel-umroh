@@ -44,4 +44,23 @@ class NotificationController extends Controller
 
         return back()->with('success', 'Semua notifikasi ditandai sudah dibaca.');
     }
+
+    public function destroy(Request $request, Notification $notification): RedirectResponse
+    {
+        Gate::authorize('update', $notification);
+
+        $notification->delete();
+
+        return back()->with('success', 'Notifikasi dihapus.');
+    }
+
+    public function destroyAll(Request $request): RedirectResponse
+    {
+        Notification::query()
+            ->where('notifiable_type', User::class)
+            ->where('notifiable_id', $request->user()->id)
+            ->delete();
+
+        return back()->with('success', 'Semua notifikasi dihapus.');
+    }
 }
