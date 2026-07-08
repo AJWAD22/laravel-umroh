@@ -13,7 +13,7 @@
                     <nav class="mb-2 text-sm font-medium text-slate-500">Beranda / Dashboard</nav>
                     <h1 class="text-3xl font-black tracking-tight text-slate-950 dark:text-white">Dashboard {{ $scopeLabel }}</h1>
                     <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                        Ringkasan operasional travel, keberangkatan, monitoring jamaah, dan laporan darurat dalam satu panel.
+                        Ringkasan jamaah, petugas, rombongan, monitoring GPS, dan laporan darurat dalam satu panel.
                     </p>
                 </div>
                 <div class="inline-flex items-center gap-2 self-start rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700 shadow-sm dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300">
@@ -61,7 +61,7 @@
         <article class="surface-card p-5 sm:p-6">
             <div>
                 <h2 class="font-semibold">Statistik 6 Bulan</h2>
-                <p class="mt-1 text-sm text-slate-500">Jamaah baru, jadwal keberangkatan, dan laporan SOS.</p>
+                <p class="mt-1 text-sm text-slate-500">Jamaah baru, rombongan baru, dan laporan SOS.</p>
             </div>
             <div class="mt-6 h-80">
                 <canvas id="dashboard-statistics-chart" aria-label="Grafik statistik enam bulan"></canvas>
@@ -89,7 +89,7 @@
         </article>
     </section>
 
-    <section class="mt-6 grid gap-6 xl:grid-cols-2">
+    <section class="mt-6">
         <article class="surface-card overflow-hidden">
             <div class="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
                 <h2 class="font-semibold">SOS Aktif Terbaru</h2>
@@ -129,30 +129,6 @@
             @endforelse
         </article>
 
-        <article class="surface-card overflow-hidden">
-            <div class="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
-                <h2 class="font-semibold">Keberangkatan Mendatang</h2>
-                <p class="mt-1 text-sm text-slate-500">Lima jadwal terdekat yang belum berangkat.</p>
-            </div>
-            @forelse ($upcomingDepartures as $departure)
-                <div class="flex items-center gap-4 border-b border-slate-100 px-5 py-4 last:border-0 dark:border-slate-800">
-                    <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60">
-                        <i data-lucide="plane" class="size-5"></i>
-                    </span>
-                    <div class="min-w-0">
-                        <p class="truncate text-sm font-semibold">{{ $departure->program_name }}</p>
-                        <p class="truncate text-xs text-slate-500">{{ $departure->branch->name }} · {{ $departure->code }}</p>
-                    </div>
-                    <div class="ml-auto text-right">
-                        <p class="text-sm font-semibold">{{ $departure->departure_date->format('d M Y') }}</p>
-                        <p class="text-xs text-slate-500">{{ $departure->departure_date->diffForHumans() }}</p>
-                    </div>
-                </div>
-            @empty
-                <x-empty-state icon="plane" title="Belum ada jadwal"
-                               description="Keberangkatan mendatang akan ditampilkan di sini." />
-            @endforelse
-        </article>
     </section>
 
     <script>

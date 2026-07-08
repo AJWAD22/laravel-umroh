@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Enums\UserRole;
 use App\Models\Branch;
-use App\Models\Departure;
 use App\Models\Group;
 use App\Models\Muthawwif;
 use App\Models\Pilgrim;
@@ -32,7 +31,6 @@ class DashboardService
             'chart' => $this->chart($branchId),
             'monitoring' => $this->monitoring($branchId),
             'recentSos' => $this->recentSos($branchId),
-            'upcomingDepartures' => $this->upcomingDepartures($branchId),
         ];
     }
 
@@ -66,12 +64,11 @@ class DashboardService
                 'color' => 'cyan',
             ],
             ...$operationalCards,
-            ['label' => 'Keberangkatan', 'value' => Departure::count(), 'icon' => 'plane', 'color' => 'indigo'],
         ];
     }
 
     /**
-     * @return array{labels: list<string>, pilgrims: list<int>, departures: list<int>, sos: list<int>}
+     * @return array{labels: list<string>, pilgrims: list<int>, groups: list<int>, sos: list<int>}
      */
     private function chart(?int $branchId): array
     {
@@ -84,9 +81,9 @@ class DashboardService
                 ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
                 ->whereBetween('created_at', [$month, $month->endOfMonth()])
                 ->count())->all(),
-            'departures' => $months->map(fn (CarbonImmutable $month) => Departure::query()
+            'groups' => $months->map(fn (CarbonImmutable $month) => Group::query()
                 ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
-                ->whereBetween('departure_date', [$month->toDateString(), $month->endOfMonth()->toDateString()])
+                ->whereBetween('created_at', [$month, $month->endOfMonth()])
                 ->count())->all(),
             'sos' => $months->map(fn (CarbonImmutable $month) => SosReport::query()
                 ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
@@ -128,15 +125,4 @@ class DashboardService
             ->get();
     }
 
-    private function upcomingDepartures(?int $branchId)
-    {
-        return Departure::query()
-            ->with('branch:id,name')
-            ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
-            ->whereDate('departure_date', '>=', today())
-            ->whereIn('status', ['draft', 'scheduled'])
-            ->orderBy('departure_date')
-            ->limit(5)
-            ->get();
-    }
 }

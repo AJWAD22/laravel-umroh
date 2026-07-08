@@ -62,10 +62,10 @@ if (chartElement && window.dashboardChartData) {
                     tension: .35,
                 },
                 {
-                    label: 'Keberangkatan',
-                    data: data.departures,
-                    borderColor: '#7c3aed',
-                    backgroundColor: 'rgba(124, 58, 237, .08)',
+                    label: 'Rombongan Baru',
+                    data: data.groups,
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, .08)',
                     tension: .35,
                 },
                 {
