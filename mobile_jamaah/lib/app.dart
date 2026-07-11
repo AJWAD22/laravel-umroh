@@ -9,6 +9,9 @@ import 'features/auth/presentation/auth_provider.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/dashboard/presentation/dashboard_screen.dart';
 import 'features/staff/presentation/staff_dashboard_screen.dart';
+import 'features/staff/presentation/staff_provider.dart';
+import 'features/staff/presentation/staff_sos_map_screen.dart';
+import 'features/staff/presentation/staff_sos_screen.dart';
 
 class UmrahJamaahApp extends StatefulWidget {
   const UmrahJamaahApp({super.key});
@@ -67,6 +70,28 @@ class _UmrahJamaahAppState extends State<UmrahJamaahApp> {
   }
 
   Future<void> _openNotification(Map<String, dynamic> data) async {
-    return;
+    if (data['type']?.toString() != 'sos') return;
+
+    final context = _navigatorKey.currentContext;
+    if (context == null || !context.mounted) return;
+
+    final auth = context.read<AuthProvider>();
+    if (!auth.isAuthenticated || auth.profile?.role == 'jamaah') return;
+
+    final sosId = int.tryParse(data['sos_report_id']?.toString() ?? '');
+    final provider = context.read<StaffProvider>();
+    await provider.load(auth.profile!.role, force: true);
+
+    if (!context.mounted) return;
+    final report = sosId == null ? null : provider.findSosById(sosId);
+    _navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder:
+            (_) =>
+                report == null
+                    ? const StaffSosScreen()
+                    : StaffSosMapScreen(report: report),
+      ),
+    );
   }
 }

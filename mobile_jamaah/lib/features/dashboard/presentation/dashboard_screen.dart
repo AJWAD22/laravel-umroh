@@ -9,6 +9,8 @@ import '../../location/presentation/location_permission_guide_screen.dart';
 import '../../location/presentation/tracking_provider.dart';
 import '../../profile/domain/jamaah_profile.dart';
 import '../../profile/presentation/profile_screen.dart';
+import '../../sos/data/sos_repository.dart';
+import '../../location/data/location_repository.dart';
 import '../../staff_contact/presentation/staff_contact_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -19,6 +21,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  bool _sendingSos = false;
+
   @override
   void initState() {
     super.initState();
@@ -50,6 +54,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await context.read<TrackingProvider>().stop();
     if (!mounted) return;
     await context.read<AuthProvider>().logout();
+  }
+
+  Future<void> _sendSos() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            icon: const Icon(Icons.sos_rounded, color: Colors.red),
+            title: const Text('Kirim SOS?'),
+            content: const Text(
+              'Gunakan tombol ini hanya saat membutuhkan bantuan. Lokasi Anda akan dikirim ke Tour Leader dan Muthawwif.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Batal'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Kirim SOS'),
+              ),
+            ],
+          ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _sendingSos = true);
+    try {
+      final position = await context.read<LocationRepository>().currentPosition();
+      await context.read<SosRepository>().send(position: position);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('SOS terkirim. Tetap tenang, petugas sedang diberi tahu.'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.toString())),
+      );
+    } finally {
+      if (mounted) setState(() => _sendingSos = false);
+    }
   }
 
   @override
@@ -99,6 +148,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       lastSentAt: tracking.lastSentAt,
                       error: tracking.error,
                     ),
+                    const SizedBox(height: 14),
+                    _SosButton(isSending: _sendingSos, onPressed: _sendSos),
                     const SizedBox(height: 18),
                     _JourneyCard(journey: profile.journey),
                     const SizedBox(height: 18),
@@ -194,6 +245,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ],
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SosButton extends StatelessWidget {
+  const _SosButton({required this.isSending, required this.onPressed});
+
+  final bool isSending;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: const Color(0xFFFFF1F2),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Row(
+          children: [
+            Container(
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(
+                color: const Color(0xFFDC2626).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: const Icon(Icons.sos_rounded, color: Color(0xFFDC2626)),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Butuh Bantuan?',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Tekan SOS untuk mengirim lokasi Anda ke petugas.',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFDC2626),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              ),
+              onPressed: isSending ? null : onPressed,
+              child:
+                  isSending
+                      ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : const Text('SOS'),
             ),
           ],
         ),

@@ -73,6 +73,11 @@ class User extends Authenticatable
         return $this->hasMany(MobileDevice::class);
     }
 
+    public function handledSosReports(): HasMany
+    {
+        return $this->hasMany(SosReport::class, 'handled_by');
+    }
+
     public function scopeOfBranch(Builder $query, int $branchId): Builder
     {
         return $query->where('branch_id', $branchId);

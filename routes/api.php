@@ -30,6 +30,7 @@ Route::prefix('mobile')->group(function () {
 
     Route::middleware(['auth:sanctum', 'mobile.role:jamaah'])->group(function () {
         Route::post('/send-location', [PilgrimController::class, 'sendLocation'])->name('api.mobile.pilgrim.location');
+        Route::post('/sos', [PilgrimController::class, 'sos'])->name('api.mobile.pilgrim.sos');
         Route::get('/hotel', [PilgrimController::class, 'hotel'])->name('api.mobile.pilgrim.hotel');
         Route::get('/muthawwif-location', [PilgrimController::class, 'muthawwifLocation'])->name('api.mobile.pilgrim.muthawwif');
         Route::get('/staff-locations', [PilgrimController::class, 'staffLocations'])->name('api.mobile.pilgrim.staff-locations');
@@ -39,6 +40,9 @@ Route::prefix('mobile')->group(function () {
     Route::middleware(['auth:sanctum', 'mobile.role:tour-leader,muthawwif'])->group(function () {
         Route::post('/staff-location', [StaffGroupController::class, 'sendLocation'])->name('api.mobile.staff.location');
         Route::post('/staff-checkpoints', [StaffGroupController::class, 'storeCheckpoint'])->name('api.mobile.staff.checkpoints.store');
+        Route::get('/sos-reports', [StaffGroupController::class, 'sosReports'])->name('api.mobile.staff.sos');
+        Route::post('/sos-reports/{sosReport}/acknowledge', [StaffGroupController::class, 'acknowledge'])->name('api.mobile.staff.sos.acknowledge');
+        Route::post('/sos-reports/{sosReport}/resolve', [StaffGroupController::class, 'resolve'])->name('api.mobile.staff.sos.resolve');
     });
 
     Route::middleware(['auth:sanctum', 'mobile.role:tour-leader'])->group(function () {

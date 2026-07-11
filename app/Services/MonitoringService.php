@@ -33,7 +33,9 @@ class MonitoringService
             ->when($groupId, fn (Builder $query) => $query->where('group_id', $groupId))
             ->get()
             ->map(function (PilgrimLocation $location): array {
-                $status = $location->recorded_at->gte(now()->subMinutes(2)) ? 'online' : 'offline';
+                $status = $location->pilgrim->monitoring_status === 'sos'
+                    ? 'sos'
+                    : ($location->recorded_at->gte(now()->subMinutes(2)) ? 'online' : 'offline');
 
                 return [
                     'id' => "pilgrim-{$location->pilgrim_id}",
@@ -71,6 +73,7 @@ class MonitoringService
                 'total' => $pilgrims->count(),
                 'online' => $pilgrims->where('status', 'online')->count(),
                 'offline' => $pilgrims->where('status', 'offline')->count(),
+                'sos' => $pilgrims->where('status', 'sos')->count(),
             ],
             'generated_at' => now()->toIso8601String(),
             'source' => 'database',

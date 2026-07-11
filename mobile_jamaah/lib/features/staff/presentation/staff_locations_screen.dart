@@ -93,6 +93,7 @@ class StaffLocationsScreen extends StatelessWidget {
                 markers:
                     pilgrims.map((pilgrim) {
                       final location = pilgrim.location!;
+                      final isSos = pilgrim.monitoringStatus == 'sos';
                       return Marker(
                         point: LatLng(location.latitude, location.longitude),
                         width: 54,
@@ -101,7 +102,7 @@ class StaffLocationsScreen extends StatelessWidget {
                           message: pilgrim.fullName,
                           child: IconButton.filled(
                             style: IconButton.styleFrom(
-                              backgroundColor: Colors.blue,
+                              backgroundColor: isSos ? Colors.red : Colors.blue,
                             ),
                             onPressed:
                                 () => Navigator.push(
@@ -113,7 +114,11 @@ class StaffLocationsScreen extends StatelessWidget {
                                         ),
                                   ),
                                 ),
-                            icon: const Icon(Icons.person_pin_circle_rounded),
+                            icon: Icon(
+                              isSos
+                                  ? Icons.sos_rounded
+                                  : Icons.person_pin_circle_rounded,
+                            ),
                           ),
                         ),
                       );

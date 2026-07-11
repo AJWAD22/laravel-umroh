@@ -5,10 +5,14 @@ namespace App\Http\Controllers\Api\Mobile;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Mobile\LocationHistoryRequest;
 use App\Http\Requests\Api\Mobile\SendLocationRequest;
+use App\Http\Requests\Api\Mobile\SendSosRequest;
 use App\Http\Resources\Mobile\HotelResource;
 use App\Http\Resources\Mobile\LocationResource;
+use App\Http\Resources\Mobile\SosReportResource;
 use App\Models\LocationHistory;
 use App\Models\PilgrimLocation;
+use App\Models\SosReport;
+use App\Services\AdminNotificationService;
 use App\Services\MobileGroupAccessService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -17,7 +21,10 @@ use Illuminate\Support\Facades\DB;
 
 class PilgrimController extends Controller
 {
-    public function __construct(private readonly MobileGroupAccessService $access) {}
+    public function __construct(
+        private readonly MobileGroupAccessService $access,
+        private readonly AdminNotificationService $notifications,
+    ) {}
 
     public function sendLocation(SendLocationRequest $request): JsonResponse
     {
@@ -58,6 +65,54 @@ class PilgrimController extends Controller
         $hotels = $group?->departure?->hotels()->orderByPivot('sequence')->get() ?? collect();
 
         return HotelResource::collection($hotels);
+    }
+
+    public function sos(SendSosRequest $request): JsonResponse
+    {
+        $pilgrim = $request->user()->pilgrim;
+        $group = $this->access->activeGroupForPilgrim($pilgrim);
+        $data = $request->validated();
+
+        $report = DB::transaction(function () use ($pilgrim, $group, $data): SosReport {
+            $existing = SosReport::query()
+                ->where('pilgrim_id', $pilgrim->id)
+                ->active()
+                ->latest('reported_at')
+                ->first();
+
+            if ($existing) {
+                return $existing->load(['pilgrim.branch', 'pilgrim.latestLocation', 'group', 'handler']);
+            }
+
+            $report = SosReport::query()->create([
+                'branch_id' => $pilgrim->branch_id,
+                'pilgrim_id' => $pilgrim->id,
+                'group_id' => $group?->id,
+                'latitude' => $data['latitude'],
+                'longitude' => $data['longitude'],
+                'accuracy' => $data['accuracy'] ?? null,
+                'message' => $data['message'] ?? 'Jamaah meminta bantuan.',
+                'status' => 'new',
+                'reported_at' => now(),
+            ]);
+
+            $pilgrim->forceFill(['monitoring_status' => 'sos'])->save();
+
+            return $report->load(['pilgrim.branch', 'pilgrim.latestLocation', 'group', 'handler']);
+        });
+
+        if ($report->wasRecentlyCreated) {
+            $this->notifications->sos($report);
+        }
+
+        return (new SosReportResource($report))
+            ->additional([
+                'message' => $report->wasRecentlyCreated
+                    ? 'SOS berhasil dikirim ke petugas.'
+                    : 'SOS sebelumnya masih aktif dan sudah diteruskan ke petugas.',
+            ])
+            ->response()
+            ->setStatusCode($report->wasRecentlyCreated ? 201 : 200);
     }
 
     public function muthawwifLocation(Request $request): JsonResponse

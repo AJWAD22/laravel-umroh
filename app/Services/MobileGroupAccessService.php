@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\MobileRole;
 use App\Models\Group;
 use App\Models\Pilgrim;
+use App\Models\SosReport;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -44,4 +45,17 @@ class MobileGroupAccessService
             ->distinct();
     }
 
+    public function sosReportsForStaff(User $user, MobileRole $role): Builder
+    {
+        $groupIds = $this->groupIdsForStaff($user, $role);
+
+        return SosReport::query()
+            ->whereIn('group_id', $groupIds)
+            ->with([
+                'pilgrim.branch:id,name',
+                'pilgrim.latestLocation',
+                'group:id,name,code',
+                'handler:id,name',
+            ]);
+    }
 }

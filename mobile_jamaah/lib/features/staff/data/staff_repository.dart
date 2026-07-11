@@ -1,5 +1,6 @@
 import '../../../core/network/api_client.dart';
 import '../domain/staff_pilgrim.dart';
+import '../domain/staff_sos_report.dart';
 
 class StaffRepository {
   StaffRepository(this._api);
@@ -41,6 +42,44 @@ class StaffRepository {
         pilgrim['latest_location'] = item['location'];
         return StaffPilgrim.fromJson(pilgrim);
       }).toList();
+    } catch (error) {
+      throw _api.errorFrom(error);
+    }
+  }
+
+  Future<List<StaffSosReport>> sosReports() async {
+    try {
+      final response = await _api.dio.get<Map<String, dynamic>>(
+        '/api/mobile/sos-reports',
+      );
+      return _items(response.data).map(StaffSosReport.fromJson).toList();
+    } catch (error) {
+      throw _api.errorFrom(error);
+    }
+  }
+
+  Future<StaffSosReport> acknowledgeSos(int id) async {
+    try {
+      final response = await _api.dio.post<Map<String, dynamic>>(
+        '/api/mobile/sos-reports/$id/acknowledge',
+      );
+      return StaffSosReport.fromJson(
+        Map<String, dynamic>.from(response.data?['data'] as Map? ?? {}),
+      );
+    } catch (error) {
+      throw _api.errorFrom(error);
+    }
+  }
+
+  Future<StaffSosReport> resolveSos(int id) async {
+    try {
+      final response = await _api.dio.post<Map<String, dynamic>>(
+        '/api/mobile/sos-reports/$id/resolve',
+        data: const {'resolution_notes': 'Ditandai aman dari aplikasi petugas.'},
+      );
+      return StaffSosReport.fromJson(
+        Map<String, dynamic>.from(response.data?['data'] as Map? ?? {}),
+      );
     } catch (error) {
       throw _api.errorFrom(error);
     }

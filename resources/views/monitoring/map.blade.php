@@ -11,11 +11,12 @@
         </div>
     </x-slot:header>
 
-    <section class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
+    <section class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         @foreach ([
             ['id' => 'monitoring-total', 'label' => 'Total Jamaah', 'color' => 'text-blue-600'],
             ['id' => 'monitoring-online', 'label' => 'Online', 'color' => 'text-emerald-600'],
             ['id' => 'monitoring-offline', 'label' => 'Offline', 'color' => 'text-slate-600'],
+            ['id' => 'monitoring-sos', 'label' => 'SOS', 'color' => 'text-red-600'],
         ] as $stat)
             <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ $stat['label'] }}</p>
@@ -49,6 +50,7 @@
                 <option value="">Semua status</option>
                 <option value="online">Online</option>
                 <option value="offline">Offline</option>
+                <option value="sos">SOS</option>
             </select>
 
             <select id="monitoring-refresh" class="rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">
@@ -78,6 +80,7 @@
                 <div class="grid grid-cols-2 gap-x-4 gap-y-2">
                     <span><i class="mr-1 inline-block size-2.5 rounded-full bg-emerald-500"></i> Online</span>
                     <span><i class="mr-1 inline-block size-2.5 rounded-full bg-slate-500"></i> Offline</span>
+                    <span><i class="mr-1 inline-block size-2.5 rounded-full bg-red-500"></i> SOS</span>
                 </div>
             </div>
         </div>

@@ -93,9 +93,18 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
                                   runSpacing: 8,
                                   children: [
                                     _StatusChip(
-                                      icon: Icons.verified_user_rounded,
-                                      label: 'Normal',
-                                      color: Colors.green,
+                                      icon:
+                                          pilgrim.monitoringStatus == 'sos'
+                                              ? Icons.sos_rounded
+                                              : Icons.verified_user_rounded,
+                                      label:
+                                          pilgrim.monitoringStatus == 'sos'
+                                              ? 'SOS'
+                                              : 'Normal',
+                                      color:
+                                          pilgrim.monitoringStatus == 'sos'
+                                              ? Colors.red
+                                              : Colors.green,
                                     ),
                                     _StatusChip(
                                       icon: Icons.location_on_rounded,

@@ -5,7 +5,7 @@
             <div>
                 <nav class="mb-2 text-sm text-slate-500">Notifikasi</nav>
                 <h1 class="text-2xl font-bold">Pusat Notifikasi</h1>
-                <p class="mt-1 text-sm text-slate-500">Perangkat GPS offline dan pelanggaran geofence.</p>
+                <p class="mt-1 text-sm text-slate-500">SOS jamaah, perangkat GPS offline, dan peringatan operasional.</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 <form method="POST" action="{{ route('notifications.read-all') }}">
@@ -33,6 +33,7 @@
                     [$icon, $colors] = match($notification->type) {
                         'gps_offline' => ['G', 'bg-slate-200 text-slate-700'],
                         'geofence_exit' => ['↗', 'bg-amber-100 text-amber-700'],
+                        'sos' => ['!', 'bg-red-100 text-red-700'],
                         default => ['i', 'bg-blue-100 text-blue-700'],
                     };
                 @endphp

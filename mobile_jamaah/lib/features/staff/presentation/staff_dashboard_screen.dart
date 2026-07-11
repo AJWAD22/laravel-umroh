@@ -12,6 +12,7 @@ import '../../profile/presentation/staff_profile_screen.dart';
 import 'staff_locations_screen.dart';
 import 'staff_pilgrims_screen.dart';
 import 'staff_provider.dart';
+import 'staff_sos_screen.dart';
 
 class StaffDashboardScreen extends StatefulWidget {
   const StaffDashboardScreen({super.key});
@@ -143,6 +144,21 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                               crossAxisSpacing: 12,
                             ),
                         children: [
+                          _DashboardMenu(
+                            icon: Icons.sos_rounded,
+                            label: 'SOS Jamaah',
+                            description: 'Tanggapi laporan darurat jamaah',
+                            count:
+                                staff.sosReports
+                                    .where((report) => report.isActive)
+                                    .length,
+                            accentColor: const Color(0xFFDC2626),
+                            onTap:
+                                () => _open(
+                                  context,
+                                  const StaffSosScreen(),
+                                ),
+                          ),
                           _DashboardMenu(
                             icon: Icons.groups_rounded,
                             label: 'Cari Jamaah',

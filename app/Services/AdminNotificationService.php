@@ -6,9 +6,11 @@ use App\Enums\UserRole;
 use App\Events\AdminNotificationCreated;
 use App\Models\Pilgrim;
 use App\Models\PilgrimLocation;
+use App\Models\SosReport;
 use App\Models\User;
 use App\Notifications\GeofenceExitAlert;
 use App\Notifications\GpsOfflineAlert;
+use App\Notifications\SosAlert;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Collection;
 
@@ -56,6 +58,53 @@ class AdminNotificationService
                 'url' => route('monitoring.map.index'),
             ],
             GeofenceExitAlert::class,
+        );
+    }
+
+    public function sos(SosReport $report): void
+    {
+        $report->loadMissing([
+            'pilgrim:id,branch_id,registration_number,full_name,phone',
+            'group:id,name,code,tour_leader_id,muthawwif_id',
+            'group.tourLeader:id,user_id,full_name',
+            'group.tourLeader.user:id,branch_id,name',
+            'group.muthawwif:id,user_id,full_name',
+            'group.muthawwif.user:id,branch_id,name',
+        ]);
+
+        $payload = [
+            'title' => 'SOS Jamaah',
+            'message' => "{$report->pilgrim->full_name} mengirim laporan darurat.",
+            'sos_report_id' => $report->id,
+            'pilgrim_id' => $report->pilgrim_id,
+            'pilgrim_name' => $report->pilgrim->full_name,
+            'registration_number' => $report->pilgrim->registration_number,
+            'group_id' => $report->group_id,
+            'group_name' => $report->group?->name,
+            'latitude' => $report->latitude,
+            'longitude' => $report->longitude,
+            'occurred_at' => $report->reported_at?->toIso8601String() ?? now()->toIso8601String(),
+            'url' => route('monitoring.sos.show', $report),
+        ];
+
+        $this->send($report->branch_id, 'sos', $payload, SosAlert::class);
+
+        $staffRecipients = collect([
+            $report->group?->tourLeader?->user,
+            $report->group?->muthawwif?->user,
+        ])->filter()->unique('id')->values();
+
+        $this->push->sendToUsers(
+            $staffRecipients,
+            'SOS Jamaah',
+            "{$report->pilgrim->full_name} membutuhkan bantuan.",
+            [
+                'type' => 'sos',
+                'sos_report_id' => $report->id,
+                'pilgrim_id' => $report->pilgrim_id,
+                'latitude' => $report->latitude,
+                'longitude' => $report->longitude,
+            ],
         );
     }
 

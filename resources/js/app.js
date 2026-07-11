@@ -115,6 +115,7 @@ if (monitoringMapElement) {
 
     const markerStyle = (marker) => {
         if (marker.type === 'muthawwif') return ['#0891b2', 'M'];
+        if (marker.status === 'sos') return ['#dc2626', '!'];
         if (marker.status === 'offline') return ['#64748b', 'J'];
         return ['#16a34a', 'J'];
     };
@@ -136,6 +137,7 @@ if (monitoringMapElement) {
         const statusColors = {
             online: ['#dcfce7', '#15803d'],
             offline: ['#e2e8f0', '#475569'],
+            sos: ['#fee2e2', '#b91c1c'],
         };
         const [statusBackground, statusColor] = statusColors[marker.status] || statusColors.offline;
         const initials = marker.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
@@ -234,7 +236,7 @@ if (monitoringMapElement) {
                 hasFittedBounds = true;
             }
 
-            ['total', 'online', 'offline'].forEach((key) => {
+            ['total', 'online', 'offline', 'sos'].forEach((key) => {
                 document.getElementById(`monitoring-${key}`).textContent = payload.summary[key];
             });
             elements.updated.textContent = `Diperbarui ${new Date(payload.generated_at).toLocaleTimeString('id-ID')}`;
@@ -269,6 +271,29 @@ if (monitoringMapElement) {
     filterGroups();
     loadMarkers();
     resetRefresh();
+}
+
+const sosDetailMapElement = document.getElementById('sos-detail-map');
+
+if (sosDetailMapElement) {
+    const lat = Number(sosDetailMapElement.dataset.lat);
+    const lng = Number(sosDetailMapElement.dataset.lng);
+    const name = sosDetailMapElement.dataset.name || 'Lokasi SOS';
+    const map = L.map(sosDetailMapElement, { zoomControl: true }).setView([lat, lng], 17);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19,
+    }).addTo(map);
+
+    const icon = L.divIcon({
+        className: '',
+        html: '<span class="monitoring-marker" style="background:#dc2626">!</span>',
+        iconSize: [34, 34],
+        iconAnchor: [17, 17],
+    });
+
+    L.marker([lat, lng], { icon }).bindPopup(`<strong>${name}</strong><br>Lokasi SOS terakhir`).addTo(map).openPopup();
 }
 
 const trackingMapElement = document.getElementById('tracking-map');

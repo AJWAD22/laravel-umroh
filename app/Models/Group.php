@@ -75,4 +75,8 @@ class Group extends Model
         return $this->hasMany(LocationHistory::class);
     }
 
+    public function sosReports(): HasMany
+    {
+        return $this->hasMany(SosReport::class);
+    }
 }

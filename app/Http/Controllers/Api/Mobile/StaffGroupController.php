@@ -11,9 +11,11 @@ use App\Http\Resources\Mobile\CheckpointResource;
 use App\Http\Resources\Mobile\HotelResource;
 use App\Http\Resources\Mobile\LocationResource;
 use App\Http\Resources\Mobile\PilgrimResource;
+use App\Http\Resources\Mobile\SosReportResource;
 use App\Models\Checkpoint;
 use App\Models\Group;
 use App\Models\Hotel;
+use App\Models\SosReport;
 use App\Models\StaffLocation;
 use App\Services\MobileGroupAccessService;
 use Illuminate\Http\JsonResponse;
@@ -115,6 +117,64 @@ class StaffGroupController extends Controller
             ->setStatusCode(201);
     }
 
+    public function sosReports(Request $request)
+    {
+        $role = $this->mobileRole($request);
+        $status = $request->query('status');
+        $reports = $this->access->sosReportsForStaff($request->user(), $role)
+            ->when(
+                in_array($status, ['new', 'handling', 'resolved'], true),
+                fn ($query) => $query->where('status', $status)
+            )
+            ->latest('reported_at')
+            ->paginate($request->integer('per_page', 30));
+
+        return SosReportResource::collection($reports);
+    }
+
+    public function acknowledge(Request $request, SosReport $sosReport): SosReportResource
+    {
+        $this->authorizeSos($request, $sosReport);
+
+        if ($sosReport->status === 'new') {
+            $sosReport->forceFill([
+                'status' => 'handling',
+                'handled_by' => $request->user()->id,
+                'acknowledged_at' => now(),
+            ])->save();
+        }
+
+        return new SosReportResource($sosReport->fresh(['pilgrim.branch', 'pilgrim.latestLocation', 'group', 'handler']));
+    }
+
+    public function resolve(Request $request, SosReport $sosReport): SosReportResource
+    {
+        $this->authorizeSos($request, $sosReport);
+        $data = $request->validate([
+            'resolution_notes' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $sosReport->forceFill([
+            'status' => 'resolved',
+            'handled_by' => $sosReport->handled_by ?: $request->user()->id,
+            'acknowledged_at' => $sosReport->acknowledged_at ?: now(),
+            'resolved_at' => now(),
+            'resolution_notes' => $data['resolution_notes'] ?? 'Sudah ditangani oleh petugas.',
+        ])->save();
+
+        $hasActive = SosReport::query()
+            ->where('pilgrim_id', $sosReport->pilgrim_id)
+            ->whereKeyNot($sosReport->id)
+            ->active()
+            ->exists();
+
+        if (! $hasActive) {
+            $sosReport->pilgrim()->update(['monitoring_status' => 'normal']);
+        }
+
+        return new SosReportResource($sosReport->fresh(['pilgrim.branch', 'pilgrim.latestLocation', 'group', 'handler']));
+    }
+
     private function pilgrims(Request $request, MobileRole $role)
     {
         $pilgrims = $this->access->pilgrimsForStaff($request->user(), $role)
@@ -137,6 +197,23 @@ class StaffGroupController extends Controller
             ]);
 
         return response()->json(['data' => $locations]);
+    }
+
+    private function mobileRole(Request $request): MobileRole
+    {
+        return $request->user()->hasRole(MobileRole::TourLeader->value)
+            ? MobileRole::TourLeader
+            : MobileRole::Muthawwif;
+    }
+
+    private function authorizeSos(Request $request, SosReport $sosReport): void
+    {
+        $role = $this->mobileRole($request);
+        abort_unless(
+            $this->access->groupIdsForStaff($request->user(), $role)->contains($sosReport->group_id),
+            403,
+            'Laporan SOS tidak dapat diakses.'
+        );
     }
 
     private function hotels(Request $request, MobileRole $role)

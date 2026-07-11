@@ -7,6 +7,7 @@ use App\Http\Controllers\MonitoringMapController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SosReportController;
 use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\TrackingHistoryController;
 use Illuminate\Support\Facades\Route;
@@ -23,17 +24,20 @@ Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->
     Route::get('/monitoring/live-map/data', [MonitoringMapController::class, 'data'])->name('monitoring.map.data');
     Route::get('/monitoring/tracking-history', [TrackingHistoryController::class, 'index'])->name('monitoring.tracking.index');
     Route::get('/monitoring/tracking-history/data', [TrackingHistoryController::class, 'data'])->name('monitoring.tracking.data');
+    Route::get('/monitoring/sos', [SosReportController::class, 'index'])->name('monitoring.sos.index');
+    Route::get('/monitoring/sos/{sosReport}', [SosReportController::class, 'show'])->name('monitoring.sos.show');
+    Route::patch('/monitoring/sos/{sosReport}/resolve', [SosReportController::class, 'resolve'])->name('monitoring.sos.resolve');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::patch('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
     Route::delete('/notifications/delete-all', [NotificationController::class, 'destroyAll'])->name('notifications.destroy-all');
     Route::patch('/notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
     Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
-    Route::redirect('/reports', '/reports/pilgrims')->name('reports.home');
+    Route::redirect('/reports', '/reports/all')->name('reports.home');
     Route::get('/reports/{type}', [ReportController::class, 'index'])
-        ->whereIn('type', ['pilgrims', 'tracking'])
+        ->whereIn('type', ['all', 'pilgrims', 'tracking', 'sos'])
         ->name('reports.index');
     Route::get('/reports/{type}/download/{format}', [ReportController::class, 'download'])
-        ->whereIn('type', ['pilgrims', 'tracking'])
+        ->whereIn('type', ['all', 'pilgrims', 'tracking', 'sos'])
         ->whereIn('format', ['pdf', 'xlsx'])
         ->name('reports.download');
     Route::get('/groups/{group}/members', [GroupMemberController::class, 'index'])->name('groups.members.index');
