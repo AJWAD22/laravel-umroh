@@ -11,7 +11,7 @@ import '../storage/secure_storage_service.dart';
 const _notificationChannel = AndroidNotificationChannel(
   'umrah_alerts',
   'Peringatan Umrah',
-  description: 'Notifikasi SOS dan peringatan monitoring jamaah.',
+  description: 'Notifikasi peringatan monitoring jamaah.',
   importance: Importance.high,
 );
 
@@ -122,8 +122,7 @@ class FirebaseNotificationService {
         android: AndroidNotificationDetails(
           'umrah_alerts',
           'Peringatan Umrah',
-          channelDescription:
-              'Notifikasi SOS dan peringatan monitoring jamaah.',
+          channelDescription: 'Notifikasi peringatan monitoring jamaah.',
           importance: Importance.high,
           priority: Priority.high,
           icon: '@mipmap/ic_launcher',

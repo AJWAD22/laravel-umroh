@@ -1,5 +1,5 @@
 name: umrah_jamaah
-description: "Aplikasi monitoring GPS dan SOS untuk Jamaah Umrah."
+description: "Aplikasi monitoring GPS untuk Jamaah Umrah."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev

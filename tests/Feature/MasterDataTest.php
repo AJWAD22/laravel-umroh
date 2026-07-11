@@ -160,7 +160,7 @@ class MasterDataTest extends TestCase
         $this->assertSame('MKS-MTF-001', $muthawwif->employee_number);
     }
 
-    public function test_operational_codes_are_generated_sequentially_and_use_departure_year(): void
+    public function test_operational_codes_are_generated_sequentially(): void
     {
         [$admin, $branch] = $this->branchAdmin('BJM');
 
@@ -174,18 +174,8 @@ class MasterDataTest extends TestCase
                 ->assertSessionHasNoErrors();
         }
 
-        $departure = Departure::create([
-            'branch_id' => $branch->id,
-            'code' => 'BJM-DEP-2027-001',
-            'program_name' => 'Umroh Awal Tahun',
-            'departure_date' => '2027-01-10',
-            'return_date' => '2027-01-20',
-            'status' => 'scheduled',
-        ]);
-
         $this->actingAs($admin)
             ->post(route('master-data.store', 'groups'), [
-                'departure_id' => $departure->id,
                 'name' => 'Rombongan Satu',
                 'capacity' => 45,
                 'is_active' => '1',
@@ -196,7 +186,7 @@ class MasterDataTest extends TestCase
             ['BJM-JMH-00001', 'BJM-JMH-00002'],
             Pilgrim::orderBy('id')->pluck('registration_number')->all(),
         );
-        $this->assertSame('BJM-GRP-2027-001', Group::firstOrFail()->code);
+        $this->assertSame('BJM-GRP-001', Group::firstOrFail()->code);
     }
 
     public function test_group_rejects_a_departure_from_another_branch(): void

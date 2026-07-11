@@ -76,12 +76,12 @@ class ProfileResource extends JsonResource
         return [
             'group_name' => $group->name,
             'group_code' => $group->code,
-            'program_name' => $group->departure->program_name,
-            'departure_date' => $group->departure->departure_date?->toDateString(),
-            'return_date' => $group->departure->return_date?->toDateString(),
-            'departure_airport' => $group->departure->departure_airport,
-            'arrival_airport' => $group->departure->arrival_airport,
-            'status' => $group->departure->status,
+            'program_name' => $group->departure?->program_name,
+            'departure_date' => $group->departure?->departure_date?->toDateString(),
+            'return_date' => $group->departure?->return_date?->toDateString(),
+            'departure_airport' => $group->departure?->departure_airport,
+            'arrival_airport' => $group->departure?->arrival_airport,
+            'status' => $group->departure?->status,
             'tour_leader_name' => $group->tourLeader?->full_name,
             'muthawwif_name' => $group->muthawwif?->full_name,
         ];

@@ -13,7 +13,6 @@ class StaffPilgrimMapScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final location = pilgrim.location!;
-    final isSos = pilgrim.monitoringStatus == 'sos';
 
     return InternalDirectionMapScreen(
       title: 'Lokasi ${pilgrim.fullName}',
@@ -21,7 +20,7 @@ class StaffPilgrimMapScreen extends StatelessWidget {
       targetName: pilgrim.fullName,
       targetSubtitle: pilgrim.registrationNumber,
       targetIcon: Icons.person_pin_circle_rounded,
-      targetColor: isSos ? Colors.red : Colors.blue,
+      targetColor: Colors.blue,
       bottom: Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -43,10 +42,10 @@ class StaffPilgrimMapScreen extends StatelessWidget {
                     ),
                   ),
                   Chip(
-                    label: Text(
-                      isSos ? 'SOS' : 'LOKASI TERAKHIR',
+                    label: const Text(
+                      'LOKASI TERAKHIR',
                       style: TextStyle(
-                        color: isSos ? Colors.red : Colors.blue,
+                        color: Colors.blue,
                         fontWeight: FontWeight.w700,
                         fontSize: 11,
                       ),

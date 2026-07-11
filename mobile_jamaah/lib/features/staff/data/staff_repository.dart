@@ -1,6 +1,5 @@
 import '../../../core/network/api_client.dart';
 import '../domain/staff_pilgrim.dart';
-import '../domain/staff_sos.dart';
 
 class StaffRepository {
   StaffRepository(this._api);
@@ -42,34 +41,6 @@ class StaffRepository {
         pilgrim['latest_location'] = item['location'];
         return StaffPilgrim.fromJson(pilgrim);
       }).toList();
-    } catch (error) {
-      throw _api.errorFrom(error);
-    }
-  }
-
-  Future<List<StaffSos>> sos(String role) async {
-    try {
-      final response = await _api.dio.get<Map<String, dynamic>>(
-        _endpoint(role, '/api/mobile/group-sos', '/api/mobile/assigned-sos'),
-      );
-      return _items(response.data).map(StaffSos.fromJson).toList();
-    } catch (error) {
-      throw _api.errorFrom(error);
-    }
-  }
-
-  Future<void> resolveSos(String role, int reportId) async {
-    try {
-      await _api.dio.post<void>(
-        _endpoint(
-          role,
-          '/api/mobile/group-sos/$reportId/resolve',
-          '/api/mobile/assigned-sos/$reportId/resolve',
-        ),
-        data: {
-          'resolution_notes': 'Jamaah telah diamankan oleh petugas rombongan.',
-        },
-      );
     } catch (error) {
       throw _api.errorFrom(error);
     }

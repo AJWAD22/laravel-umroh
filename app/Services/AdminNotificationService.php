@@ -6,60 +6,15 @@ use App\Enums\UserRole;
 use App\Events\AdminNotificationCreated;
 use App\Models\Pilgrim;
 use App\Models\PilgrimLocation;
-use App\Models\SosReport;
 use App\Models\User;
 use App\Notifications\GeofenceExitAlert;
 use App\Notifications\GpsOfflineAlert;
-use App\Notifications\SosAlert;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Collection;
 
 class AdminNotificationService
 {
     public function __construct(private readonly FcmPushService $push) {}
-
-    public function sos(SosReport $report): void
-    {
-        $report->loadMissing([
-            'pilgrim:id,full_name,registration_number',
-            'group.tourLeader.user',
-            'group.muthawwif.user',
-        ]);
-        $message = "{$report->pilgrim->full_name} mengirim laporan darurat.";
-        $this->send(
-            $report->branch_id,
-            'sos',
-            [
-                'title' => 'SOS Jamaah',
-                'message' => $message,
-                'pilgrim_id' => $report->pilgrim_id,
-                'pilgrim_name' => $report->pilgrim->full_name,
-                'sos_report_id' => $report->id,
-                'latitude' => (float) $report->latitude,
-                'longitude' => (float) $report->longitude,
-                'occurred_at' => $report->reported_at->toIso8601String(),
-                'url' => route('monitoring.sos.show', $report),
-            ],
-            SosAlert::class,
-        );
-
-        $staff = collect([
-            $report->group?->tourLeader?->user,
-            $report->group?->muthawwif?->user,
-        ])->filter();
-        $this->push->sendToUsers(
-            $this->recipients($report->branch_id)->concat($staff)->unique('id')->values(),
-            'SOS Jamaah',
-            $message,
-            [
-                'type' => 'sos',
-                'sos_report_id' => $report->id,
-                'pilgrim_id' => $report->pilgrim_id,
-                'latitude' => $report->latitude,
-                'longitude' => $report->longitude,
-            ],
-        );
-    }
 
     public function gpsOffline(PilgrimLocation $location): void
     {

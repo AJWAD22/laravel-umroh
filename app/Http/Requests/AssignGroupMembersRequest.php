@@ -42,13 +42,12 @@ class AssignGroupMembersRequest extends FormRequest
                     ->whereIn('pilgrim_id', $pilgrimIds)
                     ->where('status', 'active')
                     ->where('group_id', '!=', $group->id)
-                    ->whereHas('group', fn ($query) => $query->where('departure_id', $group->departure_id))
                     ->exists();
 
                 if ($conflicts) {
                     $validator->errors()->add(
                         'pilgrim_ids',
-                        'Salah satu jamaah sudah menjadi anggota group lain pada keberangkatan yang sama.',
+                        'Salah satu jamaah sudah menjadi anggota rombongan aktif lain.',
                     );
                 }
 

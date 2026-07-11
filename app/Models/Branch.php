@@ -62,11 +62,6 @@ class Branch extends Model
         return $this->hasMany(Group::class);
     }
 
-    public function sosReports(): HasMany
-    {
-        return $this->hasMany(SosReport::class);
-    }
-
     public function notifications(): HasMany
     {
         return $this->hasMany(Notification::class);

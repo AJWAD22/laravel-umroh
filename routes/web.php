@@ -23,9 +23,6 @@ Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->
     Route::get('/monitoring/live-map/data', [MonitoringMapController::class, 'data'])->name('monitoring.map.data');
     Route::get('/monitoring/tracking-history', [TrackingHistoryController::class, 'index'])->name('monitoring.tracking.index');
     Route::get('/monitoring/tracking-history/data', [TrackingHistoryController::class, 'data'])->name('monitoring.tracking.data');
-    Route::redirect('/monitoring/sos', '/notifications')->name('monitoring.sos.index');
-    Route::redirect('/monitoring/sos/{sosReport}', '/notifications')->name('monitoring.sos.show');
-    Route::redirect('/monitoring/sos/{sosReport}/resolve', '/notifications')->name('monitoring.sos.resolve');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::patch('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
     Route::delete('/notifications/delete-all', [NotificationController::class, 'destroyAll'])->name('notifications.destroy-all');

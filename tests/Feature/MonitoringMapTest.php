@@ -40,7 +40,6 @@ class MonitoringMapTest extends TestCase
             ->assertOk()
             ->assertJsonPath('source', 'database')
             ->assertJsonPath('summary.offline', 0)
-            ->assertJsonPath('summary.sos', 0)
             ->assertJsonStructure([
                 'markers' => [
                     '*' => [

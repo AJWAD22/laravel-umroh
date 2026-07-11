@@ -8,7 +8,6 @@ use App\Models\Branch;
 use App\Models\Notification;
 use App\Models\Pilgrim;
 use App\Models\PilgrimLocation;
-use App\Models\SosReport;
 use App\Models\User;
 use App\Services\AdminNotificationService;
 use Database\Seeders\RolePermissionSeeder;
@@ -20,19 +19,10 @@ class NotificationSystemTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_sos_gps_offline_and_geofence_alerts_reach_the_correct_admins(): void
+    public function test_gps_offline_and_geofence_alerts_reach_the_correct_admins(): void
     {
         Event::fake([AdminNotificationCreated::class]);
         [$superAdmin, $branchAdmin, $foreignAdmin, $pilgrim] = $this->scenario();
-
-        $report = SosReport::create([
-            'branch_id' => $pilgrim->branch_id,
-            'pilgrim_id' => $pilgrim->id,
-            'latitude' => 21.4224870,
-            'longitude' => 39.8262060,
-            'status' => 'active',
-            'reported_at' => now(),
-        ]);
 
         PilgrimLocation::create([
             'pilgrim_id' => $pilgrim->id,
@@ -49,22 +39,17 @@ class NotificationSystemTest extends TestCase
             'Hotel Jamaah',
         );
 
-        $this->assertSame(3, Notification::where('notifiable_id', $branchAdmin->id)->count());
-        $this->assertSame(3, Notification::where('notifiable_id', $superAdmin->id)->count());
+        $this->assertSame(2, Notification::where('notifiable_id', $branchAdmin->id)->count());
+        $this->assertSame(2, Notification::where('notifiable_id', $superAdmin->id)->count());
         $this->assertSame(0, Notification::where('notifiable_id', $foreignAdmin->id)->count());
         $this->assertEqualsCanonicalizing(
-            ['sos', 'gps_offline', 'geofence_exit'],
+            ['gps_offline', 'geofence_exit'],
             Notification::where('notifiable_id', $branchAdmin->id)->pluck('type')->all(),
         );
-        $this->assertDatabaseHas('notifications', [
-            'branch_id' => $pilgrim->branch_id,
-            'type' => 'sos',
-        ]);
 
         Event::assertDispatched(
             AdminNotificationCreated::class,
-            fn (AdminNotificationCreated $event) => $event->type === 'sos'
-                && $event->data['sos_report_id'] === $report->id,
+            fn (AdminNotificationCreated $event) => $event->type === 'geofence_exit',
         );
     }
 

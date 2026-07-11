@@ -68,11 +68,6 @@ class User extends Authenticatable
         return $this->hasOne(StaffLocation::class);
     }
 
-    public function handledSosReports(): HasMany
-    {
-        return $this->hasMany(SosReport::class, 'handled_by');
-    }
-
     public function mobileDevices(): HasMany
     {
         return $this->hasMany(MobileDevice::class);

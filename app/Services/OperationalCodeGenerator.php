@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Branch;
-use App\Models\Departure;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -38,7 +37,7 @@ class OperationalCodeGenerator
                 'code',
                 'GRP',
                 3,
-                Departure::query()->findOrFail($data['departure_id'])->departure_date->year,
+                null,
             ],
             default => throw new \InvalidArgumentException("Resource {$resource} tidak memiliki kode otomatis."),
         };

@@ -3,9 +3,9 @@
     <x-slot:header>
         <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <nav class="mb-2 text-sm text-slate-500">Operasional Umrah / Rombongan / Pembagian Jamaah</nav>
+                <nav class="mb-2 text-sm text-slate-500">Data Master / Rombongan / Pembagian Jamaah</nav>
                 <h1 class="text-2xl font-bold">{{ $group->name }}</h1>
-                <p class="mt-1 text-sm text-slate-500">{{ $group->departure->program_name }} · {{ $group->branch->name }}</p>
+                <p class="mt-1 text-sm text-slate-500">{{ $group->branch->name }}</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 <button type="button" data-group-staff-open class="button-primary">
@@ -93,7 +93,7 @@
                         </label>
                     @empty
                         <x-empty-state icon="user-round-check" title="Tidak ada jamaah tersedia"
-                                       description="Semua jamaah aktif sudah ditempatkan atau tidak cocok dengan keberangkatan ini." />
+                                       description="Semua jamaah aktif sudah ditempatkan di rombongan lain atau tidak cocok dengan filter pencarian." />
                     @endforelse
                 </div>
                 @if ($availablePilgrims->isNotEmpty())
@@ -112,7 +112,7 @@
             <div class="flex items-start justify-between border-b border-slate-200 p-6 dark:border-slate-800">
                 <div>
                     <h2 class="text-lg font-bold">Tentukan Petugas Rombongan</h2>
-                    <p class="mt-1 text-sm text-slate-500">Petugas terpilih dapat melihat jamaah, lokasi, dan laporan SOS rombongan ini.</p>
+                    <p class="mt-1 text-sm text-slate-500">Petugas terpilih dapat melihat jamaah dan lokasi rombongan ini.</p>
                 </div>
                 <button type="button" data-group-staff-close class="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Tutup">
                     <i data-lucide="x" class="size-5"></i>

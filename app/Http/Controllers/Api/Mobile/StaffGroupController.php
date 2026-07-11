@@ -11,24 +11,18 @@ use App\Http\Resources\Mobile\CheckpointResource;
 use App\Http\Resources\Mobile\HotelResource;
 use App\Http\Resources\Mobile\LocationResource;
 use App\Http\Resources\Mobile\PilgrimResource;
-use App\Http\Resources\Mobile\SosReportResource;
 use App\Models\Checkpoint;
 use App\Models\Group;
 use App\Models\Hotel;
 use App\Models\StaffLocation;
-use App\Models\SosReport;
 use App\Services\MobileGroupAccessService;
-use App\Services\SosResolutionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 class StaffGroupController extends Controller
 {
-    public function __construct(
-        private readonly MobileGroupAccessService $access,
-        private readonly SosResolutionService $resolution,
-    ) {}
+    public function __construct(private readonly MobileGroupAccessService $access) {}
 
     public function leaderPilgrims(StaffListRequest $request)
     {
@@ -38,11 +32,6 @@ class StaffGroupController extends Controller
     public function leaderLocations(StaffListRequest $request)
     {
         return $this->locations($request, MobileRole::TourLeader);
-    }
-
-    public function leaderSos(StaffListRequest $request)
-    {
-        return $this->sos($request, MobileRole::TourLeader);
     }
 
     public function muthawwifPilgrims(StaffListRequest $request)
@@ -55,11 +44,6 @@ class StaffGroupController extends Controller
         return $this->locations($request, MobileRole::Muthawwif);
     }
 
-    public function muthawwifSos(StaffListRequest $request)
-    {
-        return $this->sos($request, MobileRole::Muthawwif);
-    }
-
     public function leaderHotels(Request $request)
     {
         return $this->hotels($request, MobileRole::TourLeader);
@@ -68,16 +52,6 @@ class StaffGroupController extends Controller
     public function muthawwifHotels(Request $request)
     {
         return $this->hotels($request, MobileRole::Muthawwif);
-    }
-
-    public function leaderResolveSos(Request $request, SosReport $sosReport): JsonResponse
-    {
-        return $this->resolveSos($request, $sosReport, MobileRole::TourLeader);
-    }
-
-    public function muthawwifResolveSos(Request $request, SosReport $sosReport): JsonResponse
-    {
-        return $this->resolveSos($request, $sosReport, MobileRole::Muthawwif);
     }
 
     public function sendLocation(SendLocationRequest $request): JsonResponse
@@ -165,18 +139,6 @@ class StaffGroupController extends Controller
         return response()->json(['data' => $locations]);
     }
 
-    private function sos(Request $request, MobileRole $role)
-    {
-        $reports = $this->access->sosForStaff($request->user(), $role)
-            ->with('pilgrim.branch')
-            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
-            ->when(! $request->filled('status'), fn ($query) => $query->whereIn('status', ['active', 'acknowledged']))
-            ->latest('reported_at')
-            ->paginate($request->integer('per_page', 30));
-
-        return SosReportResource::collection($reports);
-    }
-
     private function hotels(Request $request, MobileRole $role)
     {
         $groupIds = $this->access->groupIdsForStaff($request->user(), $role);
@@ -189,31 +151,5 @@ class StaffGroupController extends Controller
             ->get();
 
         return HotelResource::collection($hotels);
-    }
-
-    private function resolveSos(
-        Request $request,
-        SosReport $sosReport,
-        MobileRole $role,
-    ): JsonResponse {
-        abort_unless(
-            $this->access->sosForStaff($request->user(), $role)
-                ->whereKey($sosReport->id)
-                ->exists(),
-            404,
-        );
-        $validated = $request->validate([
-            'resolution_notes' => ['nullable', 'string', 'max:2000'],
-        ]);
-        $resolved = $this->resolution->resolve(
-            $sosReport,
-            $request->user(),
-            $validated['resolution_notes'] ?? 'Jamaah telah diamankan oleh petugas.',
-        );
-
-        return response()->json([
-            'message' => 'Laporan SOS selesai. Jamaah telah ditandai aman.',
-            'data' => new SosReportResource($resolved->load('pilgrim.branch')),
-        ]);
     }
 }

@@ -58,7 +58,7 @@ return new class extends Migration
         Schema::create('groups', function (Blueprint $table) {
             $table->id();
             $table->foreignId('branch_id')->constrained('branches')->restrictOnDelete();
-            $table->foreignId('departure_id')->constrained('departures')->restrictOnDelete();
+            $table->foreignId('departure_id')->nullable()->constrained('departures')->nullOnDelete();
             $table->foreignId('tour_leader_id')->nullable()->constrained('tour_leaders')->nullOnDelete();
             $table->foreignId('muthawwif_id')->nullable()->constrained('muthawwifs')->nullOnDelete();
             $table->string('code', 40)->unique();
@@ -69,7 +69,6 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['branch_id', 'departure_id']);
             $table->index(['branch_id', 'is_active']);
         });
 

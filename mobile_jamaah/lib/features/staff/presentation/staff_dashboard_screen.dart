@@ -12,7 +12,6 @@ import '../../profile/presentation/staff_profile_screen.dart';
 import 'staff_locations_screen.dart';
 import 'staff_pilgrims_screen.dart';
 import 'staff_provider.dart';
-import 'staff_sos_screen.dart';
 
 class StaffDashboardScreen extends StatefulWidget {
   const StaffDashboardScreen({super.key});
@@ -121,7 +120,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      'Kelola jamaah, lokasi, dan laporan darurat dari satu tempat.',
+                      'Kelola jamaah dan lokasi rombongan dari satu tempat.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 14),
@@ -166,14 +165,6 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                                   context,
                                   const StaffLocationsScreen(),
                                 ),
-                          ),
-                          _DashboardMenu(
-                            icon: Icons.sos_rounded,
-                            label: 'Laporan SOS',
-                            description: 'Pantau permintaan bantuan jamaah',
-                            count: staff.sosReports.length,
-                            accentColor: Colors.red,
-                            onTap: () => _open(context, const StaffSosScreen()),
                           ),
                           if (isLeader)
                             _DashboardMenu(
@@ -525,8 +516,8 @@ class _OperationalHintCard extends StatelessWidget {
                   : isTracking
                   ? 'Tracking petugas aktif${sentText == null ? '' : ' • terakhir $sentText'}. Jamaah dapat melihat posisi terakhir Anda saat membutuhkan bantuan.'
                   : isLeader
-                  ? 'Prioritaskan pengecekan lokasi jamaah dan laporan SOS. Aktivasi jamaah tersedia untuk perangkat baru.'
-                  : 'Pantau jamaah bimbingan Anda, cek lokasi terakhir, dan bantu jika ada laporan SOS.',
+                  ? 'Prioritaskan pengecekan lokasi jamaah. Aktivasi jamaah tersedia untuk perangkat baru.'
+                  : 'Pantau jamaah bimbingan Anda dan cek lokasi terakhir saat dibutuhkan.',
               style: TextStyle(
                 color:
                     hasError

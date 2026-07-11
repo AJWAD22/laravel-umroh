@@ -53,7 +53,7 @@
                         </div>
                         <div class="rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur">
                             <i data-lucide="siren" class="size-5 text-red-300"></i>
-                            <p class="mt-3 text-sm font-semibold">Respons SOS</p>
+                            <p class="mt-3 text-sm font-semibold">Monitoring Lapangan</p>
                             <p class="mt-1 text-xs leading-5 text-slate-400">Penanganan lebih terarah</p>
                         </div>
                     </div>

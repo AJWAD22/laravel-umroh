@@ -9,8 +9,6 @@ import 'features/auth/presentation/auth_provider.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/dashboard/presentation/dashboard_screen.dart';
 import 'features/staff/presentation/staff_dashboard_screen.dart';
-import 'features/staff/presentation/staff_provider.dart';
-import 'features/staff/presentation/staff_sos_map_screen.dart';
 
 class UmrahJamaahApp extends StatefulWidget {
   const UmrahJamaahApp({super.key});
@@ -22,7 +20,6 @@ class UmrahJamaahApp extends StatefulWidget {
 class _UmrahJamaahAppState extends State<UmrahJamaahApp> {
   final _navigatorKey = GlobalKey<NavigatorState>();
   StreamSubscription<Map<String, dynamic>>? _notificationSubscription;
-  int? _openingReportId;
 
   @override
   void initState() {
@@ -70,40 +67,6 @@ class _UmrahJamaahAppState extends State<UmrahJamaahApp> {
   }
 
   Future<void> _openNotification(Map<String, dynamic> data) async {
-    if (data['type']?.toString() != 'sos') return;
-    final reportId = int.tryParse(data['sos_report_id']?.toString() ?? '');
-    if (reportId == null || _openingReportId == reportId) return;
-
-    final context = _navigatorKey.currentContext;
-    if (context == null) return;
-    final auth = context.read<AuthProvider>();
-    if (!auth.isAuthenticated ||
-        auth.profile == null ||
-        auth.profile!.role == 'jamaah') {
-      return;
-    }
-
-    _openingReportId = reportId;
-    final staff = context.read<StaffProvider>();
-    await staff.load(auth.profile!.role, force: true);
-    if (!mounted) return;
-
-    final matches = staff.sosReports.where((report) => report.id == reportId);
-    if (matches.isEmpty) {
-      _openingReportId = null;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Laporan SOS tidak ditemukan atau sudah diselesaikan.'),
-        ),
-      );
-      return;
-    }
-
-    await _navigatorKey.currentState?.push(
-      MaterialPageRoute(
-        builder: (_) => StaffSosMapScreen(report: matches.first),
-      ),
-    );
-    _openingReportId = null;
+    return;
   }
 }

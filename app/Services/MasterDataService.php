@@ -58,8 +58,8 @@ class MasterDataService
                 ['code' => 'Kode', 'program_name' => 'Program', 'branch.name' => 'Cabang', 'departure_date' => 'Berangkat', 'status' => 'Status'],
                 ['code', 'program_name', 'departure_airport'], ['code', 'program_name', 'departure_date', 'status'], ['branch']),
             'groups' => $this->definition(Group::class, 'Rombongan', 'groups.manage',
-                ['code' => 'Kode', 'name' => 'Nama Rombongan', 'branch.name' => 'Cabang', 'departure.program_name' => 'Keberangkatan', 'is_active' => 'Aktif'],
-                ['code', 'name'], ['code', 'name', 'is_active'], ['branch', 'departure']),
+                ['code' => 'Kode', 'name' => 'Nama Rombongan', 'branch.name' => 'Cabang', 'is_active' => 'Aktif'],
+                ['code', 'name'], ['code', 'name', 'is_active'], ['branch']),
         ];
     }
 

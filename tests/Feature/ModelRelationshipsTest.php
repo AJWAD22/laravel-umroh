@@ -12,7 +12,6 @@ use App\Models\Muthawwif;
 use App\Models\Notification;
 use App\Models\Pilgrim;
 use App\Models\PilgrimLocation;
-use App\Models\SosReport;
 use App\Models\TourLeader;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -100,7 +99,7 @@ class ModelRelationshipsTest extends TestCase
         $this->assertTrue($admin->branch->is($branch));
     }
 
-    public function test_tracking_sos_and_notification_relationships_are_consistent(): void
+    public function test_tracking_and_notification_relationships_are_consistent(): void
     {
         [$branch, $admin, $pilgrim, $group] = $this->createMonitoringContext();
 
@@ -122,29 +121,17 @@ class ModelRelationshipsTest extends TestCase
             'recorded_at' => now(),
         ]);
 
-        $sos = SosReport::create([
-            'branch_id' => $branch->id,
-            'pilgrim_id' => $pilgrim->id,
-            'group_id' => $group->id,
-            'handled_by' => $admin->id,
-            'latitude' => 21.4224870,
-            'longitude' => 39.8262060,
-            'reported_at' => now(),
-        ]);
-
         $notification = Notification::create([
             'id' => (string) Str::uuid(),
             'branch_id' => $branch->id,
-            'type' => 'sos',
+            'type' => 'gps_offline',
             'notifiable_type' => User::class,
             'notifiable_id' => $admin->id,
-            'data' => ['sos_report_id' => $sos->id],
+            'data' => ['pilgrim_id' => $pilgrim->id],
         ]);
 
         $this->assertTrue($pilgrim->latestLocation->is($latest));
         $this->assertTrue($pilgrim->locationHistories->contains($history));
-        $this->assertTrue($group->sosReports->contains($sos));
-        $this->assertTrue($admin->handledSosReports->contains($sos));
         $this->assertTrue($notification->notifiable->is($admin));
         $this->assertTrue($branch->notifications->contains($notification));
         $this->assertSame('85', (string) $latest->battery_level);

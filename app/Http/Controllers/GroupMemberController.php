@@ -22,7 +22,7 @@ class GroupMemberController extends Controller
     public function index(Request $request, Group $group): View
     {
         $this->authorizeGroup($request, $group);
-        $group->load(['branch', 'departure', 'tourLeader', 'muthawwif']);
+        $group->load(['branch', 'tourLeader', 'muthawwif']);
 
         $members = $group->members()
             ->with('pilgrim')
@@ -46,7 +46,7 @@ class GroupMemberController extends Controller
             }))
             ->whereDoesntHave('groupMemberships', fn (Builder $query) => $query
                 ->where('status', 'active')
-                ->whereHas('group', fn (Builder $groupQuery) => $groupQuery->where('departure_id', $group->departure_id)))
+                ->where('group_id', '!=', $group->id))
             ->orderBy('full_name')
             ->limit(50)
             ->get();

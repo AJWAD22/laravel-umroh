@@ -101,10 +101,7 @@ class StaffLocationsScreen extends StatelessWidget {
                           message: pilgrim.fullName,
                           child: IconButton.filled(
                             style: IconButton.styleFrom(
-                              backgroundColor:
-                                  pilgrim.monitoringStatus == 'sos'
-                                      ? Colors.red
-                                      : Colors.blue,
+                              backgroundColor: Colors.blue,
                             ),
                             onPressed:
                                 () => Navigator.push(

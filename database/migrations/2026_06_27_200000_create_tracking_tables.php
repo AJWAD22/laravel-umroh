@@ -43,30 +43,10 @@ return new class extends Migration
             $table->index(['group_id', 'recorded_at']);
         });
 
-        Schema::create('sos_reports', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('branch_id')->constrained('branches')->restrictOnDelete();
-            $table->foreignId('pilgrim_id')->constrained('pilgrims')->restrictOnDelete();
-            $table->foreignId('group_id')->nullable()->constrained('groups')->nullOnDelete();
-            $table->foreignId('handled_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->decimal('latitude', 10, 7);
-            $table->decimal('longitude', 10, 7);
-            $table->text('message')->nullable();
-            $table->enum('status', ['active', 'acknowledged', 'resolved', 'cancelled'])->default('active');
-            $table->timestamp('reported_at');
-            $table->timestamp('acknowledged_at')->nullable();
-            $table->timestamp('resolved_at')->nullable();
-            $table->text('resolution_notes')->nullable();
-            $table->timestamps();
-
-            $table->index(['branch_id', 'status', 'reported_at']);
-            $table->index(['pilgrim_id', 'reported_at']);
-        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('sos_reports');
         Schema::dropIfExists('location_histories');
         Schema::dropIfExists('pilgrim_locations');
     }

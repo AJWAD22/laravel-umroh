@@ -2,8 +2,8 @@
 
 Aplikasi Flutter untuk role Jamaah, Tour Leader, dan Muthawwif. Login diarahkan
 otomatis berdasarkan role yang dikembalikan API. Fitur Jamaah tetap menyediakan
-tracking aktif, SOS, profil, dan peta hotel. Tour Leader dan Muthawwif dapat
-melihat jamaah yang ditugaskan, lokasi terakhir, detail, dan laporan SOS.
+tracking aktif, profil, dan peta hotel. Tour Leader dan Muthawwif dapat
+melihat jamaah yang ditugaskan, lokasi terakhir, dan detail jamaah.
 
 ## Persiapan backend
 

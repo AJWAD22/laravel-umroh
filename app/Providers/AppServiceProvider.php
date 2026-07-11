@@ -3,9 +3,7 @@
 namespace App\Providers;
 
 use App\Models\PilgrimLocation;
-use App\Models\SosReport;
 use App\Observers\PilgrimLocationObserver;
-use App\Observers\SosReportObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,7 +21,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        SosReport::observe(SosReportObserver::class);
         PilgrimLocation::observe(PilgrimLocationObserver::class);
     }
 }

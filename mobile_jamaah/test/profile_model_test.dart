@@ -15,13 +15,13 @@ void main() {
         'full_name': 'Jamaah Demo',
         'phone': '08123456789',
         'photo_url': null,
-        'monitoring_status': 'sos',
+        'monitoring_status': 'normal',
       },
     });
 
     expect(profile.name, 'Jamaah Demo');
     expect(profile.registrationNumber, 'JMH-001');
     expect(profile.branchName, 'Cabang Banjarmasin');
-    expect(profile.monitoringStatus, 'sos');
+    expect(profile.monitoringStatus, 'normal');
   });
 }

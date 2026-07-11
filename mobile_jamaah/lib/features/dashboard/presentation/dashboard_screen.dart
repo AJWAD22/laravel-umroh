@@ -5,12 +5,10 @@ import 'package:provider/provider.dart';
 import '../../auth/presentation/auth_provider.dart';
 import '../../checkpoint/presentation/checkpoint_screen.dart';
 import '../../hotel/presentation/hotel_screen.dart';
-import '../../location/data/location_repository.dart';
 import '../../location/presentation/location_permission_guide_screen.dart';
 import '../../location/presentation/tracking_provider.dart';
 import '../../profile/domain/jamaah_profile.dart';
 import '../../profile/presentation/profile_screen.dart';
-import '../../sos/data/sos_repository.dart';
 import '../../staff_contact/presentation/staff_contact_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -21,75 +19,12 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  bool _sendingSos = false;
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) context.read<TrackingProvider>().start();
     });
-  }
-
-  Future<void> _sendSos() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            icon: const Icon(Icons.sos_rounded, color: Color(0xFFDC2626)),
-            title: const Text('Kirim SOS sekarang?'),
-            content: const Text(
-              'Gunakan hanya saat membutuhkan bantuan. Lokasi Anda akan dikirim ke petugas rombongan.',
-              textAlign: TextAlign.center,
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Batal'),
-              ),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFDC2626),
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Ya, Kirim SOS'),
-              ),
-            ],
-          ),
-    );
-    if (confirmed != true || !mounted) return;
-
-    setState(() => _sendingSos = true);
-    final tracking = context.read<TrackingProvider>();
-    final locationRepository = context.read<LocationRepository>();
-    final sosRepository = context.read<SosRepository>();
-    final auth = context.read<AuthProvider>();
-    try {
-      final position =
-          tracking.lastPosition ?? await locationRepository.currentPosition();
-      await sosRepository.send(position);
-      await auth.refreshProfile();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('SOS terkirim. Petugas sedang menerima laporan.'),
-            backgroundColor: Color(0xFF16A34A),
-          ),
-        );
-      }
-    } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.toString()),
-            backgroundColor: const Color(0xFFDC2626),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _sendingSos = false);
-    }
   }
 
   Future<void> _logout() async {
@@ -122,7 +57,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final auth = context.watch<AuthProvider>();
     final tracking = context.watch<TrackingProvider>();
     final profile = auth.profile!;
-    final isSos = profile.monitoringStatus == 'sos';
 
     return Scaffold(
       appBar: AppBar(
@@ -160,17 +94,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     _WelcomeHero(profile: profile),
                     const SizedBox(height: 14),
                     _MonitoringStatusCard(
-                      isSos: isSos,
                       isTracking: tracking.isTracking,
                       isSending: tracking.isSending,
                       lastSentAt: tracking.lastSentAt,
                       error: tracking.error,
-                    ),
-                    const SizedBox(height: 14),
-                    _SosButton(
-                      isSending: _sendingSos,
-                      isSos: isSos,
-                      onPressed: _sendSos,
                     ),
                     const SizedBox(height: 18),
                     _JourneyCard(journey: profile.journey),
@@ -305,7 +232,9 @@ class _WelcomeHero extends StatelessWidget {
             radius: 34,
             backgroundColor: Colors.white.withValues(alpha: 0.16),
             backgroundImage:
-                profile.photoUrl == null ? null : NetworkImage(profile.photoUrl!),
+                profile.photoUrl == null
+                    ? null
+                    : NetworkImage(profile.photoUrl!),
             child:
                 profile.photoUrl == null
                     ? Text(
@@ -372,14 +301,12 @@ class _WelcomeHero extends StatelessWidget {
 
 class _MonitoringStatusCard extends StatelessWidget {
   const _MonitoringStatusCard({
-    required this.isSos,
     required this.isTracking,
     required this.isSending,
     required this.lastSentAt,
     required this.error,
   });
 
-  final bool isSos;
   final bool isTracking;
   final bool isSending;
   final DateTime? lastSentAt;
@@ -389,17 +316,8 @@ class _MonitoringStatusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isHealthy = error == null && isTracking;
     final statusColor =
-        isSos
-            ? const Color(0xFFDC2626)
-            : isHealthy
-            ? const Color(0xFF16A34A)
-            : const Color(0xFFF59E0B);
-    final statusText =
-        isSos
-            ? 'SOS Aktif'
-            : isHealthy
-            ? 'Aman & Terpantau'
-            : 'Perlu Cek Lokasi';
+        isHealthy ? const Color(0xFF16A34A) : const Color(0xFFF59E0B);
+    final statusText = isHealthy ? 'Aman & Terpantau' : 'Perlu Cek Lokasi';
     final subtitle =
         error != null
             ? error!
@@ -421,10 +339,7 @@ class _MonitoringStatusCard extends StatelessWidget {
                 color: statusColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(18),
               ),
-              child: Icon(
-                isSos ? Icons.sos_rounded : Icons.gps_fixed_rounded,
-                color: statusColor,
-              ),
+              child: Icon(Icons.gps_fixed_rounded, color: statusColor),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -451,58 +366,6 @@ class _MonitoringStatusCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _SosButton extends StatelessWidget {
-  const _SosButton({
-    required this.isSending,
-    required this.isSos,
-    required this.onPressed,
-  });
-
-  final bool isSending;
-  final bool isSos;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return FilledButton(
-      onPressed: isSending ? null : onPressed,
-      style: FilledButton.styleFrom(
-        minimumSize: const Size.fromHeight(78),
-        backgroundColor: const Color(0xFFDC2626),
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (isSending)
-            const SizedBox.square(
-              dimension: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                color: Colors.white,
-              ),
-            )
-          else
-            const Icon(Icons.sos_rounded, size: 34),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Text(
-              isSos ? 'SOS SUDAH TERKIRIM' : 'DARURAT / SOS',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.4,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -654,9 +517,9 @@ class _MenuCard extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -684,7 +547,7 @@ class _HelpCard extends StatelessWidget {
           SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Jika tersesat, tetap tenang. Tekan SOS hanya untuk keadaan darurat, atau hubungi Tour Leader melalui nomor yang diberikan.',
+              'Jika tersesat, tetap tenang. Buka kontak petugas dan hubungi Tour Leader melalui nomor yang diberikan.',
               style: TextStyle(fontWeight: FontWeight.w700, height: 1.45),
             ),
           ),

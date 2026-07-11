@@ -115,7 +115,6 @@ if (monitoringMapElement) {
 
     const markerStyle = (marker) => {
         if (marker.type === 'muthawwif') return ['#0891b2', 'M'];
-        if (marker.status === 'sos') return ['#dc2626', '!'];
         if (marker.status === 'offline') return ['#64748b', 'J'];
         return ['#16a34a', 'J'];
     };
@@ -137,7 +136,6 @@ if (monitoringMapElement) {
         const statusColors = {
             online: ['#dcfce7', '#15803d'],
             offline: ['#e2e8f0', '#475569'],
-            sos: ['#fee2e2', '#b91c1c'],
         };
         const [statusBackground, statusColor] = statusColors[marker.status] || statusColors.offline;
         const initials = marker.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
@@ -236,7 +234,7 @@ if (monitoringMapElement) {
                 hasFittedBounds = true;
             }
 
-            ['total', 'online', 'offline', 'sos'].forEach((key) => {
+            ['total', 'online', 'offline'].forEach((key) => {
                 document.getElementById(`monitoring-${key}`).textContent = payload.summary[key];
             });
             elements.updated.textContent = `Diperbarui ${new Date(payload.generated_at).toLocaleTimeString('id-ID')}`;
@@ -364,30 +362,4 @@ if (trackingMapElement) {
     };
 
     loadButton.addEventListener('click', loadHistory);
-}
-
-const sosDetailMapElement = document.getElementById('sos-detail-map');
-
-if (sosDetailMapElement) {
-    const latitude = Number(sosDetailMapElement.dataset.latitude);
-    const longitude = Number(sosDetailMapElement.dataset.longitude);
-    const map = L.map(sosDetailMapElement).setView([latitude, longitude], 17);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19,
-    }).addTo(map);
-
-    const popupContent = document.createElement('div');
-    const popupName = document.createElement('strong');
-    popupName.textContent = sosDetailMapElement.dataset.name;
-    popupContent.append(popupName, document.createElement('br'), document.createTextNode('Lokasi laporan SOS'));
-
-    L.circleMarker([latitude, longitude], {
-        radius: 10,
-        color: '#fff',
-        weight: 3,
-        fillColor: '#dc2626',
-        fillOpacity: 1,
-    }).bindPopup(popupContent).addTo(map).openPopup();
 }

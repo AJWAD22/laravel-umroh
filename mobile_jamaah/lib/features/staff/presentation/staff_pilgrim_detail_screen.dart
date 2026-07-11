@@ -13,7 +13,6 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final location = pilgrim.location;
-    final isSos = pilgrim.monitoringStatus == 'sos';
 
     return Scaffold(
       appBar: AppBar(
@@ -35,20 +34,12 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors:
-                            isSos
-                                ? const [Color(0xFF991B1B), Color(0xFFEF4444)]
-                                : const [
-                                  Color(0xFF0F2F6B),
-                                  Color(0xFF2563EB),
-                                ],
+                        colors: const [Color(0xFF0F2F6B), Color(0xFF2563EB)],
                       ),
                       borderRadius: BorderRadius.circular(28),
                       boxShadow: [
                         BoxShadow(
-                          color: (isSos ? Colors.red : Colors.blue).withValues(
-                            alpha: 0.18,
-                          ),
+                          color: Colors.blue.withValues(alpha: 0.18),
                           blurRadius: 28,
                           offset: const Offset(0, 14),
                         ),
@@ -60,7 +51,9 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
                         children: [
                           CircleAvatar(
                             radius: 38,
-                            backgroundColor: Colors.white.withValues(alpha: 0.16),
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.16,
+                            ),
                             backgroundImage:
                                 pilgrim.photoUrl == null
                                     ? null
@@ -82,13 +75,13 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   pilgrim.fullName,
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.titleLarge?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                  ),
                                 ),
-                              ),
                                 const SizedBox(height: 4),
                                 Text(
                                   pilgrim.registrationNumber,
@@ -100,12 +93,9 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
                                   runSpacing: 8,
                                   children: [
                                     _StatusChip(
-                                      icon:
-                                          isSos
-                                              ? Icons.sos_rounded
-                                              : Icons.verified_user_rounded,
-                                      label: isSos ? 'SOS Aktif' : 'Normal',
-                                      color: isSos ? Colors.red : Colors.green,
+                                      icon: Icons.verified_user_rounded,
+                                      label: 'Normal',
+                                      color: Colors.green,
                                     ),
                                     _StatusChip(
                                       icon: Icons.location_on_rounded,

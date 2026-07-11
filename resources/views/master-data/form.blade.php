@@ -14,7 +14,7 @@
         'tour-leaders' => 'Nomor pegawai dibuat otomatis, contoh BJM-TL-001.',
         'muthawwifs' => 'Nomor pegawai dibuat otomatis, contoh BJM-MTF-001.',
         'departures' => 'Kode dibuat dari cabang dan tahun keberangkatan, contoh BJM-DEP-2026-001.',
-        'groups' => 'Kode dibuat dari cabang dan tahun keberangkatan, contoh BJM-GRP-2026-001.',
+        'groups' => 'Kode dibuat otomatis dari cabang, contoh BJM-GRP-001.',
         default => null,
     };
     $sectionLabel = match (true) {
@@ -77,8 +77,9 @@
             ['status','Status','select',['draft'=>'Draft','scheduled'=>'Terjadwal','departed'=>'Berangkat','completed'=>'Selesai','cancelled'=>'Batal']],
         ],
         'groups' => [...$commonBranch,
-            ['departure_id','Keberangkatan','select',$options['departures']], ['tour_leader_id','Tour Leader','select',$options['tourLeaders']],
-            ['muthawwif_id','Muthawwif','select',$options['muthawwifs']], ['code','Kode Rombongan','text'], ['name','Nama Rombongan','text'],
+            ['tour_leader_id','Tour Leader','select',$options['tourLeaders']],
+            ['muthawwif_id','Muthawwif','select',$options['muthawwifs']],
+            ['code','Kode Rombongan','text'], ['name','Nama Rombongan','text'],
             ['capacity','Kapasitas','number'], ['notes','Catatan','textarea'], ['is_active','Status','boolean'],
         ],
     };

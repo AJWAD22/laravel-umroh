@@ -74,11 +74,6 @@ class Pilgrim extends Model
         return $this->hasMany(LocationHistory::class);
     }
 
-    public function sosReports(): HasMany
-    {
-        return $this->hasMany(SosReport::class);
-    }
-
     public function activationSessions(): HasMany
     {
         return $this->hasMany(MobileActivationSession::class);

@@ -5,13 +5,10 @@ namespace App\Http\Controllers\Api\Mobile;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Mobile\LocationHistoryRequest;
 use App\Http\Requests\Api\Mobile\SendLocationRequest;
-use App\Http\Requests\Api\Mobile\SendSosRequest;
 use App\Http\Resources\Mobile\HotelResource;
 use App\Http\Resources\Mobile\LocationResource;
-use App\Http\Resources\Mobile\SosReportResource;
 use App\Models\LocationHistory;
 use App\Models\PilgrimLocation;
-use App\Models\SosReport;
 use App\Services\MobileGroupAccessService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -55,38 +52,10 @@ class PilgrimController extends Controller
         ], 201);
     }
 
-    public function sos(SendSosRequest $request): JsonResponse
-    {
-        $pilgrim = $request->user()->pilgrim;
-        $group = $this->access->activeGroupForPilgrim($pilgrim);
-        $data = $request->validated();
-
-        $report = DB::transaction(function () use ($pilgrim, $group, $data): SosReport {
-            $report = SosReport::query()->create([
-                'branch_id' => $pilgrim->branch_id,
-                'pilgrim_id' => $pilgrim->id,
-                'group_id' => $group?->id,
-                'latitude' => $data['latitude'],
-                'longitude' => $data['longitude'],
-                'message' => $data['message'] ?? null,
-                'status' => 'active',
-                'reported_at' => isset($data['reported_at']) ? CarbonImmutable::parse($data['reported_at']) : now(),
-            ]);
-            $pilgrim->update(['monitoring_status' => 'sos']);
-
-            return $report;
-        });
-
-        return response()->json([
-            'message' => 'SOS berhasil dikirim.',
-            'data' => new SosReportResource($report->load('pilgrim')),
-        ], 201);
-    }
-
     public function hotel(Request $request)
     {
         $group = $this->access->activeGroupForPilgrim($request->user()->pilgrim);
-        $hotels = $group?->departure->hotels()->orderByPivot('sequence')->get() ?? collect();
+        $hotels = $group?->departure?->hotels()->orderByPivot('sequence')->get() ?? collect();
 
         return HotelResource::collection($hotels);
     }
