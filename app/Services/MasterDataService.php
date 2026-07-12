@@ -32,10 +32,10 @@ class MasterDataService
     public function resources(): array
     {
         return [
-            'branches' => $this->definition(Branch::class, 'Cabang', 'branches.manage',
+            'branches' => $this->definition(Branch::class, 'Data Cabang', 'branches.manage',
                 ['code' => 'Kode', 'name' => 'Nama Cabang', 'city' => 'Kota', 'province' => 'Provinsi', 'is_active' => 'Aktif'],
                 ['code', 'name', 'city', 'province'], ['code', 'name', 'city', 'province', 'is_active']),
-            'branch-admins' => $this->definition(User::class, 'Admin Cabang', 'branch-admins.manage',
+            'branch-admins' => $this->definition(User::class, 'Akun Admin Cabang', 'branch-admins.manage',
                 ['photo_path' => 'Foto', 'name' => 'Nama', 'email' => 'Email', 'branch.name' => 'Cabang', 'is_active' => 'Aktif'],
                 ['name', 'email', 'phone_number'], ['name', 'email', 'is_active'], ['branch']),
             'pilgrims' => $this->definition(Pilgrim::class, 'Jamaah', 'pilgrims.manage',

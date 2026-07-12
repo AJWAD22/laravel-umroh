@@ -30,8 +30,8 @@
                 ['label' => 'Rombongan', 'resource' => 'groups', 'permission' => 'groups.manage', 'view' => 'groups.view'],
             ];
             $organizationMenus = [
-                ['label' => 'Cabang', 'resource' => 'branches', 'permission' => 'branches.manage', 'view' => 'branches.manage'],
-                ['label' => 'Admin Cabang', 'resource' => 'branch-admins', 'permission' => 'branch-admins.manage', 'view' => 'branch-admins.manage'],
+                ['label' => 'Data Cabang', 'resource' => 'branches', 'permission' => 'branches.manage', 'view' => 'branches.manage'],
+                ['label' => 'Akun Admin Cabang', 'resource' => 'branch-admins', 'permission' => 'branch-admins.manage', 'view' => 'branch-admins.manage'],
             ];
         @endphp
         <div x-data="{ open: {{ request()->routeIs('master-data.*') && in_array(request()->route('resource'), array_column($masterMenus, 'resource'), true) ? 'true' : 'false' }} }">

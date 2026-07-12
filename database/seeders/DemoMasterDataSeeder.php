@@ -47,8 +47,10 @@ class DemoMasterDataSeeder extends Seeder
     {
         DB::transaction(function (): void {
             $this->deleteOldMasterData();
+            $this->deleteLegacyBranchAdmins();
 
             $branches = $this->ensureBranches();
+            $this->ensureBranchAdmins($branches);
             $departures = $this->ensureDepartures($branches);
             $this->ensureHotels($branches, $departures);
             $leaders = $this->seedTourLeaders($branches);
@@ -62,7 +64,9 @@ class DemoMasterDataSeeder extends Seeder
             $this->command?->line("Dihapus {$table}: {$count}");
         }
         $this->command?->line('Data baru: 3 Tour Leader, 3 Muthawwif, 3 Rombongan, 30 Jamaah.');
+        $this->command?->line('Akun Admin Cabang demo: admin.banjarmasin@mantauumroh.id, admin.banjarbaru@mantauumroh.id, admin.martapura@mantauumroh.id');
         $this->command?->line('Password semua Tour Leader dan Muthawwif: password123');
+        $this->command?->line('Password semua Akun Admin Cabang demo: password123');
     }
 
     private function deleteOldMasterData(): void
@@ -153,6 +157,17 @@ class DemoMasterDataSeeder extends Seeder
         }
     }
 
+    private function deleteLegacyBranchAdmins(): void
+    {
+        User::query()
+            ->whereIn('email', ['admin.cabang@umrah.test', 'adminbjm@umrah.test'])
+            ->get()
+            ->each(function (User $user): void {
+                $user->syncRoles([]);
+                $user->delete();
+            });
+    }
+
     /**
      * @return Collection<string, Branch>
      */
@@ -202,6 +217,32 @@ class DemoMasterDataSeeder extends Seeder
             }
 
             return [$city => Branch::query()->create($data + ['is_active' => true])];
+        });
+    }
+
+    /**
+     * @param Collection<string, Branch> $branches
+     */
+    private function ensureBranchAdmins(Collection $branches): void
+    {
+        collect([
+            'Banjarmasin' => ['name' => 'Admin Cabang Banjarmasin', 'email' => 'admin.banjarmasin@mantauumroh.id', 'phone' => '08115001001'],
+            'Banjarbaru' => ['name' => 'Admin Cabang Banjarbaru', 'email' => 'admin.banjarbaru@mantauumroh.id', 'phone' => '08115001002'],
+            'Martapura' => ['name' => 'Admin Cabang Martapura', 'email' => 'admin.martapura@mantauumroh.id', 'phone' => '08115001003'],
+        ])->each(function (array $data, string $city) use ($branches): void {
+            $user = User::query()->updateOrCreate(
+                ['email' => $data['email']],
+                [
+                    'branch_id' => $branches[$city]->id,
+                    'name' => $data['name'],
+                    'phone_number' => $data['phone'],
+                    'password' => Hash::make('password123'),
+                    'is_active' => true,
+                    'email_verified_at' => now(),
+                ],
+            );
+
+            $user->syncRoles('admin-cabang');
         });
     }
 
