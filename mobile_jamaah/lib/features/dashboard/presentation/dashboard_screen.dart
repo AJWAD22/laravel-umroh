@@ -81,10 +81,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
     if (confirmed != true || !mounted) return;
 
+    final locationRepository = context.read<LocationRepository>();
+    final sosRepository = context.read<SosRepository>();
     setState(() => _sendingSos = true);
     try {
-      final position = await context.read<LocationRepository>().currentPosition();
-      await context.read<SosRepository>().send(position: position);
+      final position = await locationRepository.currentPosition();
+      await sosRepository.send(position: position);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
