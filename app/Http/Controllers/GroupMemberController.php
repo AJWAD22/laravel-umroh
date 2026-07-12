@@ -22,7 +22,7 @@ class GroupMemberController extends Controller
     public function index(Request $request, Group $group): View
     {
         $this->authorizeGroup($request, $group);
-        $group->load(['branch', 'tourLeader', 'muthawwif']);
+        $group->load(['branch', 'departure.hotels', 'tourLeader', 'muthawwif']);
 
         $members = $group->members()
             ->with('pilgrim')

@@ -24,7 +24,6 @@
 
         @php
             $masterMenus = [
-                ['label' => 'Admin Cabang', 'resource' => 'branch-admins', 'permission' => 'branch-admins.manage', 'view' => 'branch-admins.manage'],
                 ['label' => 'Jamaah', 'resource' => 'pilgrims', 'permission' => 'pilgrims.manage', 'view' => 'pilgrims.view'],
                 ['label' => 'Tour Leader', 'resource' => 'tour-leaders', 'permission' => 'tour-leaders.manage', 'view' => 'tour-leaders.view'],
                 ['label' => 'Muthawwif', 'resource' => 'muthawwifs', 'permission' => 'muthawwifs.manage', 'view' => 'muthawwifs.view'],
@@ -32,6 +31,7 @@
             ];
             $organizationMenus = [
                 ['label' => 'Cabang', 'resource' => 'branches', 'permission' => 'branches.manage', 'view' => 'branches.manage'],
+                ['label' => 'Admin Cabang', 'resource' => 'branch-admins', 'permission' => 'branch-admins.manage', 'view' => 'branch-admins.manage'],
             ];
         @endphp
         <div x-data="{ open: {{ request()->routeIs('master-data.*') && in_array(request()->route('resource'), array_column($masterMenus, 'resource'), true) ? 'true' : 'false' }} }">
@@ -52,8 +52,8 @@
             </div>
         </div>
 
-        @can('branches.manage')
-            <div x-data="{ open: {{ request()->routeIs('master-data.*') && request()->route('resource') === 'branches' ? 'true' : 'false' }} }">
+        @canany(['branches.manage', 'branch-admins.manage'])
+            <div x-data="{ open: {{ request()->routeIs('master-data.*') && in_array(request()->route('resource'), array_column($organizationMenus, 'resource'), true) ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="sidebar-link w-full">
                     <i data-lucide="building-2" class="size-5 shrink-0"></i>
                     <span x-show="!sidebarCollapsed" class="flex-1 text-left">Organisasi</span>
@@ -61,14 +61,16 @@
                 </button>
                 <div x-cloak x-show="open && !sidebarCollapsed" x-transition class="ml-5 mt-1 space-y-0.5 border-l border-slate-800 pl-5">
                     @foreach ($organizationMenus as $menu)
-                        <a href="{{ route('master-data.index', $menu['resource']) }}"
-                           class="sidebar-submenu-link {{ request()->route('resource') === $menu['resource'] ? 'sidebar-submenu-link-active' : '' }}">
-                            {{ $menu['label'] }}
-                        </a>
+                        @canany([$menu['permission'], $menu['view']])
+                            <a href="{{ route('master-data.index', $menu['resource']) }}"
+                               class="sidebar-submenu-link {{ request()->route('resource') === $menu['resource'] ? 'sidebar-submenu-link-active' : '' }}">
+                                {{ $menu['label'] }}
+                            </a>
+                        @endcanany
                     @endforeach
                 </div>
             </div>
-        @endcan
+        @endcanany
 
         <div x-data="{ open: {{ request()->routeIs('monitoring.*') ? 'true' : 'false' }} }">
             <button @click="open = !open" class="sidebar-link w-full">
@@ -90,9 +92,7 @@
                 <i x-show="!sidebarCollapsed" data-lucide="chevron-down" class="size-4 transition" :class="{ 'rotate-180': open }"></i>
             </button>
             <div x-cloak x-show="open && !sidebarCollapsed" x-transition class="ml-5 mt-1 space-y-0.5 border-l border-slate-800 pl-5">
-                @foreach (['all' => 'Gabungan', 'pilgrims' => 'Jamaah', 'tracking' => 'Tracking', 'sos' => 'SOS'] as $reportType => $reportLabel)
-                    <a href="{{ route('reports.index', $reportType) }}" class="sidebar-submenu-link {{ request()->route('type') === $reportType ? 'sidebar-submenu-link-active' : '' }}">{{ $reportLabel }}</a>
-                @endforeach
+                <a href="{{ route('reports.index', 'all') }}" class="sidebar-submenu-link {{ request()->route('type') === 'all' || request()->routeIs('reports.home') ? 'sidebar-submenu-link-active' : '' }}">Laporan Gabungan</a>
             </div>
         </div>
 

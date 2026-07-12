@@ -29,11 +29,13 @@
         </div>
     </x-slot:header>
 
-    <nav class="mb-4 flex gap-2 overflow-x-auto pb-1">
-        @foreach ($reportLabels as $reportType => $label)
-            <a href="{{ route('reports.index', $reportType) }}" class="whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold {{ $type === $reportType ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 shadow-sm dark:bg-slate-900' }}">{{ $label }}</a>
-        @endforeach
-    </nav>
+    @if ($type !== 'all')
+        <div class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Untuk presentasi dan operasional harian, gunakan
+            <a href="{{ route('reports.index', 'all') }}" class="font-semibold underline">Laporan Gabungan</a>
+            agar data Jamaah, Tracking, dan SOS berada dalam satu file.
+        </div>
+    @endif
 
     <form method="GET" class="mb-4 grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:grid-cols-5">
         <label><span class="mb-1 block text-xs font-medium text-slate-500">Dari tanggal</span><input type="date" name="date_from" value="{{ $filters['date_from'] }}" class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950"></label>

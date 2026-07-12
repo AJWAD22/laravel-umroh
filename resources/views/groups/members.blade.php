@@ -35,6 +35,35 @@
         @endforeach
     </section>
 
+    <section class="mb-6 rounded-2xl border border-blue-100 bg-blue-50/70 p-5 shadow-sm dark:border-blue-900/60 dark:bg-blue-950/20">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <p class="text-sm font-semibold text-blue-700 dark:text-blue-300">Informasi Perjalanan</p>
+                <h2 class="mt-1 text-lg font-bold text-slate-950 dark:text-white">
+                    {{ $group->departure?->program_name ?? 'Belum ada jadwal keberangkatan' }}
+                </h2>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                    @if ($group->departure)
+                        Berangkat {{ $group->departure->departure_date?->translatedFormat('d M Y') }}
+                        · Pulang {{ $group->departure->return_date?->translatedFormat('d M Y') }}
+                    @else
+                        Rombongan tetap bisa dipakai untuk pembagian jamaah, tracking, dan SOS.
+                    @endif
+                </p>
+            </div>
+            <div class="rounded-2xl bg-white px-4 py-3 text-sm shadow-sm dark:bg-slate-900">
+                <span class="block text-xs font-semibold uppercase tracking-wide text-slate-400">Hotel</span>
+                <span class="mt-1 block font-semibold text-slate-800 dark:text-slate-100">
+                    @if ($group->departure?->hotels?->isNotEmpty())
+                        {{ $group->departure->hotels->pluck('name')->join(', ') }}
+                    @else
+                        Belum ditentukan
+                    @endif
+                </span>
+            </div>
+        </div>
+    </section>
+
     <div class="grid gap-6 xl:grid-cols-2">
         <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div class="border-b border-slate-200 p-5 dark:border-slate-800">

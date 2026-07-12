@@ -43,6 +43,8 @@ class DatabaseSeeder extends Seeder
         );
         $branchAdmin->syncRoles('admin-cabang');
 
+        $this->call(DemoMasterDataSeeder::class);
+
         if (app()->environment(['local', 'testing']) && env('SEED_DEMO_DATA', false)) {
             $this->call(MobileDemoSeeder::class);
         }
