@@ -94,6 +94,8 @@ class MasterDataController extends Controller
 
     public function template(Request $request, string $resource): BinaryFileResponse
     {
+        abort_unless($resource === 'pilgrims', 404);
+
         $definition = $this->authorizeResource($request, $resource);
         Gate::authorize('create', $definition['model']);
 
@@ -108,6 +110,8 @@ class MasterDataController extends Controller
 
     public function import(Request $request, string $resource): RedirectResponse
     {
+        abort_unless($resource === 'pilgrims', 404);
+
         $definition = $this->authorizeResource($request, $resource);
         Gate::authorize('create', $definition['model']);
 

@@ -45,18 +45,20 @@
 
             @if ($canManage)
                 <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <a href="{{ route('master-data.template', $resource) }}" class="button-secondary shrink-0">
-                        <i data-lucide="download" class="size-4.5"></i>
-                        Template Excel
-                    </a>
-                    <form method="POST" action="{{ route('master-data.import', $resource) }}" enctype="multipart/form-data">
-                        @csrf
-                        <label class="button-secondary shrink-0 cursor-pointer">
-                            <i data-lucide="upload" class="size-4.5"></i>
-                            Import Excel
-                            <input type="file" name="file" accept=".xlsx,.xls,.csv" class="sr-only" onchange="this.form.submit()">
-                        </label>
-                    </form>
+                    @if ($resource === 'pilgrims')
+                        <a href="{{ route('master-data.template', $resource) }}" class="button-secondary shrink-0">
+                            <i data-lucide="download" class="size-4.5"></i>
+                            Template Excel
+                        </a>
+                        <form method="POST" action="{{ route('master-data.import', $resource) }}" enctype="multipart/form-data">
+                            @csrf
+                            <label class="button-secondary shrink-0 cursor-pointer">
+                                <i data-lucide="upload" class="size-4.5"></i>
+                                Import Jamaah
+                                <input type="file" name="file" accept=".xlsx,.xls,.csv" class="sr-only" onchange="this.form.submit()">
+                            </label>
+                        </form>
+                    @endif
                     <a href="{{ route('master-data.create', $resource) }}" class="button-primary shrink-0">
                         <i data-lucide="plus" class="size-4.5"></i>
                         Tambah {{ $definition['label'] }}
