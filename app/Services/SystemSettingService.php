@@ -36,10 +36,21 @@ class SystemSettingService
 
     private function all(): Collection
     {
-        return Cache::rememberForever(
+        $settings = Cache::rememberForever(
             self::CACHE_KEY,
             fn () => SystemSetting::query()->orderBy('group')->orderBy('id')->get(),
         );
+
+        // Pengaman untuk server produksi:
+        // Jika cache lama/rusak berisi __PHP_Incomplete_Class, dashboard bisa error 500.
+        // Saat itu terjadi, cache pengaturan dihapus lalu data pengaturan diambil ulang dari database.
+        if (! $settings instanceof Collection) {
+            Cache::forget(self::CACHE_KEY);
+
+            return SystemSetting::query()->orderBy('group')->orderBy('id')->get();
+        }
+
+        return $settings;
     }
 
     private function cast(?string $value, string $type): mixed
