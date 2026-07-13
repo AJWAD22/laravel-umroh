@@ -108,6 +108,34 @@ class AdminNotificationService
         );
     }
 
+    public function sosAcknowledged(SosReport $report): void
+    {
+        $report->loadMissing([
+            'pilgrim:id,user_id,full_name',
+            'pilgrim.user:id,name',
+            'handler:id,name',
+        ]);
+
+        $pilgrimUser = $report->pilgrim?->user;
+        if (! $pilgrimUser) {
+            return;
+        }
+
+        $handlerName = $report->handler?->name ?? 'Petugas';
+
+        $this->push->sendToUsers(
+            collect([$pilgrimUser]),
+            'SOS sedang ditangani',
+            "{$handlerName} sedang menangani laporan SOS Anda. Tetap tenang dan tetap di lokasi yang aman.",
+            [
+                'type' => 'sos_handling',
+                'sos_report_id' => $report->id,
+                'status' => 'handling',
+                'handler_name' => $handlerName,
+            ],
+        );
+    }
+
     /**
      * @param  class-string<Notification>  $notificationClass
      */

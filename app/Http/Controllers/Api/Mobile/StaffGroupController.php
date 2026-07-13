@@ -17,6 +17,7 @@ use App\Models\Group;
 use App\Models\Hotel;
 use App\Models\SosReport;
 use App\Models\StaffLocation;
+use App\Services\AdminNotificationService;
 use App\Services\MobileGroupAccessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,7 +25,10 @@ use Illuminate\Support\Carbon;
 
 class StaffGroupController extends Controller
 {
-    public function __construct(private readonly MobileGroupAccessService $access) {}
+    public function __construct(
+        private readonly MobileGroupAccessService $access,
+        private readonly AdminNotificationService $notifications,
+    ) {}
 
     public function leaderPilgrims(StaffListRequest $request)
     {
@@ -135,13 +139,18 @@ class StaffGroupController extends Controller
     public function acknowledge(Request $request, SosReport $sosReport): SosReportResource
     {
         $this->authorizeSos($request, $sosReport);
+        $shouldNotifyPilgrim = $sosReport->status === 'new';
 
-        if ($sosReport->status === 'new') {
+        if ($shouldNotifyPilgrim) {
             $sosReport->forceFill([
                 'status' => 'handling',
                 'handled_by' => $request->user()->id,
                 'acknowledged_at' => now(),
             ])->save();
+
+            $this->notifications->sosAcknowledged(
+                $sosReport->fresh(['pilgrim.user', 'handler']),
+            );
         }
 
         return new SosReportResource($sosReport->fresh(['pilgrim.branch', 'pilgrim.latestLocation', 'group', 'handler']));
