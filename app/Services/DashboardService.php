@@ -97,6 +97,9 @@ class DashboardService
                 'pilgrim',
                 fn (Builder $pilgrimQuery) => $pilgrimQuery->where('branch_id', $branchId),
             ));
+
+        // Harus sama dengan Live Map supaya angka Dashboard tidak beda.
+        // Batas ini bisa diubah dari Pengaturan Sistem.
         $offlineThreshold = now()->subMinutes(
             (int) $this->settings->get('gps_offline_threshold_minutes', 10)
         );

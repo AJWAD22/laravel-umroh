@@ -25,6 +25,9 @@ class MasterDataImportService
 
     public function headings(string $resource): array
     {
+        // Saat ini import Excel sengaja dibatasi hanya untuk Jamaah.
+        // Data lain seperti cabang, admin cabang, TL, Muthawwif, dan rombongan
+        // lebih aman dibuat lewat form agar relasi dan akun login tidak kacau.
         abort_unless($resource === 'pilgrims', 404);
 
         return [
@@ -65,6 +68,8 @@ class MasterDataImportService
     {
         abort_unless($resource === 'pilgrims', 404);
 
+        // File Excel dibaca sebagai array biasa.
+        // Baris pertama dianggap sebagai judul kolom, baris berikutnya adalah data Jamaah.
         $sheets = Excel::toArray(new SpreadsheetArrayImport, $file);
         $sheet = $sheets[0] ?? [];
 
@@ -92,6 +97,9 @@ class MasterDataImportService
         DB::transaction(function () use ($rows, $actor, &$result): void {
             foreach ($rows as $rowNumber => $row) {
                 try {
+                    // Setiap baris Excel diubah ke format yang dipakai form Jamaah.
+                    // Jika NIK atau nomor paspor sudah ada, data akan diperbarui.
+                    // Jika belum ada, sistem membuat Jamaah baru.
                     [$data, $record] = $this->mapPilgrim($row, $actor);
                     $wasExisting = $record instanceof Model;
 
@@ -101,6 +109,8 @@ class MasterDataImportService
 
                     $model = $this->masterData->save('pilgrims', $data, $actor, $record);
 
+                    // PIN aktivasi dibuat otomatis hanya untuk Jamaah baru
+                    // atau Jamaah lama yang belum pernah punya PIN.
                     if ($this->shouldGeneratePin($model, $wasExisting)) {
                         $this->activations->generatePin($actor, $model);
                         $result['pins']++;
@@ -145,6 +155,8 @@ class MasterDataImportService
 
     private function mapPilgrim(array $row, User $actor): array
     {
+        // Admin Cabang tidak perlu mengisi cabang di Excel.
+        // Sistem otomatis memakai cabang milik akun admin yang sedang login.
         $branch = $this->branch($row, $actor);
         $nik = $this->value($row, 'nik');
         $passport = $this->value($row, 'nomor_paspor');
@@ -182,6 +194,8 @@ class MasterDataImportService
             return Branch::findOrFail($actor->branch_id);
         }
 
+        // Super Admin bisa import untuk cabang mana saja.
+        // Isi kolom cabang dengan kode cabang, nama cabang, atau kota.
         $value = $this->required($row, 'cabang', 'cabang');
 
         return Branch::withTrashed()
@@ -193,6 +207,8 @@ class MasterDataImportService
 
     private function optionalGroup(array $row, Branch $branch): ?Group
     {
+        // Rombongan boleh dikosongkan.
+        // Jika diisi, namanya harus sudah ada di cabang tersebut.
         $value = $this->value($row, 'rombongan');
         if (! $value) {
             return null;

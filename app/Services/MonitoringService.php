@@ -21,6 +21,10 @@ class MonitoringService
             ? ($filters['branch_id'] ?? null)
             : $user->branch_id;
         $groupId = $filters['group_id'] ?? null;
+
+        // Live Map dan Dashboard harus memakai batas waktu yang sama.
+        // Default dari seeder: 10 menit. Jika lokasi terakhir lebih lama dari ini,
+        // Jamaah dianggap offline walaupun kolom gps_status masih "online".
         $offlineThreshold = now()->subMinutes(
             (int) $this->settings->get('gps_offline_threshold_minutes', 10)
         );
@@ -38,6 +42,10 @@ class MonitoringService
             ->when($groupId, fn (Builder $query) => $query->where('group_id', $groupId))
             ->get()
             ->map(function (PilgrimLocation $location) use ($offlineThreshold): array {
+                // Prioritas status:
+                // 1. SOS selalu ditandai merah.
+                // 2. Online hanya jika GPS masih online dan waktu lokasinya masih baru.
+                // 3. Selain itu dianggap offline.
                 $status = $location->pilgrim->monitoring_status === 'sos'
                     ? 'sos'
                     : ($location->gps_status === 'online' && $location->recorded_at->gte($offlineThreshold)
