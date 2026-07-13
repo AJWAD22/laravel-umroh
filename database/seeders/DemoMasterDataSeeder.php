@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\MobileRole;
 use App\Models\Branch;
+use App\Models\Checkpoint;
 use App\Models\Departure;
 use App\Models\Group;
 use App\Models\GroupMember;
@@ -22,6 +23,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Models\Role;
 
 class DemoMasterDataSeeder extends Seeder
@@ -51,6 +53,7 @@ class DemoMasterDataSeeder extends Seeder
 
             $branches = $this->ensureBranches();
             $this->ensureBranchAdmins($branches);
+            $this->ensureGeneralCheckpoints($branches);
             $departures = $this->ensureDepartures($branches);
             $this->ensureHotels($branches, $departures);
             $leaders = $this->seedTourLeaders($branches);
@@ -64,6 +67,7 @@ class DemoMasterDataSeeder extends Seeder
             $this->command?->line("Dihapus {$table}: {$count}");
         }
         $this->command?->line('Data baru: 3 Tour Leader, 3 Muthawwif, 3 Rombongan, 30 Jamaah.');
+        $this->command?->line('Tujuan umum: Masjidil Haram/Ka’bah, Masjid Nabawi, Bandara Jeddah, Miqat Tan’im, Jabal Rahmah.');
         $this->command?->line('Akun Admin Cabang demo: admin.banjarmasin@mantauumroh.id, admin.banjarbaru@mantauumroh.id, admin.martapura@mantauumroh.id');
         $this->command?->line('Password semua Tour Leader dan Muthawwif: password123');
         $this->command?->line('Password semua Akun Admin Cabang demo: password123');
@@ -244,6 +248,92 @@ class DemoMasterDataSeeder extends Seeder
 
             $user->syncRoles('admin-cabang');
         });
+    }
+
+    /**
+     * @param Collection<string, Branch> $branches
+     */
+    private function ensureGeneralCheckpoints(Collection $branches): void
+    {
+        if (! Schema::hasTable('checkpoints')) {
+            return;
+        }
+
+        $checkpoints = [
+            [
+                'name' => 'Masjidil Haram / Ka’bah',
+                'category' => 'ibadah',
+                'city' => 'makkah',
+                'address' => 'Area Masjidil Haram, Makkah',
+                'latitude' => 21.4224870,
+                'longitude' => 39.8262060,
+                'description' => 'Tujuan utama ibadah umroh. Gunakan sebagai patokan area Masjidil Haram dan Ka’bah.',
+            ],
+            [
+                'name' => 'Masjid Nabawi',
+                'category' => 'ibadah',
+                'city' => 'madinah',
+                'address' => 'Area Masjid Nabawi, Madinah',
+                'latitude' => 24.4672130,
+                'longitude' => 39.6111930,
+                'description' => 'Tujuan ibadah dan ziarah utama di Madinah.',
+            ],
+            [
+                'name' => 'Bandara King Abdulaziz Jeddah',
+                'category' => 'transportasi',
+                'city' => 'jeddah',
+                'address' => 'King Abdulaziz International Airport, Jeddah',
+                'latitude' => 21.6702330,
+                'longitude' => 39.1527790,
+                'description' => 'Bandara kedatangan atau kepulangan jamaah di Jeddah.',
+            ],
+            [
+                'name' => 'Miqat Masjid Aisyah / Tan’im',
+                'category' => 'ibadah',
+                'city' => 'makkah',
+                'address' => 'Masjid Aisyah, Tan’im, Makkah',
+                'latitude' => 21.4670780,
+                'longitude' => 39.7876090,
+                'description' => 'Titik miqat yang umum digunakan jamaah untuk mengambil niat umroh.',
+            ],
+            [
+                'name' => 'Jabal Rahmah',
+                'category' => 'lainnya',
+                'city' => 'makkah',
+                'address' => 'Arafah, Makkah',
+                'latitude' => 21.3549720,
+                'longitude' => 39.9840080,
+                'description' => 'Lokasi ziarah di area Arafah.',
+            ],
+        ];
+
+        foreach ($branches as $branch) {
+            foreach ($checkpoints as $data) {
+                $checkpoint = Checkpoint::withTrashed()
+                    ->where('branch_id', $branch->id)
+                    ->where('name', $data['name'])
+                    ->first();
+
+                if ($checkpoint) {
+                    $checkpoint->restore();
+                    $checkpoint->fill($data + [
+                        'branch_id' => $branch->id,
+                        'departure_id' => null,
+                        'group_id' => null,
+                        'is_active' => true,
+                    ])->save();
+
+                    continue;
+                }
+
+                Checkpoint::query()->create($data + [
+                    'branch_id' => $branch->id,
+                    'departure_id' => null,
+                    'group_id' => null,
+                    'is_active' => true,
+                ]);
+            }
+        }
     }
 
     /**

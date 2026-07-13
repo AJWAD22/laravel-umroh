@@ -61,15 +61,13 @@ class MobileActivationService
                 ]);
             }
 
+            $this->ensurePilgrimUser($pilgrim);
             $group = $this->groupAccess->activeGroupForPilgrim($pilgrim);
             $leaderUser = $group?->tourLeader?->user;
-            if (! $leaderUser) {
-                throw ValidationException::withMessages([
-                    'activation' => ['Tour Leader belum ditentukan pada rombongan Jamaah.'],
-                ]);
-            }
+            $createdBy = $pilgrim->activation_pin_created_by
+                ?? $leaderUser?->id
+                ?? $pilgrim->user_id;
 
-            $this->ensurePilgrimUser($pilgrim);
             MobileActivationSession::query()
                 ->where('pilgrim_id', $pilgrim->id)
                 ->whereIn('status', ['created', 'awaiting_approval', 'approved'])
@@ -79,15 +77,16 @@ class MobileActivationService
             $session = MobileActivationSession::create([
                 'public_id' => (string) Str::uuid(),
                 'pilgrim_id' => $pilgrim->id,
-                'created_by' => $pilgrim->activation_pin_created_by ?? $leaderUser->id,
+                'created_by' => $createdBy,
                 'activation_token_hash' => $this->digest(Str::random(64)),
                 'numeric_code_hash' => $this->digest($data['numeric_code']),
                 'claim_secret_hash' => $this->digest($claimSecret),
                 'device_uuid' => $data['device_uuid'],
                 'device_name' => $data['device_name'],
                 'platform' => $data['platform'],
-                'status' => 'awaiting_approval',
+                'status' => 'approved',
                 'claimed_at' => now(),
+                'approved_at' => now(),
                 'expires_at' => now()->addMinutes(10),
             ]);
 
@@ -95,7 +94,7 @@ class MobileActivationService
                 'public_id' => $session->public_id,
                 'claim_secret' => $claimSecret,
                 'status' => $session->status,
-                'message' => 'Permintaan dikirim. Tunggu persetujuan Tour Leader.',
+                'message' => 'PIN valid. Aktivasi perangkat sedang diproses.',
                 'pilgrim_name' => $session->pilgrim->full_name,
             ];
         });
@@ -123,7 +122,7 @@ class MobileActivationService
                 return [
                     'status' => $session->status,
                     'message' => match ($session->status) {
-                        'awaiting_approval' => 'Menunggu persetujuan Tour Leader.',
+                        'awaiting_approval' => 'Aktivasi sedang diproses.',
                         'expired' => 'Permintaan aktivasi kedaluwarsa.',
                         'cancelled' => 'Permintaan aktivasi dibatalkan.',
                         'completed' => 'Aktivasi telah selesai.',

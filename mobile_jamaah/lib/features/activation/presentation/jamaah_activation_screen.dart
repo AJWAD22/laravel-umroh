@@ -260,7 +260,7 @@ class _ActivationWaitingScreenState extends State<ActivationWaitingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Menunggu Persetujuan'),
+        title: const Text('Memproses Aktivasi'),
         automaticallyImplyLeading: false,
       ),
       body: Center(
@@ -285,7 +285,7 @@ class _ActivationWaitingScreenState extends State<ActivationWaitingScreen> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'Minta Tour Leader memeriksa nama dan perangkat Anda, lalu menekan tombol Setujui Aktivasi.',
+                  'PIN berhasil dikenali. Sistem sedang mengaktifkan perangkat Anda secara otomatis.',
                   textAlign: TextAlign.center,
                 ),
                 if (_error != null) ...[
