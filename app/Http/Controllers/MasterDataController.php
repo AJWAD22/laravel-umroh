@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Enums\UserRole;
 use App\Http\Requests\MasterDataRequest;
 use App\Models\Pilgrim;
+use App\Exports\MasterDataTemplateExport;
+use App\Services\MasterDataImportService;
 use App\Services\MasterDataService;
 use App\Services\MobileActivationService;
 use Illuminate\Database\QueryException;
@@ -12,12 +14,15 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class MasterDataController extends Controller
 {
     public function __construct(
         private readonly MasterDataService $masterData,
         private readonly MobileActivationService $activations,
+        private readonly MasterDataImportService $imports,
     ) {}
 
     public function index(Request $request, string $resource): View
@@ -85,6 +90,41 @@ class MasterDataController extends Controller
 
         return redirect()->route('master-data.index', $resource)
             ->with('success', $message);
+    }
+
+    public function template(Request $request, string $resource): BinaryFileResponse
+    {
+        $definition = $this->authorizeResource($request, $resource);
+        Gate::authorize('create', $definition['model']);
+
+        return Excel::download(
+            new MasterDataTemplateExport(
+                $this->imports->headings($resource),
+                $this->imports->exampleRows($resource),
+            ),
+            str($definition['label'])->slug('-').'-template.xlsx',
+        );
+    }
+
+    public function import(Request $request, string $resource): RedirectResponse
+    {
+        $definition = $this->authorizeResource($request, $resource);
+        Gate::authorize('create', $definition['model']);
+
+        $validated = $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:5120'],
+        ]);
+
+        $result = $this->imports->import($resource, $validated['file'], $request->user());
+
+        $message = "{$definition['label']} berhasil diimport. "
+            ."Data baru: {$result['created']}, diperbarui: {$result['updated']}.";
+
+        if ($result['pins'] > 0) {
+            $message .= " PIN jamaah dibuat: {$result['pins']}.";
+        }
+
+        return back()->with('success', $message);
     }
 
     public function edit(Request $request, string $resource, int $record): View
