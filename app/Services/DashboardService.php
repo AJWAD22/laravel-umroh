@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class DashboardService
 {
+    public function __construct(private readonly SystemSettingService $settings) {}
+
     /**
      * @return array<string, mixed>
      */
@@ -95,10 +97,24 @@ class DashboardService
                 'pilgrim',
                 fn (Builder $pilgrimQuery) => $pilgrimQuery->where('branch_id', $branchId),
             ));
+        $offlineThreshold = now()->subMinutes(
+            (int) $this->settings->get('gps_offline_threshold_minutes', 10)
+        );
 
         return [
-            'online' => (clone $locations)->where('gps_status', 'online')->count(),
-            'offline' => (clone $locations)->where('gps_status', 'offline')->count(),
+            'online' => (clone $locations)
+                ->where('gps_status', 'online')
+                ->where('recorded_at', '>=', $offlineThreshold)
+                ->count(),
+            'offline' => (clone $locations)
+                ->where(function (Builder $query) use ($offlineThreshold): void {
+                    $query->where('gps_status', 'offline')
+                        ->orWhere(function (Builder $onlineQuery) use ($offlineThreshold): void {
+                            $onlineQuery->where('gps_status', 'online')
+                                ->where('recorded_at', '<', $offlineThreshold);
+                        });
+                })
+                ->count(),
             'unknown' => (clone $locations)->where('gps_status', 'unknown')->count(),
         ];
     }

@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class MonitoringService
 {
+    public function __construct(private readonly SystemSettingService $settings) {}
+
     /**
      * @param  array{branch_id?: int|null, group_id?: int|null, status?: string|null}  $filters
      * @return array<string, mixed>
@@ -19,6 +21,9 @@ class MonitoringService
             ? ($filters['branch_id'] ?? null)
             : $user->branch_id;
         $groupId = $filters['group_id'] ?? null;
+        $offlineThreshold = now()->subMinutes(
+            (int) $this->settings->get('gps_offline_threshold_minutes', 10)
+        );
 
         $pilgrims = PilgrimLocation::query()
             ->with([
@@ -32,10 +37,12 @@ class MonitoringService
                 ->when($branchId, fn (Builder $branchQuery) => $branchQuery->where('branch_id', $branchId)))
             ->when($groupId, fn (Builder $query) => $query->where('group_id', $groupId))
             ->get()
-            ->map(function (PilgrimLocation $location): array {
+            ->map(function (PilgrimLocation $location) use ($offlineThreshold): array {
                 $status = $location->pilgrim->monitoring_status === 'sos'
                     ? 'sos'
-                    : ($location->recorded_at->gte(now()->subMinutes(2)) ? 'online' : 'offline');
+                    : ($location->gps_status === 'online' && $location->recorded_at->gte($offlineThreshold)
+                        ? 'online'
+                        : 'offline');
 
                 return [
                     'id' => "pilgrim-{$location->pilgrim_id}",
