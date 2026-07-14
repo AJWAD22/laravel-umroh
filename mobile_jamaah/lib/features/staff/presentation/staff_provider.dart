@@ -4,6 +4,8 @@ import '../data/staff_repository.dart';
 import '../domain/staff_pilgrim.dart';
 import '../domain/staff_sos_report.dart';
 
+// State untuk layar petugas: daftar jamaah, lokasi terakhir, dan laporan SOS.
+// Repository menangani HTTP; provider hanya mengatur loading/error dan refresh UI.
 class StaffProvider extends ChangeNotifier {
   StaffProvider(this._repository);
 

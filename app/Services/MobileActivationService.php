@@ -18,6 +18,7 @@ class MobileActivationService
 {
     public function __construct(private readonly MobileGroupAccessService $groupAccess) {}
 
+    /** Membuat PIN aktivasi baru untuk jamaah yang dikelola admin. */
     public function generatePin(User $actor, Pilgrim $pilgrim): string
     {
         if (! $actor->can('pilgrims.manage')

@@ -12,6 +12,10 @@ class MonitoringService
     public function __construct(private readonly SystemSettingService $settings) {}
 
     /**
+     * Menghasilkan marker peta dan ringkasan status jamaah.
+     * Status online/offline dihitung dari waktu lokasi terakhir, bukan hanya
+     * dari status yang dikirim perangkat.
+     *
      * @param  array{branch_id?: int|null, group_id?: int|null, status?: string|null}  $filters
      * @return array<string, mixed>
      */

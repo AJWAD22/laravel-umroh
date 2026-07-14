@@ -13,6 +13,8 @@ import 'features/staff/presentation/staff_provider.dart';
 import 'features/staff/presentation/staff_sos_map_screen.dart';
 import 'features/staff/presentation/staff_sos_screen.dart';
 
+// Widget root aplikasi. Navigator key dipakai agar notifikasi FCM dapat
+// membuka halaman SOS walaupun navigasi dipicu dari service.
 class UmrahJamaahApp extends StatefulWidget {
   const UmrahJamaahApp({super.key});
 

@@ -19,12 +19,17 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class MasterDataController extends Controller
 {
+    /**
+     * Controller pusat untuk halaman Data Master.
+     * Service dipisahkan agar aturan bisnis tidak menumpuk di controller.
+     */
     public function __construct(
         private readonly MasterDataService $masterData,
         private readonly MobileActivationService $activations,
         private readonly MasterDataImportService $imports,
     ) {}
 
+    /** Menampilkan daftar resource seperti jamaah, rombongan, dan petugas. */
     public function index(Request $request, string $resource): View
     {
         $definition = $this->authorizeResource($request, $resource);

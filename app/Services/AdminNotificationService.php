@@ -18,6 +18,7 @@ class AdminNotificationService
 {
     public function __construct(private readonly FcmPushService $push) {}
 
+    /** Membuat notifikasi GPS offline dan mengirimkannya ke pihak terkait. */
     public function gpsOffline(PilgrimLocation $location): void
     {
         $location->loadMissing('pilgrim:id,branch_id,full_name');

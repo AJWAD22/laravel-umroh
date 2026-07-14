@@ -11,6 +11,7 @@ class SystemSettingService
 {
     private const CACHE_KEY = 'system_settings.all';
 
+    /** Mengelompokkan pengaturan untuk tampilan menu Pengaturan Sistem. */
     public function grouped(): Collection
     {
         return $this->all()->groupBy('group');

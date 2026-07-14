@@ -12,12 +12,15 @@ use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\TrackingHistoryController;
 use Illuminate\Support\Facades\Route;
 
+// Halaman root hanya mengarahkan pengguna ke login atau dashboard.
 Route::get('/', function () {
     return auth()->check()
         ? redirect()->route('dashboard')
         : redirect()->route('login');
 });
 
+// Semua route berikut adalah website admin. Middleware memastikan akun aktif
+// dan hanya role Super Admin/Admin Cabang yang dapat mengaksesnya.
 Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/monitoring/live-map', [MonitoringMapController::class, 'index'])->name('monitoring.map.index');

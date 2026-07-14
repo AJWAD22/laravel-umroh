@@ -4,6 +4,8 @@ import '../config/app_config.dart';
 import '../storage/secure_storage_service.dart';
 import 'api_exception.dart';
 
+// Pembungkus HTTP untuk seluruh request APK ke Laravel API.
+// Token Sanctum dibaca dari secure storage dan ditempel sebagai Bearer token.
 class ApiClient {
   ApiClient(this._storage)
     : dio = Dio(

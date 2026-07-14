@@ -13,6 +13,10 @@ use Throwable;
 class FcmPushService
 {
     /**
+     * Pengirim notifikasi Firebase Cloud Messaging.
+     * Token perangkat diambil dari mobile_devices; jika kredensial Firebase
+     * belum tersedia, proses aplikasi tetap berjalan tanpa mengirim push.
+     *
      * @param  Collection<int, User>  $users
      * @param  array<string, mixed>  $data
      */

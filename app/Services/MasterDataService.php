@@ -21,6 +21,11 @@ use Illuminate\Support\Facades\Hash;
 
 class MasterDataService
 {
+    /**
+     * Menyimpan aturan CRUD Data Master dan relasi antar tabel.
+     * Controller memanggil service ini agar validasi hak akses dan transaksi
+     * database dilakukan di satu tempat.
+     */
     public function __construct(
         private readonly ProfilePhotoService $photos,
         private readonly OperationalCodeGenerator $codes,

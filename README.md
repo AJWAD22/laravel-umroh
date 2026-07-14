@@ -12,6 +12,8 @@ Sederhananya:
 
 Dokumen ini dibuat sebagai pegangan praktis supaya alur sistem, push, deploy, build APK, dan input data tidak membingungkan.
 
+Panduan penjelasan kode dan simulasi live coding tersedia di [docs/PANDUAN_LIVE_CODING.md](docs/PANDUAN_LIVE_CODING.md).
+
 ---
 
 ## 1. Struktur Sistem
@@ -523,4 +525,3 @@ Jika data peta tidak muncul:
 - Pastikan HP mengirim lokasi.
 - Pastikan izin lokasi aktif.
 - Pastikan data rombongan jamaah benar.
-

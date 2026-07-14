@@ -7,6 +7,11 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
+    /**
+     * Seeder utama yang dipanggil oleh `php artisan db:seed`.
+     * Urutannya penting: role/pengaturan dibuat lebih dulu, lalu akun dan
+     * data master demo dibuat setelah struktur pendukung tersedia.
+     */
     public function run(): void
     {
         $this->call(RolePermissionSeeder::class);

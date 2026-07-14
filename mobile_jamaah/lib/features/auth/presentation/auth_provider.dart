@@ -4,6 +4,8 @@ import '../../profile/domain/jamaah_profile.dart';
 import '../../../core/notifications/firebase_notification_service.dart';
 import '../data/auth_repository.dart';
 
+// State login APK. Provider ini menghubungkan layar login dengan repository
+// tanpa mengubah endpoint atau aturan autentikasi di backend.
 class AuthProvider extends ChangeNotifier {
   AuthProvider(this._repository, this._notifications);
 

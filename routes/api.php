@@ -8,6 +8,9 @@ use App\Http\Controllers\Api\Mobile\ProfileController;
 use App\Http\Controllers\Api\Mobile\StaffGroupController;
 use Illuminate\Support\Facades\Route;
 
+// Endpoint dengan prefix /api/mobile dipakai oleh aplikasi Flutter.
+// Endpoint publik hanya untuk aktivasi PIN dan login; endpoint lainnya
+// dilindungi Sanctum serta pemeriksaan role mobile.
 Route::prefix('mobile')->group(function () {
     Route::post('/activation/claim', [ActivationController::class, 'claim'])
         ->middleware('throttle:5,1')
@@ -20,6 +23,7 @@ Route::prefix('mobile')->group(function () {
         ->middleware('throttle:6,1')
         ->name('api.mobile.login');
 
+    // Setelah login, token Bearer dikirim oleh ApiClient pada setiap request.
     Route::middleware(['auth:sanctum', 'mobile.role:jamaah,tour-leader,muthawwif'])->group(function () {
         Route::get('/profile', [ProfileController::class, 'show'])->name('api.mobile.profile');
         Route::post('/device-token', [ProfileController::class, 'registerDeviceToken'])->name('api.mobile.device-token');

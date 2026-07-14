@@ -21,6 +21,8 @@ import 'features/staff/presentation/staff_provider.dart';
 import 'features/staff_contact/data/staff_contact_repository.dart';
 import 'features/activation/data/activation_repository.dart';
 
+// Titik masuk APK: menyiapkan Firebase, penyimpanan token, repository,
+// provider state management, lalu menjalankan widget aplikasi.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
