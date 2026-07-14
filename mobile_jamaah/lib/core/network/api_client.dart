@@ -25,12 +25,25 @@ class ApiClient {
           }
           handler.next(options);
         },
+        onError: (error, handler) async {
+          if (error.response?.statusCode == 401 && !_handlingUnauthorized) {
+            _handlingUnauthorized = true;
+            try {
+              await onUnauthorized?.call();
+            } finally {
+              _handlingUnauthorized = false;
+            }
+          }
+          handler.next(error);
+        },
       ),
     );
   }
 
   final SecureStorageService _storage;
   final Dio dio;
+  Future<void> Function()? onUnauthorized;
+  bool _handlingUnauthorized = false;
 
   ApiException errorFrom(Object error) {
     if (error is DioException) {

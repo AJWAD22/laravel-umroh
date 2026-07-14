@@ -36,30 +36,32 @@ Future<void> main() async {
   );
   await notificationService.initialize();
 
+  // Dependency inti dibuat sekali agar callback 401 dapat menghentikan
+  // tracking dan mengosongkan sesi login yang sedang aktif.
+  final authRepository = AuthRepository(apiClient, storage);
+  final locationRepository = LocationRepository(apiClient);
+  final authProvider = AuthProvider(authRepository, notificationService);
+  final trackingProvider = TrackingProvider(locationRepository);
+  apiClient.onUnauthorized = () async {
+    await trackingProvider.stop();
+    await authProvider.handleUnauthorized();
+  };
+
   runApp(
     MultiProvider(
       providers: [
         Provider.value(value: apiClient),
         Provider.value(value: notificationService),
-        Provider.value(value: AuthRepository(apiClient, storage)),
+        Provider.value(value: authRepository),
         Provider.value(value: ActivationRepository(apiClient, storage)),
         Provider.value(value: CheckpointRepository(apiClient)),
-        Provider.value(value: LocationRepository(apiClient)),
+        Provider.value(value: locationRepository),
         Provider.value(value: HotelRepository(apiClient)),
         Provider.value(value: StaffRepository(apiClient)),
         Provider.value(value: SosRepository(apiClient)),
         Provider.value(value: StaffContactRepository(apiClient)),
-        ChangeNotifierProvider(
-          create:
-              (context) => AuthProvider(
-                context.read<AuthRepository>(),
-                context.read<FirebaseNotificationService>(),
-              )..initialize(),
-        ),
-        ChangeNotifierProvider(
-          create:
-              (context) => TrackingProvider(context.read<LocationRepository>()),
-        ),
+        ChangeNotifierProvider.value(value: authProvider..initialize()),
+        ChangeNotifierProvider.value(value: trackingProvider),
         ChangeNotifierProvider(
           create: (context) => HotelProvider(context.read<HotelRepository>()),
         ),

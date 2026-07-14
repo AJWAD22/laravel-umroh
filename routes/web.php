@@ -50,7 +50,7 @@ Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->
     Route::post('/master-data/pilgrims/{pilgrim}/regenerate-pin', [MasterDataController::class, 'regeneratePin'])
         ->name('master-data.pilgrims.regenerate-pin');
     Route::prefix('master-data/{resource}')
-        ->whereIn('resource', ['branches', 'branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs', 'groups'])
+        ->whereIn('resource', ['branches', 'branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs', 'groups', 'checkpoints'])
         ->name('master-data.')
         ->controller(MasterDataController::class)
         ->group(function () {

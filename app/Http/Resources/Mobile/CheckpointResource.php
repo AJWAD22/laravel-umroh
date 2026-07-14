@@ -20,6 +20,7 @@ class CheckpointResource extends JsonResource
             'latitude' => (float) $this->latitude,
             'longitude' => (float) $this->longitude,
             'description' => $this->description,
+            'is_active' => (bool) $this->is_active,
         ];
     }
 }

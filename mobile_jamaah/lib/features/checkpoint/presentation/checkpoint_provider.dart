@@ -55,4 +55,52 @@ class CheckpointProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> updateMeetingPoint({
+    required int id,
+    required String name,
+    required String city,
+    required double latitude,
+    required double longitude,
+    String? address,
+    String? description,
+  }) async {
+    isCreating = true;
+    error = null;
+    notifyListeners();
+    try {
+      final updated = await _repository.updateMeetingPoint(
+        id: id,
+        name: name,
+        city: city,
+        latitude: latitude,
+        longitude: longitude,
+        address: address,
+        description: description,
+      );
+      checkpoints = checkpoints
+          .map((item) => item.id == updated.id ? updated : item)
+          .toList(growable: false);
+    } catch (exception) {
+      error = exception.toString();
+      rethrow;
+    } finally {
+      isCreating = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deactivateMeetingPoint(int id) async {
+    error = null;
+    notifyListeners();
+    try {
+      await _repository.deactivateMeetingPoint(id);
+      checkpoints = checkpoints.where((item) => item.id != id).toList(growable: false);
+    } catch (exception) {
+      error = exception.toString();
+      rethrow;
+    } finally {
+      notifyListeners();
+    }
+  }
 }

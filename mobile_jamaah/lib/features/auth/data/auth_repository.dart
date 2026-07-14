@@ -55,7 +55,17 @@ class AuthRepository {
     return token != null && token.isNotEmpty;
   }
 
+  // Dipakai saat server mencabut token sehingga tidak memanggil endpoint
+  // logout yang memang sudah tidak dapat diakses oleh token tersebut.
+  Future<void> clearLocalSession() => _storage.clearToken();
+
   Future<void> logout() async {
+    // Jika token sudah dicabut server, tidak perlu mengirim request logout
+    // yang pasti akan dibalas 401. Sesi lokal tetap dibersihkan.
+    if (!await hasToken()) {
+      await _storage.clearToken();
+      return;
+    }
     try {
       await _api.dio.post<void>('/api/mobile/logout');
     } catch (_) {

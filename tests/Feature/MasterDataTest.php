@@ -23,13 +23,13 @@ class MasterDataTest extends TestCase
     {
         $superAdmin = $this->superAdmin();
 
-        foreach (['branches', 'branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs', 'groups'] as $resource) {
+        foreach (['branches', 'branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs', 'groups', 'checkpoints'] as $resource) {
             $this->actingAs($superAdmin)
                 ->get(route('master-data.index', $resource))
                 ->assertOk();
         }
 
-        foreach (['hotels', 'checkpoints', 'departures'] as $resource) {
+        foreach (['hotels', 'departures'] as $resource) {
             $this->actingAs($superAdmin)
                 ->get("/master-data/{$resource}")
                 ->assertNotFound();

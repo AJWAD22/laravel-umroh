@@ -28,6 +28,7 @@
                 ['label' => 'Tour Leader', 'resource' => 'tour-leaders', 'permission' => 'tour-leaders.manage', 'view' => 'tour-leaders.view'],
                 ['label' => 'Muthawwif', 'resource' => 'muthawwifs', 'permission' => 'muthawwifs.manage', 'view' => 'muthawwifs.view'],
                 ['label' => 'Rombongan', 'resource' => 'groups', 'permission' => 'groups.manage', 'view' => 'groups.view'],
+                ['label' => 'Tujuan & Titik Penting', 'resource' => 'checkpoints', 'permission' => 'hotels.manage', 'view' => 'hotels.view'],
             ];
             $organizationMenus = [
                 ['label' => 'Data Cabang', 'resource' => 'branches', 'permission' => 'branches.manage', 'view' => 'branches.manage'],

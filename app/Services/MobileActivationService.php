@@ -27,7 +27,14 @@ class MobileActivationService
         }
 
         return DB::transaction(function () use ($actor, $pilgrim): string {
-            $this->ensurePilgrimUser($pilgrim);
+            $user = $this->ensurePilgrimUser($pilgrim);
+
+            // Mengganti PIN juga mencabut sesi login perangkat lama.
+            $user->tokens()->delete();
+            MobileDevice::query()
+                ->where('user_id', $user->id)
+                ->whereNull('revoked_at')
+                ->update(['revoked_at' => now()]);
             MobileActivationSession::query()
                 ->where('pilgrim_id', $pilgrim->id)
                 ->whereIn('status', ['created', 'awaiting_approval', 'approved'])

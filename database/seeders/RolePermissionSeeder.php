@@ -52,6 +52,7 @@ class RolePermissionSeeder extends Seeder
             'muthawwifs.view',
             'departures.view',
             'groups.view',
+            'hotels.manage',
             'hotels.view',
             'monitoring.view',
             'tracking-history.view',

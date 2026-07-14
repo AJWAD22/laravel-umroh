@@ -219,6 +219,19 @@ Catatan:
 - Tidak perlu menunggu izin Tour Leader.
 - PIN bisa diperbarui dari web jika diperlukan.
 
+Saat PIN diperbarui, semua token login dan perangkat aktif milik jamaah tersebut
+dicabut. APK akan menerima `401 Unauthorized`, menghapus sesi lokal, kembali ke
+halaman login/aktivasi, dan menghentikan tracking. Riwayat lokasi yang sudah
+tersimpan tidak dihapus.
+
+## 5a. Tujuan Umum dan Titik Kumpul
+
+- Admin mengelola tujuan umum melalui menu `Data Pendukung Sistem > Tujuan & Titik Penting`.
+- Tour Leader atau Muthawwif dapat membuat titik kumpul dari APK untuk rombongan yang menjadi tanggung jawabnya.
+- Petugas dapat mengubah nama, keterangan, dan—jika sedang berada di lokasi baru—koordinat titik kumpul.
+- Petugas dapat menonaktifkan titik kumpul yang sudah tidak dipakai.
+- Jamaah dan petugas hanya menerima titik yang berstatus aktif. Daftar berubah setelah aplikasi di-refresh.
+
 ---
 
 ## 6. Live Map dan Status Online

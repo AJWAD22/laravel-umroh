@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Mobile\SendLocationRequest;
 use App\Http\Requests\Api\Mobile\StaffListRequest;
 use App\Http\Requests\Api\Mobile\StoreStaffCheckpointRequest;
+use App\Http\Requests\Api\Mobile\UpdateStaffCheckpointRequest;
 use App\Http\Resources\Mobile\CheckpointResource;
 use App\Http\Resources\Mobile\HotelResource;
 use App\Http\Resources\Mobile\LocationResource;
@@ -121,6 +122,24 @@ class StaffGroupController extends Controller
             ->setStatusCode(201);
     }
 
+    public function updateCheckpoint(UpdateStaffCheckpointRequest $request, Checkpoint $checkpoint)
+    {
+        $this->authorizeStaffCheckpoint($request, $checkpoint);
+        $checkpoint->fill($request->validated())->save();
+
+        return (new CheckpointResource($checkpoint->load(['branch', 'departure', 'group'])))
+            ->additional(['message' => 'Titik kumpul berhasil diperbarui.']);
+    }
+
+    public function deactivateCheckpoint(Request $request, Checkpoint $checkpoint)
+    {
+        $this->authorizeStaffCheckpoint($request, $checkpoint);
+        $checkpoint->forceFill(['is_active' => false])->save();
+
+        return (new CheckpointResource($checkpoint->load(['branch', 'departure', 'group'])))
+            ->additional(['message' => 'Titik kumpul berhasil dinonaktifkan.']);
+    }
+
     public function sosReports(Request $request)
     {
         $role = $this->mobileRole($request);
@@ -222,6 +241,24 @@ class StaffGroupController extends Controller
             $this->access->groupIdsForStaff($request->user(), $role)->contains($sosReport->group_id),
             403,
             'Laporan SOS tidak dapat diakses.'
+        );
+    }
+
+    private function authorizeStaffCheckpoint(Request $request, Checkpoint $checkpoint): void
+    {
+        $user = $request->user();
+        $role = $user->hasRole(MobileRole::TourLeader->value)
+            ? MobileRole::TourLeader
+            : MobileRole::Muthawwif;
+        $groupIds = $this->access->groupIdsForStaff($user, $role);
+
+        abort_unless(
+            (int) $checkpoint->branch_id === (int) $user->branch_id
+                && $checkpoint->category === 'titik_kumpul'
+                && $checkpoint->group_id !== null
+                && $groupIds->contains((int) $checkpoint->group_id),
+            403,
+            'Titik kumpul ini tidak dapat diubah oleh Anda.',
         );
     }
 

@@ -65,4 +65,13 @@ class AuthProvider extends ChangeNotifier {
     profile = null;
     notifyListeners();
   }
+
+  // Dipanggil ApiClient ketika backend mengembalikan 401 Unauthorized.
+  // App root akan otomatis kembali menampilkan halaman login.
+  Future<void> handleUnauthorized() async {
+    await _repository.clearLocalSession();
+    profile = null;
+    error = 'Sesi berakhir. Silakan login atau aktivasi kembali.';
+    notifyListeners();
+  }
 }

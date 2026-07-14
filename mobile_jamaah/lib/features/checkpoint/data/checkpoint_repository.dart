@@ -48,4 +48,42 @@ class CheckpointRepository {
       throw _api.errorFrom(error);
     }
   }
+
+  Future<Checkpoint> updateMeetingPoint({
+    required int id,
+    required String name,
+    required String city,
+    required double latitude,
+    required double longitude,
+    String? address,
+    String? description,
+  }) async {
+    try {
+      final response = await _api.dio.patch<Map<String, dynamic>>(
+        '/api/mobile/staff-checkpoints/$id',
+        data: {
+          'name': name,
+          'city': city,
+          'latitude': latitude,
+          'longitude': longitude,
+          if (address != null && address.trim().isNotEmpty)
+            'address': address.trim(),
+          if (description != null && description.trim().isNotEmpty)
+            'description': description.trim(),
+        },
+      );
+      final data = response.data?['data'] as Map<String, dynamic>? ?? {};
+      return Checkpoint.fromJson(data);
+    } catch (error) {
+      throw _api.errorFrom(error);
+    }
+  }
+
+  Future<void> deactivateMeetingPoint(int id) async {
+    try {
+      await _api.dio.delete<void>('/api/mobile/staff-checkpoints/$id');
+    } catch (error) {
+      throw _api.errorFrom(error);
+    }
+  }
 }

@@ -183,7 +183,10 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
               ...filtered.map(
                 (checkpoint) => Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: _CheckpointCard(checkpoint: checkpoint),
+                  child: _CheckpointCard(
+                    checkpoint: checkpoint,
+                    allowManage: widget.allowCreate,
+                  ),
                 ),
               ),
             ],
@@ -205,7 +208,9 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
 }
 
 class MeetingPointFormScreen extends StatefulWidget {
-  const MeetingPointFormScreen({super.key});
+  const MeetingPointFormScreen({super.key, this.initial});
+
+  final Checkpoint? initial;
 
   @override
   State<MeetingPointFormScreen> createState() => _MeetingPointFormScreenState();
@@ -218,6 +223,21 @@ class _MeetingPointFormScreenState extends State<MeetingPointFormScreen> {
   final _descriptionController = TextEditingController();
   String _city = 'other';
   String? _error;
+  bool _refreshCoordinate = false;
+
+  bool get _isEditing => widget.initial != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initial;
+    if (initial != null) {
+      _nameController.text = initial.name;
+      _addressController.text = initial.address ?? '';
+      _descriptionController.text = initial.description ?? '';
+      _city = initial.city;
+    }
+  }
 
   @override
   void dispose() {
@@ -232,7 +252,9 @@ class _MeetingPointFormScreenState extends State<MeetingPointFormScreen> {
     final isSaving = context.watch<CheckpointProvider>().isCreating;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tambah Titik Kumpul')),
+      appBar: AppBar(
+        title: Text(_isEditing ? 'Edit Titik Kumpul' : 'Tambah Titik Kumpul'),
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
@@ -260,12 +282,14 @@ class _MeetingPointFormScreenState extends State<MeetingPointFormScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Buat patokan berkumpul',
+                                _isEditing
+                                    ? 'Perbarui patokan berkumpul'
+                                    : 'Buat patokan berkumpul',
                                 style: TextStyle(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w800,
@@ -273,7 +297,9 @@ class _MeetingPointFormScreenState extends State<MeetingPointFormScreen> {
                               ),
                               SizedBox(height: 3),
                               Text(
-                                'Lokasi yang tersimpan memakai GPS perangkat ini.',
+                                _isEditing
+                                    ? 'Nama, keterangan, dan koordinat titik dapat diperbarui.'
+                                    : 'Lokasi yang tersimpan memakai GPS perangkat ini.',
                               ),
                             ],
                           ),
@@ -350,6 +376,20 @@ class _MeetingPointFormScreenState extends State<MeetingPointFormScreen> {
                               prefixIcon: Icon(Icons.info_outline_rounded),
                             ),
                           ),
+                          if (_isEditing) ...[
+                            const SizedBox(height: 8),
+                            SwitchListTile.adaptive(
+                              contentPadding: EdgeInsets.zero,
+                              value: _refreshCoordinate,
+                              onChanged: (value) => setState(
+                                () => _refreshCoordinate = value,
+                              ),
+                              title: const Text('Perbarui titik GPS'),
+                              subtitle: const Text(
+                                'Aktifkan jika Anda sedang berada di lokasi baru titik kumpul.',
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -390,13 +430,17 @@ class _MeetingPointFormScreenState extends State<MeetingPointFormScreen> {
                         label: Text(
                           isSaving
                               ? 'Menyimpan titik...'
-                              : 'Gunakan Lokasi Saat Ini & Simpan',
+                              : _isEditing
+                                  ? 'Simpan Perubahan'
+                                  : 'Gunakan Lokasi Saat Ini & Simpan',
                         ),
                       ),
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Pastikan petugas sedang berada di titik kumpul sebelum menyimpan.',
+                      _isEditing
+                          ? 'Perubahan hanya berlaku untuk titik kumpul rombongan Anda.'
+                          : 'Pastikan petugas sedang berada di titik kumpul sebelum menyimpan.',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -414,17 +458,31 @@ class _MeetingPointFormScreenState extends State<MeetingPointFormScreen> {
 
     setState(() => _error = null);
     try {
-      final position =
-          await context.read<LocationRepository>().currentPosition();
+      final initial = widget.initial;
+      final position = initial == null || _refreshCoordinate
+          ? await context.read<LocationRepository>().currentPosition()
+          : null;
       if (!mounted) return;
-      await context.read<CheckpointProvider>().createMeetingPoint(
-        name: _nameController.text.trim(),
-        city: _city,
-        address: _addressController.text.trim(),
-        description: _descriptionController.text.trim(),
-        latitude: position.latitude,
-        longitude: position.longitude,
-      );
+      if (initial == null) {
+        await context.read<CheckpointProvider>().createMeetingPoint(
+          name: _nameController.text.trim(),
+          city: _city,
+          address: _addressController.text.trim(),
+          description: _descriptionController.text.trim(),
+          latitude: position!.latitude,
+          longitude: position.longitude,
+        );
+      } else {
+        await context.read<CheckpointProvider>().updateMeetingPoint(
+          id: initial.id,
+          name: _nameController.text.trim(),
+          city: _city,
+          address: _addressController.text.trim(),
+          description: _descriptionController.text.trim(),
+          latitude: position?.latitude ?? initial.latitude,
+          longitude: position?.longitude ?? initial.longitude,
+        );
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Titik kumpul berhasil disimpan.')),
@@ -438,9 +496,10 @@ class _MeetingPointFormScreenState extends State<MeetingPointFormScreen> {
 }
 
 class _CheckpointCard extends StatelessWidget {
-  const _CheckpointCard({required this.checkpoint});
+  const _CheckpointCard({required this.checkpoint, this.allowManage = false});
 
   final Checkpoint checkpoint;
+  final bool allowManage;
 
   @override
   Widget build(BuildContext context) {
@@ -509,6 +568,34 @@ class _CheckpointCard extends StatelessWidget {
                 ],
               ),
             ),
+            if (allowManage &&
+                checkpoint.category == 'titik_kumpul' &&
+                checkpoint.groupId != null)
+              PopupMenuButton<String>(
+                tooltip: 'Kelola titik kumpul',
+                onSelected: (value) {
+                  if (value == 'edit') _edit(context);
+                  if (value == 'deactivate') _deactivate(context);
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(Icons.edit_location_alt_rounded),
+                      title: Text('Edit titik'),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'deactivate',
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(Icons.visibility_off_rounded),
+                      title: Text('Nonaktifkan'),
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
       ),
@@ -531,6 +618,53 @@ class _CheckpointCard extends StatelessWidget {
             ),
       ),
     );
+  }
+
+  Future<void> _edit(BuildContext context) async {
+    final changed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MeetingPointFormScreen(initial: checkpoint),
+      ),
+    );
+    if (changed == true && context.mounted) {
+      await context.read<CheckpointProvider>().load();
+    }
+  }
+
+  Future<void> _deactivate(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Nonaktifkan titik kumpul?'),
+        content: Text(
+          '“${checkpoint.name}” tidak akan tampil lagi untuk jamaah dan petugas setelah daftar diperbarui.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Nonaktifkan'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    try {
+      await context.read<CheckpointProvider>().deactivateMeetingPoint(checkpoint.id);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Titik kumpul dinonaktifkan.')),
+      );
+    } catch (exception) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(exception.toString())),
+      );
+    }
   }
 }
 
