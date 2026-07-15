@@ -501,6 +501,11 @@ class _CheckpointCard extends StatelessWidget {
   final Checkpoint checkpoint;
   final bool allowManage;
 
+  bool get _canManageMeetingPoint =>
+      allowManage &&
+      checkpoint.category == 'titik_kumpul' &&
+      checkpoint.groupId != null;
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -560,17 +565,36 @@ class _CheckpointCard extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 12),
-                  FilledButton.icon(
-                    onPressed: () => _openMap(context),
-                    icon: const Icon(Icons.map_rounded),
-                    label: const Text('Lihat Arah di Peta'),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton.icon(
+                        onPressed: () => _openMap(context),
+                        icon: const Icon(Icons.map_rounded),
+                        label: const Text('Lihat Arah di Peta'),
+                      ),
+                      if (_canManageMeetingPoint) ...[
+                        OutlinedButton.icon(
+                          onPressed: () => _edit(context),
+                          icon: const Icon(Icons.edit_location_alt_rounded),
+                          label: const Text('Edit Titik'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () => _deactivate(context),
+                          icon: const Icon(Icons.visibility_off_rounded),
+                          label: const Text('Nonaktifkan'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFFB91C1C),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
             ),
-            if (allowManage &&
-                checkpoint.category == 'titik_kumpul' &&
-                checkpoint.groupId != null)
+            if (_canManageMeetingPoint)
               PopupMenuButton<String>(
                 tooltip: 'Kelola titik kumpul',
                 onSelected: (value) {
