@@ -7,6 +7,7 @@ use App\Http\Resources\Mobile\ProfileResource;
 use App\Models\MobileActivationSession;
 use App\Models\MobileDevice;
 use App\Models\Pilgrim;
+use App\Models\PilgrimLocation;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +36,13 @@ class MobileActivationService
                 ->where('user_id', $user->id)
                 ->whereNull('revoked_at')
                 ->update(['revoked_at' => now()]);
+
+            // Hapus hanya snapshot lokasi aktif agar marker lama tidak tetap
+            // muncul di Live Map. Riwayat detail tetap tersimpan di tabel
+            // location_histories untuk kebutuhan laporan dan audit.
+            PilgrimLocation::query()
+                ->where('pilgrim_id', $pilgrim->id)
+                ->delete();
             MobileActivationSession::query()
                 ->where('pilgrim_id', $pilgrim->id)
                 ->whereIn('status', ['created', 'awaiting_approval', 'approved'])

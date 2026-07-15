@@ -222,7 +222,9 @@ Catatan:
 Saat PIN diperbarui, semua token login dan perangkat aktif milik jamaah tersebut
 dicabut. APK akan menerima `401 Unauthorized`, menghapus sesi lokal, kembali ke
 halaman login/aktivasi, dan menghentikan tracking. Riwayat lokasi yang sudah
-tersimpan tidak dihapus.
+tersimpan tidak dihapus. Snapshot lokasi aktif dihapus agar marker lama tidak
+tetap tampil di Live Map; setelah aktivasi PIN baru dan pengiriman lokasi
+pertama, marker akan muncul kembali.
 
 ## 5a. Tujuan Umum dan Titik Kumpul
 
