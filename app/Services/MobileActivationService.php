@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\MobileRole;
+use App\Enums\UserRole;
 use App\Http\Resources\Mobile\ProfileResource;
 use App\Models\MobileActivationSession;
 use App\Models\MobileDevice;
@@ -22,8 +23,11 @@ class MobileActivationService
     /** Membuat PIN aktivasi baru untuk jamaah yang dikelola admin. */
     public function generatePin(User $actor, Pilgrim $pilgrim): string
     {
-        if (! $actor->can('pilgrims.manage')
-            || (int) $actor->branch_id !== (int) $pilgrim->branch_id) {
+        $isSuperAdmin = $actor->hasRole(UserRole::SuperAdmin->value);
+
+        if (! $isSuperAdmin
+            && (! $actor->can('pilgrims.manage')
+                || (int) $actor->branch_id !== (int) $pilgrim->branch_id)) {
             throw new AuthorizationException;
         }
 
@@ -130,7 +134,7 @@ class MobileActivationService
                 throw ValidationException::withMessages(['activation' => ['Permintaan aktivasi tidak dikenali.']]);
             }
 
-            if ($session->expires_at->isPast() && ! in_array($session->status, ['approved', 'completed'], true)) {
+            if ($session->expires_at->isPast() && $session->status !== 'completed') {
                 $session->update(['status' => 'expired']);
             }
 

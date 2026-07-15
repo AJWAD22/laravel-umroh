@@ -216,7 +216,7 @@ class MasterDataService
             ->where('status', 'active')
             ->when($groupId, fn (Builder $query) => $query->where('group_id', '!=', $groupId))
             ->update([
-                'status' => 'left',
+                'status' => $groupId ? 'moved' : 'removed',
                 'left_at' => now(),
             ]);
 

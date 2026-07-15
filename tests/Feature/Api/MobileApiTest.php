@@ -9,6 +9,7 @@ use App\Models\Departure;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\Hotel;
+use App\Models\MobileActivationSession;
 use App\Models\Muthawwif;
 use App\Models\Pilgrim;
 use App\Models\TourLeader;
@@ -16,6 +17,7 @@ use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class MobileApiTest extends TestCase
@@ -200,6 +202,42 @@ class MobileApiTest extends TestCase
         }
     }
 
+    public function test_approved_activation_session_expires_when_time_has_passed(): void
+    {
+        $context = $this->scenario();
+        $claimSecret = Str::random(64);
+
+        $session = MobileActivationSession::create([
+            'public_id' => (string) Str::uuid(),
+            'pilgrim_id' => $context['pilgrim']->id,
+            'created_by' => $context['leaderUser']->id,
+            'approved_by' => $context['leaderUser']->id,
+            'activation_token_hash' => $this->digest(Str::random(64)),
+            'numeric_code_hash' => $this->digest('123456'),
+            'claim_secret_hash' => $this->digest($claimSecret),
+            'device_uuid' => 'expired-device-001',
+            'device_name' => 'Expired Android',
+            'platform' => 'android',
+            'status' => 'approved',
+            'claimed_at' => now()->subMinutes(20),
+            'approved_at' => now()->subMinutes(20),
+            'expires_at' => now()->subMinutes(10),
+        ]);
+
+        $response = $this->postJson('/api/mobile/activation/status', [
+            'public_id' => $session->public_id,
+            'claim_secret' => $claimSecret,
+            'device_uuid' => 'expired-device-001',
+        ]);
+
+        $response->assertOk()->assertJsonPath('data.status', 'expired');
+        $this->assertArrayNotHasKey('access_token', $response->json('data'));
+        $this->assertDatabaseHas('mobile_activation_sessions', [
+            'id' => $session->id,
+            'status' => 'expired',
+        ]);
+    }
+
     private function login(User $user): string
     {
         $this->withoutToken();
@@ -304,5 +342,10 @@ class MobileApiTest extends TestCase
         $user->assignRole($role->value);
 
         return $user;
+    }
+
+    private function digest(string $value): string
+    {
+        return hash_hmac('sha256', $value, (string) config('app.key'));
     }
 }
