@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\UserRole;
 use App\Models\Branch;
+use App\Models\MobileDevice;
 use App\Models\Pilgrim;
 use App\Models\PilgrimLocation;
 use App\Models\User;
@@ -105,12 +106,21 @@ class MonitoringMapTest extends TestCase
         $branchAdmin->assignRole(UserRole::BranchAdmin->value);
 
         foreach ([$branchA, $branchB] as $index => $branch) {
+            $pilgrimUser = User::factory()->create(['branch_id' => $branch->id]);
             $pilgrim = Pilgrim::create([
                 'branch_id' => $branch->id,
+                'user_id' => $pilgrimUser->id,
                 'registration_number' => "MAP-{$branch->id}",
                 'full_name' => "Jamaah Map {$branch->id}",
                 'gender' => 'male',
                 'status' => 'active',
+            ]);
+            MobileDevice::create([
+                'user_id' => $pilgrimUser->id,
+                'device_uuid' => "map-device-{$branch->id}",
+                'device_name' => "HP Jamaah Map {$branch->id}",
+                'platform' => 'android',
+                'activated_at' => now(),
             ]);
             PilgrimLocation::create([
                 'pilgrim_id' => $pilgrim->id,

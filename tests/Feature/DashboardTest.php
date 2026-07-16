@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\Branch;
 use App\Models\Departure;
 use App\Models\Group;
+use App\Models\MobileDevice;
 use App\Models\Pilgrim;
 use App\Models\PilgrimLocation;
 use App\Models\User;
@@ -108,8 +109,18 @@ class DashboardTest extends TestCase
 
     private function pilgrim(Branch $branch, string $number, string $name): Pilgrim
     {
+        $user = User::factory()->create(['branch_id' => $branch->id]);
+        MobileDevice::create([
+            'user_id' => $user->id,
+            'device_uuid' => "dashboard-device-{$number}",
+            'device_name' => "HP {$name}",
+            'platform' => 'android',
+            'activated_at' => now(),
+        ]);
+
         return Pilgrim::create([
             'branch_id' => $branch->id,
+            'user_id' => $user->id,
             'registration_number' => $number,
             'full_name' => $name,
             'gender' => 'male',

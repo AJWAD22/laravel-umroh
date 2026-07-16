@@ -178,14 +178,7 @@ class MasterDataController extends Controller
         Gate::authorize('delete', $model);
 
         try {
-            $staffAccount = in_array($resource, ['tour-leaders', 'muthawwifs'], true)
-                ? $model->user
-                : null;
-            $model->delete();
-            if ($staffAccount) {
-                $staffAccount->tokens()->delete();
-                $staffAccount->forceFill(['is_active' => false])->save();
-            }
+            $this->masterData->delete($resource, $model);
         } catch (QueryException) {
             return back()->with('error', 'Data masih digunakan dan tidak dapat dihapus.');
         }

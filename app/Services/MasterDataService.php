@@ -10,8 +10,14 @@ use App\Models\Departure;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\Hotel;
+use App\Models\LocationHistory;
+use App\Models\MobileActivationSession;
+use App\Models\MobileDevice;
 use App\Models\Muthawwif;
 use App\Models\Pilgrim;
+use App\Models\PilgrimLocation;
+use App\Models\SosReport;
+use App\Models\StaffLocation;
 use App\Models\TourLeader;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -205,6 +211,36 @@ class MasterDataService
         });
     }
 
+    /**
+     * Menghapus data master dengan aturan khusus per resource.
+     *
+     * Untuk cabang, sistem menghapus semua data operasional di dalamnya dulu.
+     * Ini dipakai agar saat Super Admin menghapus cabang, data admin cabang,
+     * jamaah, petugas, rombongan, lokasi, SOS, dan perangkatnya tidak tersisa.
+     */
+    public function delete(string $resource, Model $model): void
+    {
+        if ($resource === 'branches' && $model instanceof Branch) {
+            $this->deleteBranchWithChildren($model);
+
+            return;
+        }
+
+        DB::transaction(function () use ($resource, $model): void {
+            $staffAccount = in_array($resource, ['tour-leaders', 'muthawwifs'], true)
+                ? $model->user
+                : null;
+
+            $model->delete();
+
+            if ($staffAccount instanceof User) {
+                $staffAccount->tokens()->delete();
+                $staffAccount->mobileDevices()->update(['revoked_at' => now()]);
+                $staffAccount->forceFill(['is_active' => false])->save();
+            }
+        });
+    }
+
     private function syncPilgrimGroup(Model $pilgrim, int|string|null $groupId): void
     {
         if (! $pilgrim instanceof Pilgrim) {
@@ -235,6 +271,90 @@ class MasterDataService
                 'status' => 'active',
             ],
         );
+    }
+
+    private function deleteBranchWithChildren(Branch $branch): void
+    {
+        DB::transaction(function () use ($branch): void {
+            $pilgrimIds = Pilgrim::withTrashed()
+                ->where('branch_id', $branch->id)
+                ->pluck('id');
+            $groupIds = Group::withTrashed()
+                ->where('branch_id', $branch->id)
+                ->pluck('id');
+            $userIds = User::query()
+                ->where('branch_id', $branch->id)
+                ->pluck('id');
+            $departureIds = Departure::withTrashed()
+                ->where('branch_id', $branch->id)
+                ->pluck('id');
+            $hotelIds = Hotel::withTrashed()
+                ->where('branch_id', $branch->id)
+                ->pluck('id');
+
+            if ($pilgrimIds->isNotEmpty()) {
+                PilgrimLocation::query()->whereIn('pilgrim_id', $pilgrimIds)->delete();
+                LocationHistory::query()->whereIn('pilgrim_id', $pilgrimIds)->delete();
+                SosReport::query()->whereIn('pilgrim_id', $pilgrimIds)->delete();
+                MobileActivationSession::query()
+                    ->whereIn('pilgrim_id', $pilgrimIds)
+                    ->delete();
+                GroupMember::query()->whereIn('pilgrim_id', $pilgrimIds)->delete();
+            }
+
+            if ($groupIds->isNotEmpty()) {
+                GroupMember::query()->whereIn('group_id', $groupIds)->delete();
+                PilgrimLocation::query()->whereIn('group_id', $groupIds)->delete();
+                LocationHistory::query()->whereIn('group_id', $groupIds)->delete();
+                SosReport::query()->whereIn('group_id', $groupIds)->delete();
+            }
+
+            if ($userIds->isNotEmpty()) {
+                DB::table('personal_access_tokens')
+                    ->where('tokenable_type', User::class)
+                    ->whereIn('tokenable_id', $userIds)
+                    ->delete();
+                DB::table('model_has_roles')
+                    ->where('model_type', User::class)
+                    ->whereIn('model_id', $userIds)
+                    ->delete();
+                DB::table('model_has_permissions')
+                    ->where('model_type', User::class)
+                    ->whereIn('model_id', $userIds)
+                    ->delete();
+                DB::table('notifications')
+                    ->where('notifiable_type', User::class)
+                    ->whereIn('notifiable_id', $userIds)
+                    ->delete();
+                MobileActivationSession::query()
+                    ->whereIn('created_by', $userIds)
+                    ->orWhereIn('approved_by', $userIds)
+                    ->delete();
+                StaffLocation::query()->whereIn('user_id', $userIds)->delete();
+                MobileDevice::query()->whereIn('user_id', $userIds)->delete();
+            }
+
+            if ($departureIds->isNotEmpty()) {
+                DB::table('departure_hotel')->whereIn('departure_id', $departureIds)->delete();
+            }
+
+            if ($hotelIds->isNotEmpty()) {
+                DB::table('departure_hotel')->whereIn('hotel_id', $hotelIds)->delete();
+            }
+
+            DB::table('notifications')->where('branch_id', $branch->id)->delete();
+
+            Checkpoint::withTrashed()->where('branch_id', $branch->id)->forceDelete();
+            Group::withTrashed()->where('branch_id', $branch->id)->forceDelete();
+            Departure::withTrashed()->where('branch_id', $branch->id)->forceDelete();
+            Hotel::withTrashed()->where('branch_id', $branch->id)->forceDelete();
+            Pilgrim::withTrashed()->where('branch_id', $branch->id)->forceDelete();
+            TourLeader::withTrashed()->where('branch_id', $branch->id)->forceDelete();
+            Muthawwif::withTrashed()->where('branch_id', $branch->id)->forceDelete();
+            User::query()->where('branch_id', $branch->id)->delete();
+
+            $branch->forceDelete();
+        });
     }
 
     /**
