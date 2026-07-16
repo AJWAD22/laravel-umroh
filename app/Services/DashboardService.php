@@ -96,7 +96,11 @@ class DashboardService
             ->when($branchId, fn (Builder $query) => $query->whereHas(
                 'pilgrim',
                 fn (Builder $pilgrimQuery) => $pilgrimQuery->where('branch_id', $branchId),
-            ));
+            ))
+            ->whereHas(
+                'pilgrim.user.mobileDevices',
+                fn (Builder $deviceQuery) => $deviceQuery->whereNull('revoked_at'),
+            );
 
         // Harus sama dengan Live Map supaya angka Dashboard tidak beda.
         // Batas ini bisa diubah dari Pengaturan Sistem.

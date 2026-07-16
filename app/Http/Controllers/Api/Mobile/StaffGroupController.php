@@ -217,6 +217,7 @@ class StaffGroupController extends Controller
     {
         $locations = $this->access->pilgrimsForStaff($request->user(), $role)
             ->whereHas('latestLocation')
+            ->whereHas('user.mobileDevices', fn ($query) => $query->whereNull('revoked_at'))
             ->with('latestLocation')
             ->get()
             ->map(fn ($pilgrim) => [

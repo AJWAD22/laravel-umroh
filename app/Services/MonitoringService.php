@@ -42,7 +42,8 @@ class MonitoringService
                 'group.muthawwif:id,full_name',
             ])
             ->whereHas('pilgrim', fn (Builder $query) => $query
-                ->when($branchId, fn (Builder $branchQuery) => $branchQuery->where('branch_id', $branchId)))
+                ->when($branchId, fn (Builder $branchQuery) => $branchQuery->where('branch_id', $branchId))
+                ->whereHas('user.mobileDevices', fn (Builder $deviceQuery) => $deviceQuery->whereNull('revoked_at')))
             ->when($groupId, fn (Builder $query) => $query->where('group_id', $groupId))
             ->get()
             ->map(function (PilgrimLocation $location) use ($offlineThreshold): array {
