@@ -90,6 +90,12 @@ class MasterDataService
             $query->role(UserRole::BranchAdmin->value);
         }
 
+        if ($this->usesBranchScope($resource)) {
+            $query
+                ->whereNotNull('branch_id')
+                ->whereHas('branch');
+        }
+
         if (! $user->hasRole(UserRole::SuperAdmin->value) && $resource !== 'branches') {
             $query->where('branch_id', $user->branch_id);
         }
@@ -391,5 +397,19 @@ class MasterDataService
         array $with = [],
     ): array {
         return compact('model', 'label', 'permission', 'columns', 'search', 'sort', 'with');
+    }
+
+    private function usesBranchScope(string $resource): bool
+    {
+        return in_array($resource, [
+            'branch-admins',
+            'pilgrims',
+            'tour-leaders',
+            'muthawwifs',
+            'hotels',
+            'checkpoints',
+            'departures',
+            'groups',
+        ], true);
     }
 }
