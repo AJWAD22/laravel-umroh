@@ -24,9 +24,13 @@ class FcmPushService
     {
         $credentials = $this->credentials();
         if (! $credentials) {
+            // FCM bersifat pendukung. Jika file firebase-admin.json belum ada,
+            // sistem tetap menyimpan data SOS/notifikasi database seperti biasa.
             return;
         }
 
+        // Hanya perangkat aktif yang punya fcm_token yang bisa dikirimi push.
+        // Perangkat lama yang sudah logout/refresh PIN memiliki revoked_at.
         $devices = MobileDevice::query()
             ->whereIn('user_id', $users->pluck('id'))
             ->whereNull('revoked_at')
@@ -57,6 +61,8 @@ class FcmPushService
                     );
 
                 if ($response->status() === 404 || str_contains($response->body(), 'UNREGISTERED')) {
+                    // Jika token sudah tidak valid menurut Firebase, perangkat
+                    // dinonaktifkan agar tidak terus dicoba pada pengiriman berikutnya.
                     $device->update(['fcm_token' => null, 'revoked_at' => now()]);
                 } elseif ($response->failed()) {
                     Log::warning('FCM message could not be delivered.', [
@@ -81,6 +87,8 @@ class FcmPushService
             return null;
         }
 
+        // FIREBASE_CREDENTIALS bisa berupa path file JSON di hosting,
+        // atau isi JSON langsung. Di production lebih aman memakai path file.
         $json = str_starts_with(ltrim($source), '{')
             ? $source
             : (is_file($source) ? file_get_contents($source) : false);
@@ -97,6 +105,8 @@ class FcmPushService
      */
     private function accessToken(array $credentials): string
     {
+        // Access token Google berlaku singkat. Cache 50 menit supaya sistem
+        // tidak meminta token baru setiap kali mengirim notifikasi.
         return Cache::remember(
             'firebase-access-token-'.sha1($credentials['client_email']),
             now()->addMinutes(50),

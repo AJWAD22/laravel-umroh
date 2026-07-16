@@ -72,17 +72,29 @@ class _UmrahJamaahAppState extends State<UmrahJamaahApp> {
   }
 
   Future<void> _openNotification(Map<String, dynamic> data) async {
-    if (data['type']?.toString() != 'sos') return;
+    final type = data['type']?.toString();
+    if (type == null) return;
 
     final context = _navigatorKey.currentContext;
     if (context == null || !context.mounted) return;
 
     final auth = context.read<AuthProvider>();
-    if (!auth.isAuthenticated || auth.profile?.role == 'jamaah') return;
+    if (!auth.isAuthenticated) return;
+
+    // Jamaah cukup menerima notifikasi lokal dari FCM.
+    // Auto-refresh khusus petugas karena petugas perlu melihat SOS/lokasi terbaru.
+    if (auth.profile?.role == 'jamaah') return;
+
+    if (!{'sos', 'geofence_exit', 'gps_offline'}.contains(type)) return;
 
     final sosId = int.tryParse(data['sos_report_id']?.toString() ?? '');
     final provider = context.read<StaffProvider>();
+
+    // Saat notifikasi masuk, data petugas langsung dimuat ulang.
+    // Jadi petugas tidak perlu menekan refresh manual untuk melihat SOS baru.
     await provider.load(auth.profile!.role, force: true);
+
+    if (type != 'sos') return;
 
     if (!context.mounted) return;
     final report = sosId == null ? null : provider.findSosById(sosId);

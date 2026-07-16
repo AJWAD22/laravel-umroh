@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
 use App\Models\SosReport;
+use App\Services\AdminNotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -52,14 +53,18 @@ class SosReportController extends Controller
         ]);
     }
 
-    public function resolve(Request $request, SosReport $sosReport): RedirectResponse
-    {
+    public function resolve(
+        Request $request,
+        SosReport $sosReport,
+        AdminNotificationService $notifications,
+    ): RedirectResponse {
         Gate::authorize('monitoring.view');
         $this->authorizeBranch($request, $sosReport);
 
         $data = $request->validate([
             'resolution_notes' => ['nullable', 'string', 'max:500'],
         ]);
+        $shouldNotifyPilgrim = $sosReport->status !== 'resolved';
 
         $sosReport->forceFill([
             'status' => 'resolved',
@@ -69,6 +74,10 @@ class SosReportController extends Controller
 
         if (! SosReport::query()->where('pilgrim_id', $sosReport->pilgrim_id)->whereKeyNot($sosReport->id)->active()->exists()) {
             $sosReport->pilgrim()->update(['monitoring_status' => 'normal']);
+        }
+
+        if ($shouldNotifyPilgrim) {
+            $notifications->sosResolved($sosReport->fresh(['pilgrim.user', 'handler']));
         }
 
         return back()->with('success', 'Laporan SOS ditandai sudah aman.');

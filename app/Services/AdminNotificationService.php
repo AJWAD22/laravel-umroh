@@ -21,7 +21,15 @@ class AdminNotificationService
     /** Membuat notifikasi GPS offline dan mengirimkannya ke pihak terkait. */
     public function gpsOffline(PilgrimLocation $location): void
     {
-        $location->loadMissing('pilgrim:id,branch_id,full_name');
+        $location->loadMissing([
+            'pilgrim:id,branch_id,full_name',
+            'group:id,name,tour_leader_id,muthawwif_id',
+            'group.tourLeader:id,user_id,full_name',
+            'group.tourLeader.user:id,branch_id,name',
+            'group.muthawwif:id,user_id,full_name',
+            'group.muthawwif.user:id,branch_id,name',
+        ]);
+
         $this->send(
             $location->pilgrim->branch_id,
             'gps_offline',
@@ -36,6 +44,18 @@ class AdminNotificationService
             ],
             GpsOfflineAlert::class,
         );
+
+        $this->push->sendToUsers(
+            $this->staffRecipients($location->group),
+            'GPS Jamaah Offline',
+            "Perangkat {$location->pilgrim->full_name} tidak mengirim posisi.",
+            [
+                'type' => 'gps_offline',
+                'pilgrim_id' => $location->pilgrim_id,
+                'pilgrim_name' => $location->pilgrim->full_name,
+                'group_id' => $location->group_id,
+            ],
+        );
     }
 
     public function geofenceExit(
@@ -44,6 +64,18 @@ class AdminNotificationService
         float $longitude,
         string $geofenceName,
     ): void {
+        $pilgrim->loadMissing([
+            'groups' => fn ($query) => $query
+                ->where('groups.is_active', true)
+                ->with([
+                    'tourLeader:id,user_id,full_name',
+                    'tourLeader.user:id,branch_id,name',
+                    'muthawwif:id,user_id,full_name',
+                    'muthawwif.user:id,branch_id,name',
+                ]),
+        ]);
+        $group = $pilgrim->groups->first();
+
         $this->send(
             $pilgrim->branch_id,
             'geofence_exit',
@@ -59,6 +91,21 @@ class AdminNotificationService
                 'url' => route('monitoring.map.index'),
             ],
             GeofenceExitAlert::class,
+        );
+
+        $this->push->sendToUsers(
+            $this->staffRecipients($group),
+            'Jamaah Keluar Zona',
+            "{$pilgrim->full_name} keluar dari area {$geofenceName}.",
+            [
+                'type' => 'geofence_exit',
+                'pilgrim_id' => $pilgrim->id,
+                'pilgrim_name' => $pilgrim->full_name,
+                'group_id' => $group?->id,
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'geofence_name' => $geofenceName,
+            ],
         );
     }
 
@@ -90,13 +137,8 @@ class AdminNotificationService
 
         $this->send($report->branch_id, 'sos', $payload, SosAlert::class);
 
-        $staffRecipients = collect([
-            $report->group?->tourLeader?->user,
-            $report->group?->muthawwif?->user,
-        ])->filter()->unique('id')->values();
-
         $this->push->sendToUsers(
-            $staffRecipients,
+            $this->staffRecipients($report->group),
             'SOS Jamaah',
             "{$report->pilgrim->full_name} membutuhkan bantuan.",
             [
@@ -137,6 +179,34 @@ class AdminNotificationService
         );
     }
 
+    public function sosResolved(SosReport $report): void
+    {
+        $report->loadMissing([
+            'pilgrim:id,user_id,full_name',
+            'pilgrim.user:id,name',
+            'handler:id,name',
+        ]);
+
+        $pilgrimUser = $report->pilgrim?->user;
+        if (! $pilgrimUser) {
+            return;
+        }
+
+        $handlerName = $report->handler?->name ?? 'Petugas';
+
+        $this->push->sendToUsers(
+            collect([$pilgrimUser]),
+            'SOS sudah aman',
+            "Laporan SOS Anda telah diselesaikan oleh {$handlerName}.",
+            [
+                'type' => 'sos_resolved',
+                'sos_report_id' => $report->id,
+                'status' => 'resolved',
+                'handler_name' => $handlerName,
+            ],
+        );
+    }
+
     /**
      * @param  class-string<Notification>  $notificationClass
      */
@@ -162,5 +232,13 @@ class AdminNotificationService
             ->get();
 
         return $superAdmins->concat($branchAdmins)->unique('id')->values();
+    }
+
+    private function staffRecipients($group): Collection
+    {
+        return collect([
+            $group?->tourLeader?->user,
+            $group?->muthawwif?->user,
+        ])->filter()->unique('id')->values();
     }
 }

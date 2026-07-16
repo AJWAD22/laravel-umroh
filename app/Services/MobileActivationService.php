@@ -68,6 +68,8 @@ class MobileActivationService
     public function claim(array $data): array
     {
         return DB::transaction(function () use ($data): array {
+            // Jamaah memasukkan PIN dari aplikasi.
+            // Sistem mencari PIN yang masih aktif, belum dipakai, dan belum kedaluwarsa.
             $pilgrim = Pilgrim::query()
                 ->where('activation_pin_hash', $this->digest($data['numeric_code']))
                 ->whereNull('activation_pin_used_at')
@@ -82,6 +84,9 @@ class MobileActivationService
             }
 
             $this->ensurePilgrimUser($pilgrim);
+
+            // Aktivasi langsung disetujui otomatis. Tour Leader tidak perlu
+            // menekan approve, tetapi relasi rombongan tetap dipakai untuk audit.
             $group = $this->groupAccess->activeGroupForPilgrim($pilgrim);
             $leaderUser = $group?->tourLeader?->user;
             $createdBy = $pilgrim->activation_pin_created_by
@@ -93,6 +98,8 @@ class MobileActivationService
                 ->whereIn('status', ['created', 'awaiting_approval', 'approved'])
                 ->update(['status' => 'cancelled']);
 
+            // claim_secret adalah kode rahasia sementara yang dipakai APK
+            // untuk mengambil token login pada tahap status().
             $claimSecret = Str::random(64);
             $session = MobileActivationSession::create([
                 'public_id' => (string) Str::uuid(),
@@ -123,6 +130,8 @@ class MobileActivationService
     public function status(array $data): array
     {
         return DB::transaction(function () use ($data): array {
+            // APK memanggil endpoint ini setelah claim berhasil.
+            // lockForUpdate mencegah dua perangkat menyelesaikan aktivasi bersamaan.
             $session = MobileActivationSession::query()
                 ->with('pilgrim.user')
                 ->where('public_id', $data['public_id'])
@@ -154,6 +163,8 @@ class MobileActivationService
             $user = $session->pilgrim->user;
             abort_unless($user && $user->is_active, 422, 'Akun Jamaah tidak aktif.');
 
+            // Satu jamaah hanya boleh aktif di satu perangkat.
+            // Token dan perangkat lama dicabut agar tracking lama berhenti.
             $user->tokens()->delete();
             MobileDevice::query()
                 ->where(fn ($query) => $query
@@ -179,6 +190,9 @@ class MobileActivationService
                 'activation-'.$session->device_uuid,
                 [MobileRole::Pilgrim->ability()],
             );
+
+            // PIN hanya sekali pakai. Setelah aktivasi selesai, PIN dihapus
+            // agar tidak bisa dipakai ulang oleh perangkat lain.
             $session->update(['status' => 'completed', 'completed_at' => now()]);
             $session->pilgrim->forceFill([
                 'activation_pin_hash' => null,

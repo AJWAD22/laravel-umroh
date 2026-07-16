@@ -28,6 +28,8 @@ class PilgrimController extends Controller
 
     public function sendLocation(SendLocationRequest $request): JsonResponse
     {
+        // Endpoint ini dipanggil APK jamaah secara berkala.
+        // Tujuannya menyimpan lokasi terakhir dan riwayat lokasi.
         $pilgrim = $request->user()->pilgrim;
         $group = $this->access->activeGroupForPilgrim($pilgrim);
         $data = $request->validated();
@@ -40,10 +42,14 @@ class PilgrimController extends Controller
                 'group_id' => $group?->id,
                 'recorded_at' => $recordedAt,
             ];
+
+            // pilgrim_locations hanya menyimpan posisi terbaru untuk Live Map.
             $latest = PilgrimLocation::query()->updateOrCreate(
                 ['pilgrim_id' => $pilgrim->id],
                 [...$attributes, 'gps_status' => 'online'],
             );
+
+            // location_histories menyimpan seluruh riwayat untuk laporan.
             $history = LocationHistory::query()->create([
                 'pilgrim_id' => $pilgrim->id,
                 ...$attributes,
@@ -69,11 +75,15 @@ class PilgrimController extends Controller
 
     public function sos(SendSosRequest $request): JsonResponse
     {
+        // Endpoint darurat. Jamaah menekan SOS, lalu sistem menyimpan laporan
+        // dan mengirim notifikasi ke admin/petugas.
         $pilgrim = $request->user()->pilgrim;
         $group = $this->access->activeGroupForPilgrim($pilgrim);
         $data = $request->validated();
 
         $report = DB::transaction(function () use ($pilgrim, $group, $data): SosReport {
+            // Jika masih ada SOS aktif, sistem tidak membuat laporan ganda.
+            // Ini mencegah tombol SOS ditekan berkali-kali menghasilkan banyak data.
             $existing = SosReport::query()
                 ->where('pilgrim_id', $pilgrim->id)
                 ->active()
@@ -96,12 +106,14 @@ class PilgrimController extends Controller
                 'reported_at' => now(),
             ]);
 
+            // Status jamaah di Live Map berubah menjadi SOS.
             $pilgrim->forceFill(['monitoring_status' => 'sos'])->save();
 
             return $report->load(['pilgrim.branch', 'pilgrim.latestLocation', 'group', 'handler']);
         });
 
         if ($report->wasRecentlyCreated) {
+            // Notifikasi database dan FCM dikirim hanya untuk laporan baru.
             $this->notifications->sos($report);
         }
 

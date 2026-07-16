@@ -6,6 +6,8 @@ class CheckpointRepository {
 
   final ApiClient _api;
 
+  // Mengambil semua tujuan aktif yang boleh dilihat pengguna.
+  // Isinya gabungan tujuan umum dari admin dan titik kumpul dari petugas.
   Future<List<Checkpoint>> getCheckpoints() async {
     try {
       final response = await _api.dio.get<Map<String, dynamic>>(
@@ -20,6 +22,8 @@ class CheckpointRepository {
     }
   }
 
+  // Petugas membuat titik kumpul dari aplikasi.
+  // Data ini tersimpan sebagai checkpoint khusus lapangan.
   Future<Checkpoint> createMeetingPoint({
     required String name,
     required String city,
@@ -49,6 +53,8 @@ class CheckpointRepository {
     }
   }
 
+  // Petugas memperbarui titik kumpul yang pernah dibuat.
+  // Yang bisa diubah: nama, kota, koordinat, alamat, dan keterangan.
   Future<Checkpoint> updateMeetingPoint({
     required int id,
     required String name,
@@ -79,6 +85,8 @@ class CheckpointRepository {
     }
   }
 
+  // Hapus di aplikasi berarti menonaktifkan titik kumpul.
+  // Data lama tetap aman di database, tetapi tidak tampil lagi ke jamaah.
   Future<void> deactivateMeetingPoint(int id) async {
     try {
       await _api.dio.delete<void>('/api/mobile/staff-checkpoints/$id');

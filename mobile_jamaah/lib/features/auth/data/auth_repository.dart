@@ -8,6 +8,9 @@ class AuthRepository {
   final ApiClient _api;
   final SecureStorageService _storage;
 
+  // Login petugas memakai email dan password.
+  // Jamaah biasanya masuk lewat PIN aktivasi, tetapi backend tetap
+  // mengembalikan format profil yang sama.
   Future<JamaahProfile> login({
     required String email,
     required String password,
@@ -22,10 +25,16 @@ class AuthRepository {
         },
       );
       final data = response.data!;
+
+      // Aplikasi mobile hanya menerima tiga role ini.
+      // Role admin dipakai di web, bukan di APK.
       final role = data['role']?.toString();
       if (!{'jamaah', 'tour-leader', 'muthawwif'}.contains(role)) {
         throw const FormatException('Role akun tidak didukung aplikasi.');
       }
+
+      // Token disimpan aman di secure storage agar request berikutnya
+      // otomatis terautentikasi melalui ApiClient.
       await _storage.saveToken(data['access_token'].toString());
       return JamaahProfile.fromJson(data['user'] as Map<String, dynamic>);
     } catch (error) {
@@ -34,6 +43,8 @@ class AuthRepository {
     }
   }
 
+  // Mengambil profil berdasarkan token yang tersimpan.
+  // Dipakai saat aplikasi dibuka ulang tanpa login ulang.
   Future<JamaahProfile> profile() async {
     try {
       final response = await _api.dio.get<Map<String, dynamic>>(

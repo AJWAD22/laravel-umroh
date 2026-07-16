@@ -63,6 +63,8 @@ class StaffGroupController extends Controller
 
     public function sendLocation(SendLocationRequest $request): JsonResponse
     {
+        // Endpoint ini dipakai Tour Leader dan Muthawwif untuk mengirim
+        // posisi petugas, sehingga jamaah bisa melihat lokasi petugas.
         $user = $request->user();
         $role = $user->hasRole(MobileRole::TourLeader->value)
             ? MobileRole::TourLeader->value
@@ -89,6 +91,8 @@ class StaffGroupController extends Controller
 
     public function storeCheckpoint(StoreStaffCheckpointRequest $request)
     {
+        // Petugas boleh membuat titik kumpul hanya untuk rombongan
+        // yang memang menjadi tanggung jawabnya.
         $user = $request->user();
         $role = $user->hasRole(MobileRole::TourLeader->value)
             ? MobileRole::TourLeader
@@ -102,6 +106,8 @@ class StaffGroupController extends Controller
         $group = Group::query()->findOrFail($groupId);
         $data = $request->validated();
 
+        // Titik kumpul dibuat sebagai checkpoint kategori titik_kumpul.
+        // Jamaah hanya melihat checkpoint yang masih aktif.
         $checkpoint = Checkpoint::query()->create([
             'branch_id' => $user->branch_id,
             'departure_id' => $group->departure_id,
@@ -124,6 +130,8 @@ class StaffGroupController extends Controller
 
     public function updateCheckpoint(UpdateStaffCheckpointRequest $request, Checkpoint $checkpoint)
     {
+        // Validasi kepemilikan checkpoint dilakukan sebelum update.
+        // Petugas tidak boleh mengubah titik milik rombongan lain.
         $this->authorizeStaffCheckpoint($request, $checkpoint);
         $checkpoint->fill($request->validated())->save();
 
@@ -133,6 +141,8 @@ class StaffGroupController extends Controller
 
     public function deactivateCheckpoint(Request $request, Checkpoint $checkpoint)
     {
+        // Tombol hapus di aplikasi tidak menghapus permanen.
+        // Data dinonaktifkan agar tidak tampil lagi tetapi masih aman untuk audit.
         $this->authorizeStaffCheckpoint($request, $checkpoint);
         $checkpoint->forceFill(['is_active' => false])->save();
 
@@ -157,6 +167,8 @@ class StaffGroupController extends Controller
 
     public function acknowledge(Request $request, SosReport $sosReport): SosReportResource
     {
+        // Acknowledge berarti petugas sudah melihat SOS dan mulai menangani.
+        // Pada tahap ini jamaah juga bisa diberi notifikasi bahwa bantuan diproses.
         $this->authorizeSos($request, $sosReport);
         $shouldNotifyPilgrim = $sosReport->status === 'new';
 
@@ -177,10 +189,13 @@ class StaffGroupController extends Controller
 
     public function resolve(Request $request, SosReport $sosReport): SosReportResource
     {
+        // Resolve berarti kasus SOS selesai. Jika tidak ada SOS aktif lain,
+        // status monitoring jamaah dikembalikan menjadi normal.
         $this->authorizeSos($request, $sosReport);
         $data = $request->validate([
             'resolution_notes' => ['nullable', 'string', 'max:500'],
         ]);
+        $shouldNotifyPilgrim = $sosReport->status !== 'resolved';
 
         $sosReport->forceFill([
             'status' => 'resolved',
@@ -200,7 +215,12 @@ class StaffGroupController extends Controller
             $sosReport->pilgrim()->update(['monitoring_status' => 'normal']);
         }
 
-        return new SosReportResource($sosReport->fresh(['pilgrim.branch', 'pilgrim.latestLocation', 'group', 'handler']));
+        $freshReport = $sosReport->fresh(['pilgrim.branch', 'pilgrim.user', 'pilgrim.latestLocation', 'group', 'handler']);
+        if ($shouldNotifyPilgrim) {
+            $this->notifications->sosResolved($freshReport);
+        }
+
+        return new SosReportResource($freshReport);
     }
 
     private function pilgrims(Request $request, MobileRole $role)
@@ -215,6 +235,8 @@ class StaffGroupController extends Controller
 
     private function locations(Request $request, MobileRole $role)
     {
+        // Lokasi jamaah yang ditampilkan ke petugas hanya dari jamaah
+        // yang masih punya perangkat aktif, supaya marker lama tidak menyesatkan.
         $locations = $this->access->pilgrimsForStaff($request->user(), $role)
             ->whereHas('latestLocation')
             ->whereHas('user.mobileDevices', fn ($query) => $query->whereNull('revoked_at'))
@@ -247,6 +269,11 @@ class StaffGroupController extends Controller
 
     private function authorizeStaffCheckpoint(Request $request, Checkpoint $checkpoint): void
     {
+        // Syarat titik kumpul bisa diubah:
+        // 1. masih satu cabang,
+        // 2. kategorinya titik_kumpul,
+        // 3. terkait rombongan,
+        // 4. rombongan itu memang dipegang petugas tersebut.
         $user = $request->user();
         $role = $user->hasRole(MobileRole::TourLeader->value)
             ? MobileRole::TourLeader
