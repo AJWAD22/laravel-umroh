@@ -1,0 +1,217 @@
+Project mantau_umroh_cdm {
+  database_type: 'MySQL'
+  Note: 'Conceptual Data Model sistem Mantau Umroh. Menampilkan entitas bisnis dan hubungan konseptual.'
+}
+
+Table branches {
+  id bigint [pk]
+  code varchar
+  name varchar
+  city varchar
+  is_active boolean
+
+  Note: 'Kantor cabang penyelenggara umrah.'
+}
+
+Table users {
+  id bigint [pk]
+  name varchar
+  email varchar
+  is_active boolean
+
+  Note: 'Pengguna yang mengakses sistem.'
+}
+
+Table roles {
+  id bigint [pk]
+  name varchar
+  description text
+
+  Note: 'Peran pengguna dalam sistem.'
+}
+
+Table permissions {
+  id bigint [pk]
+  name varchar
+  description text
+
+  Note: 'Hak akses terhadap fungsi sistem.'
+}
+
+Table pilgrims {
+  id bigint [pk]
+  registration_number varchar
+  full_name varchar
+  status varchar
+  monitoring_status varchar
+
+  Note: 'Jamaah yang mengikuti perjalanan umrah.'
+}
+
+Table tour_leaders {
+  id bigint [pk]
+  employee_number varchar
+  full_name varchar
+  is_active boolean
+
+  Note: 'Petugas yang memimpin rombongan.'
+}
+
+Table muthawwifs {
+  id bigint [pk]
+  employee_number varchar
+  full_name varchar
+  is_active boolean
+
+  Note: 'Petugas yang membimbing ibadah Jamaah.'
+}
+
+Table departures {
+  id bigint [pk]
+  code varchar
+  program_name varchar
+  departure_date date
+  return_date date
+  status varchar
+
+  Note: 'Program dan jadwal keberangkatan umrah.'
+}
+
+Table hotels {
+  id bigint [pk]
+  name varchar
+  city varchar
+  address text
+
+  Note: 'Tempat akomodasi selama perjalanan.'
+}
+
+Table groups {
+  id bigint [pk]
+  code varchar
+  name varchar
+  capacity int
+  is_active boolean
+
+  Note: 'Rombongan Jamaah dalam suatu perjalanan.'
+}
+
+Table checkpoints {
+  id bigint [pk]
+  name varchar
+  category varchar
+  location varchar
+  is_active boolean
+
+  Note: 'Tujuan, titik penting, atau titik kumpul perjalanan.'
+}
+
+Table pilgrim_locations {
+  id bigint [pk]
+  latitude decimal
+  longitude decimal
+  gps_status varchar
+  recorded_at timestamp
+
+  Note: 'Posisi terbaru Jamaah.'
+}
+
+Table location_histories {
+  id bigint [pk]
+  latitude decimal
+  longitude decimal
+  recorded_at timestamp
+
+  Note: 'Riwayat pergerakan Jamaah.'
+}
+
+Table staff_locations {
+  id bigint [pk]
+  latitude decimal
+  longitude decimal
+  recorded_at timestamp
+
+  Note: 'Posisi terbaru Tour Leader atau Muthawwif.'
+}
+
+Table sos_reports {
+  id bigint [pk]
+  message text
+  status varchar
+  location varchar
+  reported_at timestamp
+
+  Note: 'Permintaan bantuan darurat dari Jamaah.'
+}
+
+Table mobile_devices {
+  id bigint [pk]
+  device_identity varchar
+  platform varchar
+  activation_status varchar
+
+  Note: 'Perangkat mobile yang digunakan pengguna.'
+}
+
+Table notifications {
+  id bigint [pk]
+  type varchar
+  message text
+  read_status boolean
+
+  Note: 'Pemberitahuan mengenai aktivitas dan keadaan darurat.'
+}
+
+Table system_settings {
+  id bigint [pk]
+  setting_name varchar
+  setting_value text
+
+  Note: 'Konfigurasi umum sistem.'
+}
+
+// Organisasi dan pengguna
+Ref: branches.id < users.id
+Ref: branches.id < pilgrims.id
+Ref: branches.id < tour_leaders.id
+Ref: branches.id < muthawwifs.id
+Ref: branches.id < departures.id
+Ref: branches.id < hotels.id
+Ref: branches.id < groups.id
+Ref: branches.id < checkpoints.id
+
+// Profil pengguna
+Ref: users.id - pilgrims.id
+Ref: users.id - tour_leaders.id
+Ref: users.id - muthawwifs.id
+
+// Hak akses
+Ref: users.id <> roles.id
+Ref: roles.id <> permissions.id
+
+// Perjalanan dan rombongan
+Ref: departures.id < groups.id
+Ref: departures.id <> hotels.id
+Ref: tour_leaders.id < groups.id
+Ref: muthawwifs.id < groups.id
+Ref: groups.id <> pilgrims.id
+Ref: departures.id < checkpoints.id
+Ref: groups.id < checkpoints.id
+
+// Monitoring lokasi
+Ref: pilgrims.id - pilgrim_locations.id
+Ref: pilgrims.id < location_histories.id
+Ref: groups.id < pilgrim_locations.id
+Ref: groups.id < location_histories.id
+Ref: users.id - staff_locations.id
+
+// Keadaan darurat
+Ref: pilgrims.id < sos_reports.id
+Ref: groups.id < sos_reports.id
+Ref: users.id < sos_reports.id
+
+// Perangkat dan notifikasi
+Ref: users.id < mobile_devices.id
+Ref: users.id < notifications.id
+Ref: branches.id < notifications.id
+

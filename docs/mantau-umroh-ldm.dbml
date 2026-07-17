@@ -1,0 +1,340 @@
+Project mantau_umroh_ldm {
+  database_type: 'MySQL'
+  Note: 'Logical Data Model sistem Mantau Umroh. Berfokus pada entitas, atribut bisnis, dan hubungan logis.'
+}
+
+Table branches {
+  id bigint [pk]
+  code varchar [not null, unique]
+  name varchar [not null]
+  phone varchar
+  email varchar
+  address text
+  city varchar [not null]
+  province varchar
+  is_active boolean [not null]
+
+  Note: 'Kantor cabang penyelenggara umrah.'
+}
+
+Table users {
+  id bigint [pk]
+  branch_id bigint [note: 'Opsional untuk Super Admin']
+  name varchar [not null]
+  email varchar [not null, unique]
+  phone_number varchar
+  photo_path varchar
+  is_active boolean [not null]
+
+  Note: 'Akun pengguna sistem.'
+}
+
+Table pilgrims {
+  id bigint [pk]
+  branch_id bigint [not null]
+  user_id bigint [unique, note: 'Opsional']
+  registration_number varchar [not null, unique]
+  full_name varchar [not null]
+  nik varchar
+  passport_number varchar
+  passport_expired_at date
+  gender varchar [not null]
+  phone varchar
+  birth_date date
+  address text
+  photo_path varchar
+  status varchar [not null]
+  monitoring_status varchar [not null]
+
+  Note: 'Data identitas dan status Jamaah.'
+}
+
+Table tour_leaders {
+  id bigint [pk]
+  branch_id bigint [not null]
+  user_id bigint [unique, note: 'Opsional']
+  employee_number varchar [not null, unique]
+  full_name varchar [not null]
+  phone varchar
+  photo_path varchar
+  is_active boolean [not null]
+
+  Note: 'Petugas pemimpin rombongan.'
+}
+
+Table muthawwifs {
+  id bigint [pk]
+  branch_id bigint [not null]
+  user_id bigint [unique, note: 'Opsional']
+  employee_number varchar [not null, unique]
+  full_name varchar [not null]
+  phone varchar
+  photo_path varchar
+  languages text
+  is_active boolean [not null]
+
+  Note: 'Petugas pembimbing ibadah Jamaah.'
+}
+
+Table departures {
+  id bigint [pk]
+  branch_id bigint [not null]
+  code varchar [not null, unique]
+  program_name varchar [not null]
+  departure_date date [not null]
+  return_date date [not null]
+  departure_airport varchar
+  arrival_airport varchar
+  quota int
+  status varchar [not null]
+
+  Note: 'Program dan jadwal keberangkatan umrah.'
+}
+
+Table hotels {
+  id bigint [pk]
+  branch_id bigint [not null]
+  name varchar [not null]
+  city varchar [not null]
+  address text
+  latitude decimal
+  longitude decimal
+  geofence_radius_meters int
+
+  Note: 'Hotel yang digunakan selama perjalanan.'
+}
+
+Table departure_hotels {
+  id bigint [pk]
+  departure_id bigint [not null]
+  hotel_id bigint [not null]
+  check_in_at date
+  check_out_at date
+  sequence int
+
+  indexes {
+    (departure_id, hotel_id) [unique]
+  }
+
+  Note: 'Entitas asosiasi keberangkatan dan hotel.'
+}
+
+Table groups {
+  id bigint [pk]
+  branch_id bigint [not null]
+  departure_id bigint [note: 'Opsional']
+  tour_leader_id bigint [note: 'Opsional']
+  muthawwif_id bigint [note: 'Opsional']
+  code varchar [not null, unique]
+  name varchar [not null]
+  capacity int
+  notes text
+  is_active boolean [not null]
+
+  Note: 'Rombongan perjalanan Jamaah.'
+}
+
+Table group_members {
+  id bigint [pk]
+  group_id bigint [not null]
+  pilgrim_id bigint [not null]
+  joined_at timestamp
+  left_at timestamp
+  status varchar [not null]
+
+  indexes {
+    (group_id, pilgrim_id) [unique]
+  }
+
+  Note: 'Entitas asosiasi rombongan dan Jamaah.'
+}
+
+Table checkpoints {
+  id bigint [pk]
+  branch_id bigint [not null]
+  departure_id bigint [note: 'Opsional']
+  group_id bigint [note: 'Opsional']
+  name varchar [not null]
+  category varchar [not null]
+  city varchar [not null]
+  address text
+  latitude decimal [not null]
+  longitude decimal [not null]
+  description text
+  is_active boolean [not null]
+
+  Note: 'Tujuan, titik penting, atau titik kumpul perjalanan.'
+}
+
+Table pilgrim_locations {
+  id bigint [pk]
+  pilgrim_id bigint [not null, unique]
+  group_id bigint [note: 'Opsional']
+  latitude decimal [not null]
+  longitude decimal [not null]
+  accuracy decimal
+  gps_status varchar
+  recorded_at timestamp [not null]
+
+  Note: 'Posisi terbaru Jamaah.'
+}
+
+Table location_histories {
+  id bigint [pk]
+  pilgrim_id bigint [not null]
+  group_id bigint [note: 'Opsional']
+  latitude decimal [not null]
+  longitude decimal [not null]
+  accuracy decimal
+  recorded_at timestamp [not null]
+
+  Note: 'Riwayat pergerakan Jamaah.'
+}
+
+Table staff_locations {
+  id bigint [pk]
+  user_id bigint [not null, unique]
+  branch_id bigint [not null]
+  role varchar [not null]
+  latitude decimal [not null]
+  longitude decimal [not null]
+  accuracy decimal
+  recorded_at timestamp [not null]
+
+  Note: 'Posisi terbaru Tour Leader atau Muthawwif.'
+}
+
+Table sos_reports {
+  id bigint [pk]
+  branch_id bigint [not null]
+  pilgrim_id bigint [not null]
+  group_id bigint [note: 'Opsional']
+  handled_by bigint [note: 'Opsional']
+  latitude decimal [not null]
+  longitude decimal [not null]
+  message text
+  status varchar [not null]
+  reported_at timestamp [not null]
+  acknowledged_at timestamp
+  resolved_at timestamp
+  resolution_notes text
+
+  Note: 'Laporan keadaan darurat yang dikirim Jamaah.'
+}
+
+Table mobile_devices {
+  id bigint [pk]
+  user_id bigint [not null]
+  device_uuid varchar [not null, unique]
+  device_name varchar
+  platform varchar
+  activation_status varchar [not null]
+  activated_at timestamp
+  last_used_at timestamp
+
+  Note: 'Perangkat mobile pengguna dengan proses aktivasi langsung.'
+}
+
+Table notifications {
+  id bigint [pk]
+  branch_id bigint [note: 'Opsional']
+  user_id bigint [note: 'Opsional']
+  type varchar [not null]
+  message text [not null]
+  read_at timestamp
+
+  Note: 'Pemberitahuan untuk pengguna atau cabang. Relasi polimorfik PDM disederhanakan menjadi relasi logis.'
+}
+
+Table roles {
+  id bigint [pk]
+  name varchar [not null, unique]
+  description text
+
+  Note: 'Peran pengguna: Super Admin, Admin Cabang, Jamaah, Tour Leader, atau Muthawwif.'
+}
+
+Table user_roles {
+  user_id bigint [not null]
+  role_id bigint [not null]
+
+  indexes {
+    (user_id, role_id) [pk]
+  }
+
+  Note: 'Entitas asosiasi pengguna dan peran.'
+}
+
+Table permissions {
+  id bigint [pk]
+  name varchar [not null, unique]
+  description text
+
+  Note: 'Hak akses terhadap fitur sistem.'
+}
+
+Table role_permissions {
+  role_id bigint [not null]
+  permission_id bigint [not null]
+
+  indexes {
+    (role_id, permission_id) [pk]
+  }
+
+  Note: 'Entitas asosiasi peran dan hak akses.'
+}
+
+Table system_settings {
+  id bigint [pk]
+  key varchar [not null, unique]
+  value text
+  type varchar
+  group varchar
+  label varchar [not null]
+  description text
+
+  Note: 'Konfigurasi umum sistem.'
+}
+
+Ref: users.branch_id > branches.id
+Ref: pilgrims.branch_id > branches.id
+Ref: pilgrims.user_id > users.id
+Ref: tour_leaders.branch_id > branches.id
+Ref: tour_leaders.user_id > users.id
+Ref: muthawwifs.branch_id > branches.id
+Ref: muthawwifs.user_id > users.id
+
+Ref: departures.branch_id > branches.id
+Ref: hotels.branch_id > branches.id
+Ref: departure_hotels.departure_id > departures.id
+Ref: departure_hotels.hotel_id > hotels.id
+Ref: groups.branch_id > branches.id
+Ref: groups.departure_id > departures.id
+Ref: groups.tour_leader_id > tour_leaders.id
+Ref: groups.muthawwif_id > muthawwifs.id
+Ref: group_members.group_id > groups.id
+Ref: group_members.pilgrim_id > pilgrims.id
+Ref: checkpoints.branch_id > branches.id
+Ref: checkpoints.departure_id > departures.id
+Ref: checkpoints.group_id > groups.id
+
+Ref: pilgrim_locations.pilgrim_id > pilgrims.id
+Ref: pilgrim_locations.group_id > groups.id
+Ref: location_histories.pilgrim_id > pilgrims.id
+Ref: location_histories.group_id > groups.id
+Ref: staff_locations.user_id > users.id
+Ref: staff_locations.branch_id > branches.id
+Ref: sos_reports.branch_id > branches.id
+Ref: sos_reports.pilgrim_id > pilgrims.id
+Ref: sos_reports.group_id > groups.id
+Ref: sos_reports.handled_by > users.id
+
+Ref: mobile_devices.user_id > users.id
+Ref: notifications.branch_id > branches.id
+Ref: notifications.user_id > users.id
+
+Ref: user_roles.user_id > users.id
+Ref: user_roles.role_id > roles.id
+Ref: role_permissions.role_id > roles.id
+Ref: role_permissions.permission_id > permissions.id
+

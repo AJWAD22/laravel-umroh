@@ -1,0 +1,434 @@
+Project mantau_umroh {
+  database_type: 'MySQL'
+  Note: 'PDM sistem monitoring Jamaah Mantau Umroh'
+}
+
+Enum pilgrim_gender {
+  male
+  female
+}
+
+Enum pilgrim_status {
+  registered
+  active
+  completed
+  cancelled
+}
+
+Enum monitoring_status {
+  normal
+  sos
+}
+
+Enum departure_status {
+  draft
+  scheduled
+  departed
+  completed
+  cancelled
+}
+
+Enum hotel_city {
+  makkah
+  madinah
+  other
+}
+
+Enum group_member_status {
+  active
+  moved
+  removed
+}
+
+Enum gps_status {
+  online
+  offline
+  unknown
+}
+
+Enum sos_status {
+  new
+  handling
+  resolved
+}
+
+Table branches {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  code varchar(20) [not null, unique]
+  name varchar(255) [not null]
+  phone varchar(30)
+  email varchar(255)
+  address text
+  city varchar(100) [not null]
+  province varchar(100)
+  is_active boolean [not null, default: true]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp [note: 'Soft delete']
+}
+
+Table users {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  branch_id bigint [note: 'UNSIGNED; nullable untuk Super Admin']
+  name varchar(255) [not null]
+  email varchar(255) [not null, unique]
+  phone_number varchar(30)
+  photo_path varchar(255)
+  email_verified_at timestamp
+  password varchar(255) [not null]
+  is_active boolean [not null, default: true]
+  remember_token varchar(100)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table pilgrims {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  branch_id bigint [not null, note: 'UNSIGNED']
+  user_id bigint [unique, note: 'UNSIGNED; nullable']
+  registration_number varchar(40) [not null, unique]
+  full_name varchar(255) [not null]
+  nik varchar(20) [unique]
+  passport_number varchar(30) [unique]
+  passport_expired_at date
+  gender pilgrim_gender [not null]
+  phone varchar(30)
+  birth_date date
+  address text
+  photo_path varchar(255)
+  status pilgrim_status [not null, default: 'registered']
+  monitoring_status monitoring_status [not null, default: 'normal']
+  activation_pin_hash char(64) [unique]
+  activation_pin_encrypted text
+  activation_pin_created_by bigint [note: 'UNSIGNED; nullable']
+  activation_pin_generated_at timestamp
+  activation_pin_used_at timestamp
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp [note: 'Soft delete']
+}
+
+Table tour_leaders {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  branch_id bigint [not null, note: 'UNSIGNED']
+  user_id bigint [unique, note: 'UNSIGNED; nullable']
+  employee_number varchar(40) [not null, unique]
+  full_name varchar(255) [not null]
+  phone varchar(30)
+  photo_path varchar(255)
+  is_active boolean [not null, default: true]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp [note: 'Soft delete']
+}
+
+Table muthawwifs {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  branch_id bigint [not null, note: 'UNSIGNED']
+  user_id bigint [unique, note: 'UNSIGNED; nullable']
+  employee_number varchar(40) [not null, unique]
+  full_name varchar(255) [not null]
+  phone varchar(30)
+  photo_path varchar(255)
+  languages text
+  is_active boolean [not null, default: true]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp [note: 'Soft delete']
+}
+
+Table departures {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  branch_id bigint [not null, note: 'UNSIGNED']
+  code varchar(40) [not null, unique]
+  program_name varchar(255) [not null]
+  departure_date date [not null]
+  return_date date [not null]
+  departure_airport varchar(100)
+  arrival_airport varchar(100)
+  quota int [note: 'UNSIGNED; nullable']
+  status departure_status [not null, default: 'draft']
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp [note: 'Soft delete']
+}
+
+Table hotels {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  branch_id bigint [not null, note: 'UNSIGNED']
+  name varchar(255) [not null]
+  city hotel_city [not null, default: 'other']
+  address text
+  latitude decimal(10,7)
+  longitude decimal(10,7)
+  geofence_radius_meters int [not null, default: 250, note: 'UNSIGNED']
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp [note: 'Soft delete']
+}
+
+Table departure_hotel {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  departure_id bigint [not null, note: 'UNSIGNED']
+  hotel_id bigint [not null, note: 'UNSIGNED']
+  check_in_at date
+  check_out_at date
+  sequence tinyint [not null, default: 1, note: 'UNSIGNED']
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (departure_id, hotel_id) [unique]
+  }
+}
+
+Table groups {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  branch_id bigint [not null, note: 'UNSIGNED']
+  departure_id bigint [note: 'UNSIGNED; nullable']
+  tour_leader_id bigint [note: 'UNSIGNED; nullable']
+  muthawwif_id bigint [note: 'UNSIGNED; nullable']
+  code varchar(40) [not null, unique]
+  name varchar(255) [not null]
+  capacity int [note: 'UNSIGNED; nullable']
+  notes text
+  is_active boolean [not null, default: true]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp [note: 'Soft delete']
+}
+
+Table group_members {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  group_id bigint [not null, note: 'UNSIGNED']
+  pilgrim_id bigint [not null, note: 'UNSIGNED']
+  joined_at timestamp
+  left_at timestamp
+  status group_member_status [not null, default: 'active']
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (group_id, pilgrim_id) [unique]
+  }
+}
+
+Table checkpoints {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  branch_id bigint [not null, note: 'UNSIGNED']
+  departure_id bigint [note: 'UNSIGNED; nullable']
+  group_id bigint [note: 'UNSIGNED; nullable']
+  name varchar(255) [not null]
+  category varchar(30) [not null]
+  city varchar(30) [not null]
+  address text
+  latitude decimal(10,7) [not null]
+  longitude decimal(10,7) [not null]
+  description text
+  is_active boolean [not null, default: true]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp [note: 'Soft delete']
+}
+
+Table pilgrim_locations {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  pilgrim_id bigint [not null, unique, note: 'UNSIGNED; satu posisi terbaru per Jamaah']
+  group_id bigint [note: 'UNSIGNED; nullable']
+  latitude decimal(10,7) [not null]
+  longitude decimal(10,7) [not null]
+  accuracy decimal(8,2)
+  speed decimal(8,2)
+  heading decimal(6,2)
+  battery_level tinyint [note: 'UNSIGNED; nullable']
+  gps_status gps_status [not null, default: 'unknown']
+  recorded_at timestamp [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table location_histories {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  pilgrim_id bigint [not null, note: 'UNSIGNED']
+  group_id bigint [note: 'UNSIGNED; nullable']
+  latitude decimal(10,7) [not null]
+  longitude decimal(10,7) [not null]
+  accuracy decimal(8,2)
+  speed decimal(8,2)
+  heading decimal(6,2)
+  battery_level tinyint [note: 'UNSIGNED; nullable']
+  recorded_at timestamp [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table staff_locations {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  user_id bigint [not null, unique, note: 'UNSIGNED; satu posisi terbaru per petugas']
+  branch_id bigint [not null, note: 'UNSIGNED']
+  role varchar(32) [not null]
+  latitude decimal(10,7) [not null]
+  longitude decimal(10,7) [not null]
+  accuracy decimal(8,2)
+  speed decimal(8,2)
+  heading decimal(8,2)
+  battery_level tinyint [note: 'UNSIGNED; nullable']
+  recorded_at timestamp [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table sos_reports {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  branch_id bigint [not null, note: 'UNSIGNED']
+  pilgrim_id bigint [not null, note: 'UNSIGNED']
+  group_id bigint [note: 'UNSIGNED; nullable']
+  handled_by bigint [note: 'UNSIGNED; nullable']
+  latitude decimal(10,7) [not null]
+  longitude decimal(10,7) [not null]
+  accuracy decimal(8,2)
+  message text
+  status sos_status [not null, default: 'new']
+  reported_at timestamp [not null]
+  acknowledged_at timestamp
+  resolved_at timestamp
+  resolution_notes text
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table mobile_devices {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  user_id bigint [not null, note: 'UNSIGNED']
+  device_uuid varchar(120) [not null, unique]
+  device_name varchar(255)
+  platform varchar(30) [not null, default: 'android']
+  fcm_token text
+  activated_at timestamp [not null]
+  last_used_at timestamp
+  revoked_at timestamp
+  activated_by bigint [note: 'UNSIGNED; nullable']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table notifications {
+  id uuid [pk, not null]
+  branch_id bigint [note: 'UNSIGNED; nullable']
+  type varchar(255) [not null]
+  notifiable_type varchar(255) [not null, note: 'Relasi polimorfik']
+  notifiable_id bigint [not null, note: 'Relasi polimorfik; tanpa FK fisik']
+  data text [not null]
+  read_at timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table roles {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  name varchar(255) [not null]
+  guard_name varchar(255) [not null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (name, guard_name) [unique]
+  }
+}
+
+Table permissions {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  name varchar(255) [not null]
+  guard_name varchar(255) [not null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (name, guard_name) [unique]
+  }
+}
+
+Table model_has_roles {
+  role_id bigint [not null, note: 'UNSIGNED']
+  model_type varchar(255) [not null, note: 'Polymorphic model type']
+  model_id bigint [not null, note: 'UNSIGNED; secara logis mengacu ke users.id']
+
+  indexes {
+    (role_id, model_id, model_type) [pk]
+  }
+}
+
+Table model_has_permissions {
+  permission_id bigint [not null, note: 'UNSIGNED']
+  model_type varchar(255) [not null, note: 'Polymorphic model type']
+  model_id bigint [not null, note: 'UNSIGNED; secara logis mengacu ke users.id']
+
+  indexes {
+    (permission_id, model_id, model_type) [pk]
+  }
+}
+
+Table role_has_permissions {
+  permission_id bigint [not null, note: 'UNSIGNED']
+  role_id bigint [not null, note: 'UNSIGNED']
+
+  indexes {
+    (permission_id, role_id) [pk]
+  }
+}
+
+Table system_settings {
+  id bigint [pk, increment, note: 'UNSIGNED']
+  key varchar(255) [not null, unique]
+  value text
+  type varchar(30) [not null, default: 'string']
+  group varchar(50) [not null, default: 'general']
+  label varchar(255) [not null]
+  description text
+  created_at timestamp
+  updated_at timestamp
+}
+
+Ref: users.branch_id > branches.id [delete: set null]
+Ref: pilgrims.branch_id > branches.id [delete: restrict]
+Ref: pilgrims.user_id > users.id [delete: set null]
+Ref: pilgrims.activation_pin_created_by > users.id [delete: set null]
+Ref: tour_leaders.branch_id > branches.id [delete: restrict]
+Ref: tour_leaders.user_id > users.id [delete: set null]
+Ref: muthawwifs.branch_id > branches.id [delete: restrict]
+Ref: muthawwifs.user_id > users.id [delete: set null]
+
+Ref: departures.branch_id > branches.id [delete: restrict]
+Ref: hotels.branch_id > branches.id [delete: restrict]
+Ref: departure_hotel.departure_id > departures.id [delete: cascade]
+Ref: departure_hotel.hotel_id > hotels.id [delete: restrict]
+Ref: groups.branch_id > branches.id [delete: restrict]
+Ref: groups.departure_id > departures.id [delete: set null]
+Ref: groups.tour_leader_id > tour_leaders.id [delete: set null]
+Ref: groups.muthawwif_id > muthawwifs.id [delete: set null]
+Ref: group_members.group_id > groups.id [delete: cascade]
+Ref: group_members.pilgrim_id > pilgrims.id [delete: cascade]
+Ref: checkpoints.branch_id > branches.id [delete: restrict]
+Ref: checkpoints.departure_id > departures.id [delete: set null]
+Ref: checkpoints.group_id > groups.id [delete: set null]
+
+Ref: pilgrim_locations.pilgrim_id > pilgrims.id [delete: cascade]
+Ref: pilgrim_locations.group_id > groups.id [delete: set null]
+Ref: location_histories.pilgrim_id > pilgrims.id [delete: cascade]
+Ref: location_histories.group_id > groups.id [delete: set null]
+Ref: staff_locations.user_id > users.id [delete: cascade]
+Ref: staff_locations.branch_id > branches.id [delete: cascade]
+Ref: sos_reports.branch_id > branches.id [delete: restrict]
+Ref: sos_reports.pilgrim_id > pilgrims.id [delete: cascade]
+Ref: sos_reports.group_id > groups.id [delete: set null]
+Ref: sos_reports.handled_by > users.id [delete: set null]
+
+Ref: mobile_devices.user_id > users.id [delete: cascade]
+Ref: mobile_devices.activated_by > users.id [delete: set null]
+Ref: notifications.branch_id > branches.id [delete: cascade]
+
+Ref: model_has_roles.role_id > roles.id [delete: cascade]
+Ref: model_has_permissions.permission_id > permissions.id [delete: cascade]
+Ref: role_has_permissions.permission_id > permissions.id [delete: cascade]
+Ref: role_has_permissions.role_id > roles.id [delete: cascade]
+
