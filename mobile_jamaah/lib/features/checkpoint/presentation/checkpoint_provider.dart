@@ -95,7 +95,9 @@ class CheckpointProvider extends ChangeNotifier {
     notifyListeners();
     try {
       await _repository.deactivateMeetingPoint(id);
-      checkpoints = checkpoints.where((item) => item.id != id).toList(growable: false);
+      checkpoints = checkpoints
+          .where((item) => item.id != id)
+          .toList(growable: false);
     } catch (exception) {
       error = exception.toString();
       rethrow;

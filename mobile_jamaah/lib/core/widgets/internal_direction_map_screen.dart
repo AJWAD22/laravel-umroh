@@ -268,13 +268,15 @@ class _StatusBanner extends StatelessWidget {
         decoration: BoxDecoration(
           color: colorScheme.surface.withValues(alpha: 0.94),
           borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
-            BoxShadow(color: Colors.black12, blurRadius: 12),
-          ],
+          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 12)],
         ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: error == null ? Colors.green : Colors.red),
+            Icon(
+              icon,
+              size: 18,
+              color: error == null ? Colors.green : Colors.red,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -309,7 +311,9 @@ class _DefaultInfoCard extends StatelessWidget {
     final distanceText =
         myPoint == null
             ? 'Menunggu posisi saya'
-            : _formatDistance(const Distance().as(LengthUnit.Meter, myPoint!, target));
+            : _formatDistance(
+              const Distance().as(LengthUnit.Meter, myPoint!, target),
+            );
 
     return Card(
       child: Padding(

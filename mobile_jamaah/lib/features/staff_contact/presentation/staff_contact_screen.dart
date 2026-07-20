@@ -59,10 +59,7 @@ class _StaffContactScreenState extends State<StaffContactScreen> {
                     size: 48,
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    snapshot.error.toString(),
-                    textAlign: TextAlign.center,
-                  ),
+                  Text(snapshot.error.toString(), textAlign: TextAlign.center),
                   const SizedBox(height: 12),
                   FilledButton.icon(
                     onPressed: _refresh,
@@ -141,8 +138,9 @@ class _StaffContactCard extends StatelessWidget {
     final updatedAt =
         location?.recordedAt == null
             ? null
-            : DateFormat('dd MMM yyyy, HH:mm')
-                .format(location!.recordedAt!.toLocal());
+            : DateFormat(
+              'dd MMM yyyy, HH:mm',
+            ).format(location!.recordedAt!.toLocal());
 
     return Card(
       child: Padding(
@@ -188,26 +186,30 @@ class _StaffContactCard extends StatelessWidget {
             const SizedBox(height: 14),
             _InfoLine(
               icon: Icons.phone_outlined,
-              label: item.phone?.isNotEmpty == true
-                  ? item.phone!
-                  : 'Nomor WhatsApp belum tersedia',
+              label:
+                  item.phone?.isNotEmpty == true
+                      ? item.phone!
+                      : 'Nomor WhatsApp belum tersedia',
             ),
             _InfoLine(
-              icon: item.hasLocation
-                  ? Icons.location_on_rounded
-                  : Icons.location_off_rounded,
-              label: item.hasLocation
-                  ? 'Lokasi tersedia${updatedAt == null ? '' : ' • $updatedAt'}'
-                  : 'Lokasi petugas belum tersedia',
+              icon:
+                  item.hasLocation
+                      ? Icons.location_on_rounded
+                      : Icons.location_off_rounded,
+              label:
+                  item.hasLocation
+                      ? 'Lokasi tersedia${updatedAt == null ? '' : ' • $updatedAt'}'
+                      : 'Lokasi petugas belum tersedia',
             ),
             const SizedBox(height: 14),
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: item.phone?.isNotEmpty == true
-                        ? () => _copyPhone(context, item.phone!)
-                        : null,
+                    onPressed:
+                        item.phone?.isNotEmpty == true
+                            ? () => _copyPhone(context, item.phone!)
+                            : null,
                     icon: const Icon(Icons.copy_rounded),
                     label: const Text('Salin WA'),
                   ),
@@ -215,9 +217,8 @@ class _StaffContactCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: location == null
-                        ? null
-                        : () => _openMap(context, item),
+                    onPressed:
+                        location == null ? null : () => _openMap(context, item),
                     icon: const Icon(Icons.map_rounded),
                     label: const Text('Lihat Posisi'),
                   ),
@@ -244,14 +245,15 @@ class _StaffContactCard extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => InternalDirectionMapScreen(
-          title: item.label,
-          target: LatLng(location.latitude, location.longitude),
-          targetName: item.fullName ?? item.label,
-          targetSubtitle: item.phone,
-          targetIcon: Icons.support_agent_rounded,
-          targetColor: const Color(0xFF2563EB),
-        ),
+        builder:
+            (_) => InternalDirectionMapScreen(
+              title: item.label,
+              target: LatLng(location.latitude, location.longitude),
+              targetName: item.fullName ?? item.label,
+              targetSubtitle: item.phone,
+              targetIcon: Icons.support_agent_rounded,
+              targetColor: const Color(0xFF2563EB),
+            ),
       ),
     );
   }

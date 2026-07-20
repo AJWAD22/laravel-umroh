@@ -9,13 +9,11 @@ use App\Http\Requests\Api\Mobile\StaffListRequest;
 use App\Http\Requests\Api\Mobile\StoreStaffCheckpointRequest;
 use App\Http\Requests\Api\Mobile\UpdateStaffCheckpointRequest;
 use App\Http\Resources\Mobile\CheckpointResource;
-use App\Http\Resources\Mobile\HotelResource;
 use App\Http\Resources\Mobile\LocationResource;
 use App\Http\Resources\Mobile\PilgrimResource;
 use App\Http\Resources\Mobile\SosReportResource;
 use App\Models\Checkpoint;
 use App\Models\Group;
-use App\Models\Hotel;
 use App\Models\SosReport;
 use App\Models\StaffLocation;
 use App\Services\AdminNotificationService;
@@ -51,16 +49,6 @@ class StaffGroupController extends Controller
         return $this->locations($request, MobileRole::Muthawwif);
     }
 
-    public function leaderHotels(Request $request)
-    {
-        return $this->hotels($request, MobileRole::TourLeader);
-    }
-
-    public function muthawwifHotels(Request $request)
-    {
-        return $this->hotels($request, MobileRole::Muthawwif);
-    }
-
     public function sendLocation(SendLocationRequest $request): JsonResponse
     {
         // Endpoint ini dipakai Tour Leader dan Muthawwif untuk mengirim
@@ -91,13 +79,10 @@ class StaffGroupController extends Controller
 
     public function storeCheckpoint(StoreStaffCheckpointRequest $request)
     {
-        // Petugas boleh membuat titik kumpul hanya untuk rombongan
+        // Hanya Tour Leader yang boleh membuat titik kumpul untuk rombongan
         // yang memang menjadi tanggung jawabnya.
         $user = $request->user();
-        $role = $user->hasRole(MobileRole::TourLeader->value)
-            ? MobileRole::TourLeader
-            : MobileRole::Muthawwif;
-        $groupIds = $this->access->groupIdsForStaff($user, $role);
+        $groupIds = $this->access->groupIdsForStaff($user, MobileRole::TourLeader);
         abort_if($groupIds->isEmpty(), 422, 'Petugas belum ditugaskan ke rombongan aktif.');
 
         $groupId = $request->integer('group_id') ?: (int) $groupIds->first();
@@ -275,10 +260,7 @@ class StaffGroupController extends Controller
         // 3. terkait rombongan,
         // 4. rombongan itu memang dipegang petugas tersebut.
         $user = $request->user();
-        $role = $user->hasRole(MobileRole::TourLeader->value)
-            ? MobileRole::TourLeader
-            : MobileRole::Muthawwif;
-        $groupIds = $this->access->groupIdsForStaff($user, $role);
+        $groupIds = $this->access->groupIdsForStaff($user, MobileRole::TourLeader);
 
         abort_unless(
             (int) $checkpoint->branch_id === (int) $user->branch_id
@@ -290,17 +272,4 @@ class StaffGroupController extends Controller
         );
     }
 
-    private function hotels(Request $request, MobileRole $role)
-    {
-        $groupIds = $this->access->groupIdsForStaff($request->user(), $role);
-        $hotels = Hotel::query()
-            ->whereHas('departures.groups', fn ($query) => $query
-                ->whereIn('groups.id', $groupIds)
-                ->where('groups.is_active', true))
-            ->orderBy('city')
-            ->orderBy('name')
-            ->get();
-
-        return HotelResource::collection($hotels);
-    }
 }

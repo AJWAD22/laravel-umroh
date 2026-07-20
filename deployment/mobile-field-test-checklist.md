@@ -12,12 +12,17 @@ Gunakan checklist ini setiap kali APK baru dipasang di HP asli.
 
 ## 2. Uji FCM Petugas
 
+Sebelum menguji, pastikan backend production memiliki
+`FIREBASE_CREDENTIALS=/path/absolut/firebase-admin.json`, file dapat dibaca PHP,
+dan jalankan `php artisan optimize:clear` setelah mengubah `.env`.
+
 1. Login sebagai Tour Leader atau Muthawwif di HP petugas.
 2. Tunggu 5-10 detik setelah login agar token FCM tersimpan.
 3. Login sebagai Jamaah di HP lain.
 4. Jamaah menekan SOS.
 5. Hasil normal:
    - Petugas menerima notifikasi SOS.
+   - Notifikasi berbunyi dan izin notifikasi aplikasi sudah diaktifkan di HP.
    - Saat notifikasi ditekan, aplikasi membuka detail SOS.
    - Detail SOS menampilkan nama jamaah, waktu, posisi, dan peta internal.
 
@@ -53,6 +58,8 @@ Gunakan checklist ini setiap kali APK baru dipasang di HP asli.
 2. Petugas membuka detail SOS.
 3. Petugas menekan tombol Jamaah Sudah Diamankan.
 4. Hasil normal:
+   - Saat petugas mulai menangani, HP jamaah menerima notifikasi berbunyi "SOS sedang ditangani".
+   - Saat laporan diselesaikan, HP jamaah menerima notifikasi berbunyi "SOS sudah aman".
    - SOS hilang dari daftar aktif.
    - Dashboard admin tidak lagi menampilkan SOS tersebut sebagai aktif.
    - Riwayat SOS tetap tersimpan di laporan/monitoring.

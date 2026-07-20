@@ -90,7 +90,7 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
               controller: _searchController,
               onChanged: (value) => setState(() => _query = value),
               decoration: const InputDecoration(
-                hintText: 'Cari Masjidil Haram, hotel, klinik...',
+                hintText: 'Cari Masjidil Haram, klinik, titik kumpul...',
                 prefixIcon: Icon(Icons.search_rounded),
               ),
             ),
@@ -123,7 +123,6 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
                     items: const [
                       DropdownMenuItem(value: 'semua', child: Text('Semua')),
                       DropdownMenuItem(value: 'ibadah', child: Text('Ibadah')),
-                      DropdownMenuItem(value: 'hotel', child: Text('Hotel')),
                       DropdownMenuItem(
                         value: 'titik_kumpul',
                         child: Text('Titik Kumpul'),
@@ -316,7 +315,7 @@ class _MeetingPointFormScreenState extends State<MeetingPointFormScreen> {
                             textInputAction: TextInputAction.next,
                             decoration: const InputDecoration(
                               labelText: 'Nama titik kumpul',
-                              hintText: 'Contoh: Depan Lobby Hotel',
+                              hintText: 'Contoh: dekat pintu utama',
                               prefixIcon: Icon(Icons.place_rounded),
                             ),
                             validator:
@@ -381,9 +380,10 @@ class _MeetingPointFormScreenState extends State<MeetingPointFormScreen> {
                             SwitchListTile.adaptive(
                               contentPadding: EdgeInsets.zero,
                               value: _refreshCoordinate,
-                              onChanged: (value) => setState(
-                                () => _refreshCoordinate = value,
-                              ),
+                              onChanged:
+                                  (value) => setState(
+                                    () => _refreshCoordinate = value,
+                                  ),
                               title: const Text('Perbarui titik GPS'),
                               subtitle: const Text(
                                 'Aktifkan jika Anda sedang berada di lokasi baru titik kumpul.',
@@ -431,8 +431,8 @@ class _MeetingPointFormScreenState extends State<MeetingPointFormScreen> {
                           isSaving
                               ? 'Menyimpan titik...'
                               : _isEditing
-                                  ? 'Simpan Perubahan'
-                                  : 'Gunakan Lokasi Saat Ini & Simpan',
+                              ? 'Simpan Perubahan'
+                              : 'Gunakan Lokasi Saat Ini & Simpan',
                         ),
                       ),
                     ),
@@ -459,9 +459,10 @@ class _MeetingPointFormScreenState extends State<MeetingPointFormScreen> {
     setState(() => _error = null);
     try {
       final initial = widget.initial;
-      final position = initial == null || _refreshCoordinate
-          ? await context.read<LocationRepository>().currentPosition()
-          : null;
+      final position =
+          initial == null || _refreshCoordinate
+              ? await context.read<LocationRepository>().currentPosition()
+              : null;
       if (!mounted) return;
       if (initial == null) {
         await context.read<CheckpointProvider>().createMeetingPoint(
@@ -601,24 +602,25 @@ class _CheckpointCard extends StatelessWidget {
                   if (value == 'edit') _edit(context);
                   if (value == 'deactivate') _deactivate(context);
                 },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(
-                    value: 'edit',
-                    child: ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(Icons.edit_location_alt_rounded),
-                      title: Text('Edit titik'),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'deactivate',
-                    child: ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(Icons.visibility_off_rounded),
-                      title: Text('Nonaktifkan'),
-                    ),
-                  ),
-                ],
+                itemBuilder:
+                    (_) => const [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(Icons.edit_location_alt_rounded),
+                          title: Text('Edit titik'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'deactivate',
+                        child: ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(Icons.visibility_off_rounded),
+                          title: Text('Nonaktifkan'),
+                        ),
+                      ),
+                    ],
               ),
           ],
         ),
@@ -659,35 +661,38 @@ class _CheckpointCard extends StatelessWidget {
   Future<void> _deactivate(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Nonaktifkan titik kumpul?'),
-        content: Text(
-          '“${checkpoint.name}” tidak akan tampil lagi untuk jamaah dan petugas setelah daftar diperbarui.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Batal'),
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text('Nonaktifkan titik kumpul?'),
+            content: Text(
+              '“${checkpoint.name}” tidak akan tampil lagi untuk jamaah dan petugas setelah daftar diperbarui.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Batal'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('Nonaktifkan'),
+              ),
+            ],
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Nonaktifkan'),
-          ),
-        ],
-      ),
     );
     if (confirmed != true || !context.mounted) return;
     try {
-      await context.read<CheckpointProvider>().deactivateMeetingPoint(checkpoint.id);
+      await context.read<CheckpointProvider>().deactivateMeetingPoint(
+        checkpoint.id,
+      );
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Titik kumpul dinonaktifkan.')),
       );
     } catch (exception) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(exception.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(exception.toString())));
     }
   }
 }
@@ -743,7 +748,6 @@ class _MessageCard extends StatelessWidget {
 
 IconData _categoryIcon(String category) => switch (category) {
   'ibadah' => Icons.mosque_rounded,
-  'hotel' => Icons.hotel_rounded,
   'titik_kumpul' => Icons.groups_rounded,
   'kesehatan' => Icons.local_hospital_rounded,
   'transportasi' => Icons.directions_bus_rounded,
@@ -753,7 +757,6 @@ IconData _categoryIcon(String category) => switch (category) {
 
 String _categoryLabel(String category) => switch (category) {
   'ibadah' => 'Tempat Ibadah',
-  'hotel' => 'Hotel',
   'titik_kumpul' => 'Titik Kumpul',
   'kesehatan' => 'Kesehatan',
   'transportasi' => 'Transportasi',

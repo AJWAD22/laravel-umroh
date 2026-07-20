@@ -97,8 +97,9 @@ class LocationPermissionGuideScreen extends StatelessWidget {
                             width: 44,
                             height: 44,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF22C55E)
-                                  .withValues(alpha: 0.14),
+                              color: const Color(
+                                0xFF22C55E,
+                              ).withValues(alpha: 0.14),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: const Icon(
@@ -195,8 +196,8 @@ class _GuideStep extends StatelessWidget {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w900,
-                        ),
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(description, style: const TextStyle(height: 1.45)),

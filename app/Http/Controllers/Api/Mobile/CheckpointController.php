@@ -49,6 +49,7 @@ class CheckpointController extends Controller
         $checkpoints = Checkpoint::query()
             ->where('branch_id', $user->branch_id)
             ->where('is_active', true)
+            ->where('category', '!=', 'hotel')
             ->where(function (Builder $query) use ($departureIds, $groupIds): void {
                 $query->where(function (Builder $query): void {
                     $query->whereNull('departure_id')->whereNull('group_id');

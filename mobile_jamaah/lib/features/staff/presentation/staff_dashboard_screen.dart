@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../../activation/presentation/leader_activation_screen.dart';
 import '../../auth/presentation/auth_provider.dart';
 import '../../checkpoint/presentation/checkpoint_screen.dart';
-import '../../hotel/presentation/hotel_screen.dart';
 import '../../location/presentation/tracking_provider.dart';
 import '../../profile/domain/jamaah_profile.dart';
 import '../../profile/presentation/staff_profile_screen.dart';
@@ -153,11 +152,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                                     .where((report) => report.isActive)
                                     .length,
                             accentColor: const Color(0xFFDC2626),
-                            onTap:
-                                () => _open(
-                                  context,
-                                  const StaffSosScreen(),
-                                ),
+                            onTap: () => _open(context, const StaffSosScreen()),
                           ),
                           _DashboardMenu(
                             icon: Icons.groups_rounded,
@@ -197,21 +192,13 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                             icon: Icons.add_location_alt_rounded,
                             label: 'Titik Kumpul',
                             description:
-                                'Buat dan lihat titik berkumpul rombongan',
+                                isLeader
+                                    ? 'Buat dan lihat titik berkumpul rombongan'
+                                    : 'Lihat titik berkumpul rombongan',
                             onTap:
                                 () => _open(
                                   context,
-                                  const CheckpointScreen(allowCreate: true),
-                                ),
-                          ),
-                          _DashboardMenu(
-                            icon: Icons.hotel_rounded,
-                            label: 'Hotel Rombongan',
-                            description: 'Lihat dan navigasi menuju hotel',
-                            onTap:
-                                () => _open(
-                                  context,
-                                  HotelScreen(staffRole: profile.role),
+                                  CheckpointScreen(allowCreate: isLeader),
                                 ),
                           ),
                         ],

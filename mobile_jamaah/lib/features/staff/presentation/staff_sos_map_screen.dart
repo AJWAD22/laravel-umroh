@@ -36,7 +36,9 @@ class _SosBottomCard extends StatelessWidget {
     final time =
         report.reportedAt == null
             ? '-'
-            : DateFormat('dd MMM yyyy, HH:mm').format(report.reportedAt!.toLocal());
+            : DateFormat(
+              'dd MMM yyyy, HH:mm',
+            ).format(report.reportedAt!.toLocal());
 
     return Card(
       child: Padding(
@@ -54,7 +56,10 @@ class _SosBottomCard extends StatelessWidget {
                     report.pilgrim.fullName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
                 Chip(label: Text(report.status.toUpperCase())),
@@ -73,7 +78,10 @@ class _SosBottomCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => context.read<StaffProvider>().acknowledgeSos(report.id),
+                      onPressed:
+                          () => context.read<StaffProvider>().acknowledgeSos(
+                            report.id,
+                          ),
                       icon: const Icon(Icons.handshake_rounded),
                       label: const Text('Tangani'),
                     ),
@@ -81,7 +89,10 @@ class _SosBottomCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: FilledButton.icon(
-                      onPressed: () => context.read<StaffProvider>().resolveSos(report.id),
+                      onPressed:
+                          () => context.read<StaffProvider>().resolveSos(
+                            report.id,
+                          ),
                       icon: const Icon(Icons.check_circle_rounded),
                       label: const Text('Aman'),
                     ),

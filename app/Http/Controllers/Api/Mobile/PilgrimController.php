@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Mobile\LocationHistoryRequest;
 use App\Http\Requests\Api\Mobile\SendLocationRequest;
 use App\Http\Requests\Api\Mobile\SendSosRequest;
-use App\Http\Resources\Mobile\HotelResource;
 use App\Http\Resources\Mobile\LocationResource;
 use App\Http\Resources\Mobile\SosReportResource;
 use App\Models\LocationHistory;
@@ -63,14 +62,6 @@ class PilgrimController extends Controller
             'latest_location' => new LocationResource($latest),
             'history' => new LocationResource($history),
         ], 201);
-    }
-
-    public function hotel(Request $request)
-    {
-        $group = $this->access->activeGroupForPilgrim($request->user()->pilgrim);
-        $hotels = $group?->departure?->hotels()->orderByPivot('sequence')->get() ?? collect();
-
-        return HotelResource::collection($hotels);
     }
 
     public function sos(SendSosRequest $request): JsonResponse

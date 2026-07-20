@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../auth/presentation/auth_provider.dart';
 import '../../checkpoint/presentation/checkpoint_screen.dart';
-import '../../hotel/presentation/hotel_screen.dart';
 import '../../location/presentation/location_permission_guide_screen.dart';
 import '../../location/presentation/tracking_provider.dart';
 import '../../profile/domain/jamaah_profile.dart';
@@ -90,14 +89,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('SOS terkirim. Tetap tenang, petugas sedang diberi tahu.'),
+          content: Text(
+            'SOS terkirim. Tetap tenang, petugas sedang diberi tahu.',
+          ),
         ),
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
     } finally {
       if (mounted) setState(() => _sendingSos = false);
     }
@@ -183,19 +184,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => const CheckpointScreen(),
-                                ),
-                              ),
-                        ),
-                        _MenuCard(
-                          icon: Icons.hotel_rounded,
-                          title: 'Hotel',
-                          subtitle: 'Lihat lokasi hotel',
-                          color: const Color(0xFF0891B2),
-                          onTap:
-                              () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const HotelScreen(),
                                 ),
                               ),
                         ),
@@ -300,7 +288,10 @@ class _SosButton extends StatelessWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFDC2626),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 14,
+                ),
               ),
               onPressed: isSending ? null : onPressed,
               child:

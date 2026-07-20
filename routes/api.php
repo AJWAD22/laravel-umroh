@@ -35,7 +35,6 @@ Route::prefix('mobile')->group(function () {
     Route::middleware(['auth:sanctum', 'mobile.role:jamaah'])->group(function () {
         Route::post('/send-location', [PilgrimController::class, 'sendLocation'])->name('api.mobile.pilgrim.location');
         Route::post('/sos', [PilgrimController::class, 'sos'])->name('api.mobile.pilgrim.sos');
-        Route::get('/hotel', [PilgrimController::class, 'hotel'])->name('api.mobile.pilgrim.hotel');
         Route::get('/muthawwif-location', [PilgrimController::class, 'muthawwifLocation'])->name('api.mobile.pilgrim.muthawwif');
         Route::get('/staff-locations', [PilgrimController::class, 'staffLocations'])->name('api.mobile.pilgrim.staff-locations');
         Route::get('/my-location-history', [PilgrimController::class, 'history'])->name('api.mobile.pilgrim.history');
@@ -43,18 +42,17 @@ Route::prefix('mobile')->group(function () {
 
     Route::middleware(['auth:sanctum', 'mobile.role:tour-leader,muthawwif'])->group(function () {
         Route::post('/staff-location', [StaffGroupController::class, 'sendLocation'])->name('api.mobile.staff.location');
-        Route::post('/staff-checkpoints', [StaffGroupController::class, 'storeCheckpoint'])->name('api.mobile.staff.checkpoints.store');
-        Route::patch('/staff-checkpoints/{checkpoint}', [StaffGroupController::class, 'updateCheckpoint'])->name('api.mobile.staff.checkpoints.update');
-        Route::delete('/staff-checkpoints/{checkpoint}', [StaffGroupController::class, 'deactivateCheckpoint'])->name('api.mobile.staff.checkpoints.deactivate');
         Route::get('/sos-reports', [StaffGroupController::class, 'sosReports'])->name('api.mobile.staff.sos');
         Route::post('/sos-reports/{sosReport}/acknowledge', [StaffGroupController::class, 'acknowledge'])->name('api.mobile.staff.sos.acknowledge');
         Route::post('/sos-reports/{sosReport}/resolve', [StaffGroupController::class, 'resolve'])->name('api.mobile.staff.sos.resolve');
     });
 
     Route::middleware(['auth:sanctum', 'mobile.role:tour-leader'])->group(function () {
+        Route::post('/staff-checkpoints', [StaffGroupController::class, 'storeCheckpoint'])->name('api.mobile.staff.checkpoints.store');
+        Route::patch('/staff-checkpoints/{checkpoint}', [StaffGroupController::class, 'updateCheckpoint'])->name('api.mobile.staff.checkpoints.update');
+        Route::delete('/staff-checkpoints/{checkpoint}', [StaffGroupController::class, 'deactivateCheckpoint'])->name('api.mobile.staff.checkpoints.deactivate');
         Route::get('/group-pilgrims', [StaffGroupController::class, 'leaderPilgrims'])->name('api.mobile.leader.pilgrims');
         Route::get('/group-locations', [StaffGroupController::class, 'leaderLocations'])->name('api.mobile.leader.locations');
-        Route::get('/group-hotels', [StaffGroupController::class, 'leaderHotels'])->name('api.mobile.leader.hotels');
         Route::get('/activation-pilgrims', [ActivationController::class, 'pilgrims'])->name('api.mobile.activation.pilgrims');
         Route::get('/activation-requests', [ActivationController::class, 'pending'])->name('api.mobile.activation.pending');
         Route::post('/activation-requests/{session:public_id}/approve', [ActivationController::class, 'approve'])->name('api.mobile.activation.approve');
@@ -63,6 +61,5 @@ Route::prefix('mobile')->group(function () {
     Route::middleware(['auth:sanctum', 'mobile.role:muthawwif'])->group(function () {
         Route::get('/assigned-pilgrims', [StaffGroupController::class, 'muthawwifPilgrims'])->name('api.mobile.muthawwif.pilgrims');
         Route::get('/assigned-locations', [StaffGroupController::class, 'muthawwifLocations'])->name('api.mobile.muthawwif.locations');
-        Route::get('/assigned-hotels', [StaffGroupController::class, 'muthawwifHotels'])->name('api.mobile.muthawwif.hotels');
     });
 });

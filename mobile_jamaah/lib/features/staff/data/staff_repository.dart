@@ -75,7 +75,9 @@ class StaffRepository {
     try {
       final response = await _api.dio.post<Map<String, dynamic>>(
         '/api/mobile/sos-reports/$id/resolve',
-        data: const {'resolution_notes': 'Ditandai aman dari aplikasi petugas.'},
+        data: const {
+          'resolution_notes': 'Ditandai aman dari aplikasi petugas.',
+        },
       );
       return StaffSosReport.fromJson(
         Map<String, dynamic>.from(response.data?['data'] as Map? ?? {}),

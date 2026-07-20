@@ -11,8 +11,6 @@ import 'features/auth/data/auth_repository.dart';
 import 'features/auth/presentation/auth_provider.dart';
 import 'features/checkpoint/data/checkpoint_repository.dart';
 import 'features/checkpoint/presentation/checkpoint_provider.dart';
-import 'features/hotel/data/hotel_repository.dart';
-import 'features/hotel/presentation/hotel_provider.dart';
 import 'features/location/data/location_repository.dart';
 import 'features/location/presentation/tracking_provider.dart';
 import 'features/sos/data/sos_repository.dart';
@@ -56,15 +54,11 @@ Future<void> main() async {
         Provider.value(value: ActivationRepository(apiClient, storage)),
         Provider.value(value: CheckpointRepository(apiClient)),
         Provider.value(value: locationRepository),
-        Provider.value(value: HotelRepository(apiClient)),
         Provider.value(value: StaffRepository(apiClient)),
         Provider.value(value: SosRepository(apiClient)),
         Provider.value(value: StaffContactRepository(apiClient)),
         ChangeNotifierProvider.value(value: authProvider..initialize()),
         ChangeNotifierProvider.value(value: trackingProvider),
-        ChangeNotifierProvider(
-          create: (context) => HotelProvider(context.read<HotelRepository>()),
-        ),
         ChangeNotifierProvider(
           create:
               (context) =>

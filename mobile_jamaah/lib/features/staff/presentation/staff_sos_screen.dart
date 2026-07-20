@@ -13,15 +13,20 @@ class StaffSosScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<StaffProvider>();
     final role = context.read<AuthProvider>().profile!.role;
-    final active = provider.sosReports.where((report) => report.isActive).toList();
+    final active =
+        provider.sosReports.where((report) => report.isActive).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SOS Jamaah', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: const Text(
+          'SOS Jamaah',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
         actions: [
           IconButton(
             tooltip: 'Perbarui',
-            onPressed: () => context.read<StaffProvider>().load(role, force: true),
+            onPressed:
+                () => context.read<StaffProvider>().load(role, force: true),
             icon: const Icon(Icons.refresh_rounded),
           ),
         ],
@@ -39,11 +44,18 @@ class StaffSosScreen extends StatelessWidget {
                     Center(
                       child: Text(
                         'Belum ada SOS aktif',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                     SizedBox(height: 6),
-                    Center(child: Text('Jika jamaah menekan SOS, datanya muncul di sini.')),
+                    Center(
+                      child: Text(
+                        'Jika jamaah menekan SOS, datanya muncul di sini.',
+                      ),
+                    ),
                   ],
                 )
                 : ListView.separated(
@@ -55,13 +67,21 @@ class StaffSosScreen extends StatelessWidget {
                     final time =
                         report.reportedAt == null
                             ? '-'
-                            : DateFormat('dd MMM, HH:mm').format(report.reportedAt!.toLocal());
+                            : DateFormat(
+                              'dd MMM, HH:mm',
+                            ).format(report.reportedAt!.toLocal());
                     return Card(
                       child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         leading: CircleAvatar(
                           backgroundColor: Colors.red.withValues(alpha: 0.12),
-                          child: const Icon(Icons.sos_rounded, color: Colors.red),
+                          child: const Icon(
+                            Icons.sos_rounded,
+                            color: Colors.red,
+                          ),
                         ),
                         title: Text(
                           report.pilgrim.fullName,
@@ -76,7 +96,8 @@ class StaffSosScreen extends StatelessWidget {
                             () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => StaffSosMapScreen(report: report),
+                                builder:
+                                    (_) => StaffSosMapScreen(report: report),
                               ),
                             ),
                       ),

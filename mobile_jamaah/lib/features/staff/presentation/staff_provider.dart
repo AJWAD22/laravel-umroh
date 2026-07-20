@@ -78,10 +78,9 @@ class StaffProvider extends ChangeNotifier {
   void _replaceSos(StaffSosReport updated) {
     // Setelah status SOS berubah, cukup ganti item yang berubah saja
     // agar UI terasa cepat tanpa reload semua data.
-    sosReports =
-        sosReports
-            .map((report) => report.id == updated.id ? updated : report)
-            .toList(growable: false);
+    sosReports = sosReports
+        .map((report) => report.id == updated.id ? updated : report)
+        .toList(growable: false);
     notifyListeners();
   }
 }

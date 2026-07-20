@@ -8,7 +8,6 @@ use App\Models\Branch;
 use App\Models\Departure;
 use App\Models\Group;
 use App\Models\GroupMember;
-use App\Models\Hotel;
 use App\Models\MobileActivationSession;
 use App\Models\Muthawwif;
 use App\Models\Pilgrim;
@@ -54,7 +53,7 @@ class MobileApiTest extends TestCase
         }
     }
 
-    public function test_pilgrim_location_hotel_and_history_are_scoped_to_itself(): void
+    public function test_pilgrim_location_and_history_are_scoped_to_itself(): void
     {
         Event::fake([AdminNotificationCreated::class]);
         $context = $this->scenario();
@@ -77,11 +76,6 @@ class MobileApiTest extends TestCase
         $this->assertDatabaseMissing('location_histories', [
             'pilgrim_id' => $context['foreignPilgrim']->id,
         ]);
-
-        $this->withToken($token)
-            ->getJson('/api/mobile/hotel')
-            ->assertOk()
-            ->assertJsonPath('data.0.name', $context['hotel']->name);
 
         $this->withToken($token)
             ->getJson('/api/mobile/muthawwif-location')
@@ -126,15 +120,40 @@ class MobileApiTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_assigned_staff_can_view_group_hotels(): void
+    public function test_only_tour_leader_can_manage_mobile_meeting_points(): void
     {
         $context = $this->scenario();
         $leaderToken = $this->login($context['leaderUser']);
 
         $this->withToken($leaderToken)
-            ->getJson('/api/mobile/group-hotels')
+            ->postJson('/api/mobile/staff-checkpoints', [
+                'group_id' => $context['group']->id,
+                'name' => 'Titik Kumpul API',
+                'city' => 'makkah',
+                'latitude' => 21.422487,
+                'longitude' => 39.826206,
+            ])
+            ->assertCreated();
+
+        $this->app['auth']->forgetGuards();
+        $muthawwifToken = $this->login($context['muthawwifUser']);
+
+        $this->withToken($muthawwifToken)
+            ->getJson('/api/mobile/checkpoints')
             ->assertOk()
-            ->assertJsonPath('data.0.name', $context['hotel']->name);
+            ->assertJsonFragment(['name' => 'Titik Kumpul API']);
+
+        $this->withToken($muthawwifToken)
+            ->postJson('/api/mobile/staff-checkpoints', [
+                'group_id' => $context['group']->id,
+                'name' => 'Tidak Boleh Dibuat',
+                'city' => 'makkah',
+                'latitude' => 21.422487,
+                'longitude' => 39.826206,
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('checkpoints', ['name' => 'Tidak Boleh Dibuat']);
     }
 
     public function test_mobile_endpoints_require_a_sanctum_token_and_validation_is_json(): void
@@ -297,14 +316,6 @@ class MobileApiTest extends TestCase
             'return_date' => today()->addMonth()->addDays(10),
             'status' => 'scheduled',
         ]);
-        $hotel = Hotel::create([
-            'branch_id' => $branch->id,
-            'name' => 'Hotel API',
-            'city' => 'makkah',
-            'latitude' => 21.42,
-            'longitude' => 39.82,
-        ]);
-        $departure->hotels()->attach($hotel->id, ['sequence' => 1]);
         $group = Group::create([
             'branch_id' => $branch->id,
             'departure_id' => $departure->id,
@@ -328,7 +339,7 @@ class MobileApiTest extends TestCase
             'foreignPilgrim',
             'leader',
             'muthawwif',
-            'hotel',
+            'group',
         );
     }
 

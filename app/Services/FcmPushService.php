@@ -24,8 +24,12 @@ class FcmPushService
     {
         $credentials = $this->credentials();
         if (! $credentials) {
-            // FCM bersifat pendukung. Jika file firebase-admin.json belum ada,
-            // sistem tetap menyimpan data SOS/notifikasi database seperti biasa.
+            // Data SOS tetap disimpan, tetapi operator harus dapat mengetahui
+            // dengan jelas mengapa push tidak pernah sampai ke perangkat.
+            Log::error('FCM push skipped: FIREBASE_CREDENTIALS is missing or invalid.', [
+                'recipient_user_ids' => $users->pluck('id')->values()->all(),
+            ]);
+
             return;
         }
 

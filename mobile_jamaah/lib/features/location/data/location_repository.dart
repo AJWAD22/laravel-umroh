@@ -1,4 +1,4 @@
-﻿import 'package:geolocator/geolocator.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
 
@@ -100,4 +100,3 @@ class LocationRepository {
     }
   }
 }
-

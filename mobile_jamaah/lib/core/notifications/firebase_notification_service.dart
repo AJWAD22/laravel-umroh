@@ -122,7 +122,8 @@ class FirebaseNotificationService {
         android: AndroidNotificationDetails(
           'umrah_alerts',
           'Peringatan Umrah',
-          channelDescription: 'Notifikasi SOS dan peringatan monitoring jamaah.',
+          channelDescription:
+              'Notifikasi SOS dan peringatan monitoring jamaah.',
           importance: Importance.high,
           priority: Priority.high,
           icon: '@mipmap/ic_launcher',

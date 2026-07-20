@@ -21,9 +21,21 @@ class AppTheme {
         ),
       ),
       textTheme: const TextTheme(
-        headlineSmall: TextStyle(fontSize: 25, height: 1.18, fontWeight: FontWeight.w800),
-        titleLarge: TextStyle(fontSize: 21, height: 1.24, fontWeight: FontWeight.w800),
-        titleMedium: TextStyle(fontSize: 17, height: 1.32, fontWeight: FontWeight.w700),
+        headlineSmall: TextStyle(
+          fontSize: 25,
+          height: 1.18,
+          fontWeight: FontWeight.w800,
+        ),
+        titleLarge: TextStyle(
+          fontSize: 21,
+          height: 1.24,
+          fontWeight: FontWeight.w800,
+        ),
+        titleMedium: TextStyle(
+          fontSize: 17,
+          height: 1.32,
+          fontWeight: FontWeight.w700,
+        ),
         bodyLarge: TextStyle(fontSize: 17, height: 1.55),
         bodyMedium: TextStyle(fontSize: 15, height: 1.5),
         bodySmall: TextStyle(fontSize: 13.5, height: 1.45),
@@ -31,7 +43,10 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 18,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide.none,
@@ -84,9 +99,21 @@ class AppTheme {
         ),
       ),
       textTheme: const TextTheme(
-        headlineSmall: TextStyle(fontSize: 25, height: 1.18, fontWeight: FontWeight.w800),
-        titleLarge: TextStyle(fontSize: 21, height: 1.24, fontWeight: FontWeight.w800),
-        titleMedium: TextStyle(fontSize: 17, height: 1.32, fontWeight: FontWeight.w700),
+        headlineSmall: TextStyle(
+          fontSize: 25,
+          height: 1.18,
+          fontWeight: FontWeight.w800,
+        ),
+        titleLarge: TextStyle(
+          fontSize: 21,
+          height: 1.24,
+          fontWeight: FontWeight.w800,
+        ),
+        titleMedium: TextStyle(
+          fontSize: 17,
+          height: 1.32,
+          fontWeight: FontWeight.w700,
+        ),
         bodyLarge: TextStyle(fontSize: 17, height: 1.55),
         bodyMedium: TextStyle(fontSize: 15, height: 1.5),
         bodySmall: TextStyle(fontSize: 13.5, height: 1.45),
@@ -94,7 +121,10 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 18,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide.none,
