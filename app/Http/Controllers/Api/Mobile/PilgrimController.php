@@ -12,6 +12,7 @@ use App\Models\LocationHistory;
 use App\Models\PilgrimLocation;
 use App\Models\SosReport;
 use App\Services\AdminNotificationService;
+use App\Services\GeofenceMonitorService;
 use App\Services\MobileGroupAccessService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -23,6 +24,7 @@ class PilgrimController extends Controller
     public function __construct(
         private readonly MobileGroupAccessService $access,
         private readonly AdminNotificationService $notifications,
+        private readonly GeofenceMonitorService $geofence,
     ) {}
 
     public function sendLocation(SendLocationRequest $request): JsonResponse
@@ -56,6 +58,16 @@ class PilgrimController extends Controller
 
             return [$latest, $history];
         });
+
+        // Setelah lokasi tersimpan, bandingkan posisi jamaah dengan titik
+        // kumpul aktif rombongannya. Jika baru keluar radius, admin dan
+        // petugas menerima notifikasi web/FCM tanpa mengirim alert berulang.
+        $this->geofence->check(
+            $pilgrim,
+            $group,
+            (float) $latest->latitude,
+            (float) $latest->longitude,
+        );
 
         return response()->json([
             'message' => 'Lokasi berhasil disimpan.',

@@ -63,6 +63,8 @@ class AdminNotificationService
         float $latitude,
         float $longitude,
         string $geofenceName,
+        ?float $distanceMeters = null,
+        ?int $radiusMeters = null,
     ): void {
         $pilgrim->loadMissing([
             'groups' => fn ($query) => $query
@@ -75,18 +77,23 @@ class AdminNotificationService
                 ]),
         ]);
         $group = $pilgrim->groups->first();
+        $message = $radiusMeters !== null && $distanceMeters !== null
+            ? "{$pilgrim->full_name} keluar dari radius {$radiusMeters} meter area {$geofenceName} (jarak ".round($distanceMeters)." meter)."
+            : "{$pilgrim->full_name} keluar dari area {$geofenceName}.";
 
         $this->send(
             $pilgrim->branch_id,
             'geofence_exit',
             [
-                'title' => 'Keluar Geofence',
-                'message' => "{$pilgrim->full_name} keluar dari area {$geofenceName}.",
+                'title' => 'Jamaah Keluar Radius',
+                'message' => $message,
                 'pilgrim_id' => $pilgrim->id,
                 'pilgrim_name' => $pilgrim->full_name,
                 'geofence_name' => $geofenceName,
                 'latitude' => $latitude,
                 'longitude' => $longitude,
+                'distance_meters' => $distanceMeters,
+                'radius_meters' => $radiusMeters,
                 'occurred_at' => now()->toIso8601String(),
                 'url' => route('monitoring.map.index'),
             ],
@@ -96,7 +103,7 @@ class AdminNotificationService
         $this->push->sendToUsers(
             $this->staffRecipients($group),
             'Jamaah Keluar Zona',
-            "{$pilgrim->full_name} keluar dari area {$geofenceName}.",
+            $message,
             [
                 'type' => 'geofence_exit',
                 'pilgrim_id' => $pilgrim->id,
@@ -105,6 +112,8 @@ class AdminNotificationService
                 'latitude' => $latitude,
                 'longitude' => $longitude,
                 'geofence_name' => $geofenceName,
+                'distance_meters' => $distanceMeters,
+                'radius_meters' => $radiusMeters,
             ],
         );
     }

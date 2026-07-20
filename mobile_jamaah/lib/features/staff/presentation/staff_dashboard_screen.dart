@@ -270,11 +270,15 @@ class _StaffJourneyCard extends StatelessWidget {
     final dateFormat = DateFormat('dd MMM yyyy');
     final dateRange =
         journey!.departureDate == null
-            ? '-'
+            ? null
             : journey!.returnDate == null
             ? dateFormat.format(journey!.departureDate!)
-            : '${dateFormat.format(journey!.departureDate!)} – '
+            : '${dateFormat.format(journey!.departureDate!)} - '
                 '${dateFormat.format(journey!.returnDate!)}';
+    final routeLabel =
+        _hasValue(journey!.departureAirport) && _hasValue(journey!.arrivalAirport)
+            ? '${journey!.departureAirport} → ${journey!.arrivalAirport}'
+            : null;
 
     return Container(
       decoration: BoxDecoration(
@@ -321,24 +325,30 @@ class _StaffJourneyCard extends StatelessWidget {
               ],
             ),
             const Divider(height: 24),
-            _StaffJourneyRow(
-              icon: Icons.flight_takeoff_rounded,
-              label: journey!.programName,
-            ),
-            _StaffJourneyRow(
-              icon: Icons.calendar_month_rounded,
-              label: dateRange,
-            ),
-            _StaffJourneyRow(
-              icon: Icons.route_rounded,
-              label:
-                  '${journey!.departureAirport ?? '-'} → '
-                  '${journey!.arrivalAirport ?? '-'}',
-            ),
+            if (_hasValue(journey!.programName))
+              _StaffJourneyRow(
+                icon: Icons.flight_takeoff_rounded,
+                label: journey!.programName,
+              ),
+            if (_hasValue(dateRange))
+              _StaffJourneyRow(
+                icon: Icons.calendar_month_rounded,
+                label: dateRange!,
+              ),
+            if (_hasValue(routeLabel))
+              _StaffJourneyRow(
+                icon: Icons.route_rounded,
+                label: routeLabel!,
+              ),
           ],
         ),
       ),
     );
+  }
+
+  bool _hasValue(String? value) {
+    final normalized = value?.trim();
+    return normalized != null && normalized.isNotEmpty && normalized != '-';
   }
 }
 

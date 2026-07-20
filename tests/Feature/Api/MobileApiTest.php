@@ -5,6 +5,7 @@ namespace Tests\Feature\Api;
 use App\Enums\MobileRole;
 use App\Events\AdminNotificationCreated;
 use App\Models\Branch;
+use App\Models\Checkpoint;
 use App\Models\Departure;
 use App\Models\Group;
 use App\Models\GroupMember;
@@ -88,6 +89,49 @@ class MobileApiTest extends TestCase
             ->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.battery_level', 87);
+    }
+
+    public function test_leaving_group_meeting_point_radius_sends_one_geofence_alert_until_reentry(): void
+    {
+        Event::fake([AdminNotificationCreated::class]);
+        $context = $this->scenario();
+        $token = $this->login($context['pilgrimUser']);
+
+        Checkpoint::create([
+            'branch_id' => $context['pilgrim']->branch_id,
+            'group_id' => $context['group']->id,
+            'name' => 'Titik Kumpul Uji',
+            'category' => 'titik_kumpul',
+            'city' => 'makkah',
+            'latitude' => 21.422487,
+            'longitude' => 39.826206,
+            'is_active' => true,
+        ]);
+
+        // Posisi awal masih berada di titik kumpul, sehingga belum ada alert.
+        $this->withToken($token)->postJson('/api/mobile/send-location', [
+            'latitude' => 21.422487,
+            'longitude' => 39.826206,
+        ])->assertCreated();
+
+        // Perpindahan sekitar satu kilometer memicu satu alert keluar radius.
+        $this->withToken($token)->postJson('/api/mobile/send-location', [
+            'latitude' => 21.432487,
+            'longitude' => 39.826206,
+        ])->assertCreated();
+
+        // Lokasi berikutnya masih di luar dan tidak boleh membuat alert ganda.
+        $this->withToken($token)->postJson('/api/mobile/send-location', [
+            'latitude' => 21.433487,
+            'longitude' => 39.826206,
+        ])->assertCreated();
+
+        Event::assertDispatchedTimes(AdminNotificationCreated::class, 1);
+        Event::assertDispatched(
+            AdminNotificationCreated::class,
+            fn (AdminNotificationCreated $event) => $event->type === 'geofence_exit'
+                && $event->data['geofence_name'] === 'Titik Kumpul Uji',
+        );
     }
 
     public function test_tour_leader_and_muthawwif_only_see_pilgrims_in_assigned_groups(): void
