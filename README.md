@@ -14,6 +14,12 @@ Dokumen ini dibuat sebagai pegangan praktis supaya alur sistem, push, deploy, bu
 
 Panduan penjelasan kode dan simulasi live coding tersedia di [docs/PANDUAN_LIVE_CODING.md](docs/PANDUAN_LIVE_CODING.md).
 
+Supaya folder lebih mudah dicari di VS Code, buka file
+`mantau-umroh.code-workspace` melalui menu **File > Open Workspace from File**.
+Workspace tersebut memisahkan tampilan Backend Laravel, Route/API, Frontend Web,
+Frontend Flutter, Database, Test, dan Dokumentasi. Penjelasan susunannya tersedia
+di [docs/STRUKTUR_SOURCE_CODE.md](docs/STRUKTUR_SOURCE_CODE.md).
+
 ---
 
 ## 1. Struktur Sistem

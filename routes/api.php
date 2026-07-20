@@ -27,7 +27,6 @@ Route::prefix('mobile')->group(function () {
     Route::middleware(['auth:sanctum', 'mobile.role:jamaah,tour-leader,muthawwif'])->group(function () {
         Route::get('/profile', [ProfileController::class, 'show'])->name('api.mobile.profile');
         Route::post('/device-token', [ProfileController::class, 'registerDeviceToken'])->name('api.mobile.device-token');
-        Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('api.mobile.profile.photo');
         Route::post('/logout', [AuthController::class, 'logout'])->name('api.mobile.logout');
         Route::get('/checkpoints', [CheckpointController::class, 'index'])->name('api.mobile.checkpoints');
     });
@@ -35,9 +34,7 @@ Route::prefix('mobile')->group(function () {
     Route::middleware(['auth:sanctum', 'mobile.role:jamaah'])->group(function () {
         Route::post('/send-location', [PilgrimController::class, 'sendLocation'])->name('api.mobile.pilgrim.location');
         Route::post('/sos', [PilgrimController::class, 'sos'])->name('api.mobile.pilgrim.sos');
-        Route::get('/muthawwif-location', [PilgrimController::class, 'muthawwifLocation'])->name('api.mobile.pilgrim.muthawwif');
         Route::get('/staff-locations', [PilgrimController::class, 'staffLocations'])->name('api.mobile.pilgrim.staff-locations');
-        Route::get('/my-location-history', [PilgrimController::class, 'history'])->name('api.mobile.pilgrim.history');
     });
 
     Route::middleware(['auth:sanctum', 'mobile.role:tour-leader,muthawwif'])->group(function () {
@@ -53,9 +50,6 @@ Route::prefix('mobile')->group(function () {
         Route::delete('/staff-checkpoints/{checkpoint}', [StaffGroupController::class, 'deactivateCheckpoint'])->name('api.mobile.staff.checkpoints.deactivate');
         Route::get('/group-pilgrims', [StaffGroupController::class, 'leaderPilgrims'])->name('api.mobile.leader.pilgrims');
         Route::get('/group-locations', [StaffGroupController::class, 'leaderLocations'])->name('api.mobile.leader.locations');
-        Route::get('/activation-pilgrims', [ActivationController::class, 'pilgrims'])->name('api.mobile.activation.pilgrims');
-        Route::get('/activation-requests', [ActivationController::class, 'pending'])->name('api.mobile.activation.pending');
-        Route::post('/activation-requests/{session:public_id}/approve', [ActivationController::class, 'approve'])->name('api.mobile.activation.approve');
     });
 
     Route::middleware(['auth:sanctum', 'mobile.role:muthawwif'])->group(function () {

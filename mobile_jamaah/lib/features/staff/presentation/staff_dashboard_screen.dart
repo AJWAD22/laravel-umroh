@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../activation/presentation/leader_activation_screen.dart';
 import '../../auth/presentation/auth_provider.dart';
 import '../../checkpoint/presentation/checkpoint_screen.dart';
 import '../../location/presentation/tracking_provider.dart';
@@ -177,17 +176,6 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                                   const StaffLocationsScreen(),
                                 ),
                           ),
-                          if (isLeader)
-                            _DashboardMenu(
-                              icon: Icons.phonelink_lock_rounded,
-                              label: 'Aktivasi Jamaah',
-                              description: 'Setujui perangkat milik jamaah',
-                              onTap:
-                                  () => _open(
-                                    context,
-                                    const LeaderActivationScreen(),
-                                  ),
-                            ),
                           _DashboardMenu(
                             icon: Icons.add_location_alt_rounded,
                             label: 'Titik Kumpul',

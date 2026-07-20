@@ -9,38 +9,6 @@ class ActivationRepository {
   final ApiClient _api;
   final SecureStorageService _storage;
 
-  Future<List<ActivationPilgrim>> pilgrims() async {
-    try {
-      final response = await _api.dio.get<Map<String, dynamic>>(
-        '/api/mobile/activation-pilgrims',
-      );
-      return _items(response.data).map(ActivationPilgrim.fromJson).toList();
-    } catch (error) {
-      throw _api.errorFrom(error);
-    }
-  }
-
-  Future<List<PendingActivation>> pending() async {
-    try {
-      final response = await _api.dio.get<Map<String, dynamic>>(
-        '/api/mobile/activation-requests',
-      );
-      return _items(response.data).map(PendingActivation.fromJson).toList();
-    } catch (error) {
-      throw _api.errorFrom(error);
-    }
-  }
-
-  Future<void> approve(String publicId) async {
-    try {
-      await _api.dio.post<void>(
-        '/api/mobile/activation-requests/$publicId/approve',
-      );
-    } catch (error) {
-      throw _api.errorFrom(error);
-    }
-  }
-
   Future<ActivationClaim> claim({required String numericCode}) async {
     try {
       final deviceUuid = await _storage.deviceUuid();
@@ -85,14 +53,5 @@ class ActivationRepository {
     } catch (error) {
       throw _api.errorFrom(error);
     }
-  }
-
-  List<Map<String, dynamic>> _items(Map<String, dynamic>? response) {
-    final data = response?['data'];
-    if (data is! List) return const [];
-    return data
-        .whereType<Map>()
-        .map((item) => Map<String, dynamic>.from(item))
-        .toList();
   }
 }

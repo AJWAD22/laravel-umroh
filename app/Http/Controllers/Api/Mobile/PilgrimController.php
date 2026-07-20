@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Mobile;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\Mobile\LocationHistoryRequest;
 use App\Http\Requests\Api\Mobile\SendLocationRequest;
 use App\Http\Requests\Api\Mobile\SendSosRequest;
 use App\Http\Resources\Mobile\LocationResource;
@@ -130,22 +129,6 @@ class PilgrimController extends Controller
             ->setStatusCode($report->wasRecentlyCreated ? 201 : 200);
     }
 
-    public function muthawwifLocation(Request $request): JsonResponse
-    {
-        $group = $this->access->activeGroupForPilgrim($request->user()->pilgrim);
-        $muthawwif = $group?->muthawwif;
-
-        return response()->json([
-            'data' => $muthawwif ? [
-                'id' => $muthawwif->id,
-                'full_name' => $muthawwif->full_name,
-                'phone' => $muthawwif->phone,
-                'location' => null,
-                'location_available' => false,
-            ] : null,
-        ]);
-    }
-
     public function staffLocations(Request $request): JsonResponse
     {
         $group = $this->access->activeGroupForPilgrim($request->user()->pilgrim);
@@ -177,18 +160,4 @@ class PilgrimController extends Controller
         return response()->json(['data' => $staff]);
     }
 
-    public function history(LocationHistoryRequest $request)
-    {
-        $filters = $request->validated();
-        $history = LocationHistory::query()
-            ->where('pilgrim_id', $request->user()->pilgrim->id)
-            ->whereBetween('recorded_at', [
-                CarbonImmutable::parse($filters['date_from'])->startOfDay(),
-                CarbonImmutable::parse($filters['date_to'])->endOfDay(),
-            ])
-            ->latest('recorded_at')
-            ->paginate($filters['per_page'] ?? 30);
-
-        return LocationResource::collection($history);
-    }
 }

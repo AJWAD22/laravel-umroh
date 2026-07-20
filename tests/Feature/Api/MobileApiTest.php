@@ -78,17 +78,6 @@ class MobileApiTest extends TestCase
             'pilgrim_id' => $context['foreignPilgrim']->id,
         ]);
 
-        $this->withToken($token)
-            ->getJson('/api/mobile/muthawwif-location')
-            ->assertOk()
-            ->assertJsonPath('data.full_name', $context['muthawwif']->full_name)
-            ->assertJsonPath('data.location_available', false);
-
-        $this->withToken($token)
-            ->getJson('/api/mobile/my-location-history')
-            ->assertOk()
-            ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.battery_level', 87);
     }
 
     public function test_leaving_group_meeting_point_radius_sends_one_geofence_alert_until_reentry(): void
@@ -245,7 +234,7 @@ class MobileApiTest extends TestCase
         ]);
     }
 
-    public function test_staff_can_only_view_profile_photo_and_cannot_replace_it(): void
+    public function test_staff_profile_is_read_only_in_mobile_api(): void
     {
         $context = $this->scenario();
 
@@ -259,7 +248,7 @@ class MobileApiTest extends TestCase
 
             $this->withToken($token)
                 ->postJson('/api/mobile/profile/photo')
-                ->assertForbidden();
+                ->assertNotFound();
 
             $this->app['auth']->forgetGuards();
         }

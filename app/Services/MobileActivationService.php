@@ -213,36 +213,6 @@ class MobileActivationService
         });
     }
 
-    public function approve(User $leader, MobileActivationSession $session): MobileActivationSession
-    {
-        $session->loadMissing('pilgrim');
-        $this->authorizeLeader($leader, $session->pilgrim);
-
-        if ($session->status !== 'awaiting_approval' || $session->expires_at->isPast()) {
-            throw ValidationException::withMessages([
-                'activation' => ['Permintaan tidak dapat disetujui karena belum dipindai atau sudah kedaluwarsa.'],
-            ]);
-        }
-
-        $session->update([
-            'status' => 'approved',
-            'approved_by' => $leader->id,
-            'approved_at' => now(),
-        ]);
-
-        return $session->fresh('pilgrim');
-    }
-
-    private function authorizeLeader(User $leader, Pilgrim $pilgrim): void
-    {
-        $allowed = $this->groupAccess
-            ->pilgrimsForStaff($leader, MobileRole::TourLeader)
-            ->whereKey($pilgrim->id)
-            ->exists();
-
-        throw_unless($allowed, AuthorizationException::class);
-    }
-
     private function ensurePilgrimUser(Pilgrim $pilgrim): User
     {
         if ($pilgrim->user) {

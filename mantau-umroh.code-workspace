@@ -1,0 +1,29 @@
+{
+    "folders": [
+        { "name": "00 - Seluruh Project", "path": "." },
+        { "name": "01 - Backend Laravel", "path": "app" },
+        { "name": "02 - Route Web dan API", "path": "routes" },
+        { "name": "03 - Frontend Web", "path": "resources" },
+        { "name": "04 - Frontend Flutter", "path": "mobile_jamaah" },
+        { "name": "05 - Database", "path": "database" },
+        { "name": "06 - Tests", "path": "tests" },
+        { "name": "07 - Dokumentasi", "path": "docs" }
+    ],
+    "settings": {
+        "files.exclude": {
+            "**/node_modules": true,
+            "**/vendor": true,
+            "**/.dart_tool": true,
+            "**/build": true,
+            "storage/framework/**": true,
+            "bootstrap/cache/*.php": true
+        },
+        "search.exclude": {
+            "**/node_modules": true,
+            "**/vendor": true,
+            "**/.dart_tool": true,
+            "**/build": true,
+            "storage/framework/**": true
+        }
+    }
+}

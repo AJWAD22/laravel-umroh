@@ -1,50 +1,52 @@
-# Pengujian REST API Mobile dengan Postman
+# Pengujian API Mobile dengan Postman
+
+Dokumen ini hanya memuat endpoint yang benar-benar digunakan aplikasi Flutter.
 
 ## Persiapan
 
-1. Jalankan `php artisan migrate:fresh --seed`.
-2. Jalankan `php artisan serve`.
-3. Buat Postman Environment:
-   - `base_url` = `http://127.0.0.1:8000`
-   - `token` = kosong
-4. Gunakan header `Accept: application/json` pada seluruh request.
+1. Jalankan Laravel dan siapkan database.
+2. Buat environment Postman dengan `base_url`.
+3. Gunakan header `Accept: application/json`.
+4. Untuk endpoint terproteksi, kirim `Authorization: Bearer {{token}}`.
 
-## Akun demo
+## Endpoint publik
 
-Semua akun memakai password `password`.
+### Aktivasi PIN
 
-| Role | Email |
-|---|---|
-| Jamaah | `jamaah@umrah.test` |
-| Tour Leader | `tourleader@umrah.test` |
-| Muthawwif | `muthawwif@umrah.test` |
+- `POST {{base_url}}/api/mobile/activation/claim`
+- `POST {{base_url}}/api/mobile/activation/status`
 
-## Login
+Aktivasi langsung disetujui sistem setelah PIN valid. Tidak ada endpoint
+persetujuan manual Tour Leader.
 
-`POST {{base_url}}/api/mobile/login`
+### Login petugas
+
+- `POST {{base_url}}/api/mobile/login`
 
 ```json
 {
-  "email": "jamaah@umrah.test",
+  "email": "petugas@mantauumroh.id",
   "password": "password",
-  "device_name": "Postman Android"
+  "device_name": "Android Petugas"
 }
 ```
 
-Tambahkan script berikut pada tab **Tests** agar token otomatis tersimpan:
+Simpan nilai `access_token` dari respons sebagai `token`.
 
-```javascript
-const response = pm.response.json();
-pm.environment.set('token', response.access_token);
-```
+## Endpoint semua pengguna mobile
 
-Untuk endpoint terproteksi pilih Authorization → Bearer Token → `{{token}}`.
+- `GET /api/mobile/profile`
+- `POST /api/mobile/device-token`
+- `POST /api/mobile/logout`
+- `GET /api/mobile/checkpoints`
 
-## Request Jamaah
+## Endpoint Jamaah
 
-### Kirim lokasi
+- `POST /api/mobile/send-location`
+- `POST /api/mobile/sos`
+- `GET /api/mobile/staff-locations`
 
-`POST {{base_url}}/api/mobile/send-location`
+Contoh lokasi:
 
 ```json
 {
@@ -53,48 +55,30 @@ Untuk endpoint terproteksi pilih Authorization → Bearer Token → `{{token}}`.
   "accuracy": 5.5,
   "speed": 1.2,
   "heading": 180,
-  "battery_level": 87,
-  "recorded_at": "2026-06-29T08:00:00+08:00"
+  "battery_level": 87
 }
 ```
 
-### Kirim SOS
+## Endpoint Tour Leader dan Muthawwif
 
-`POST {{base_url}}/api/mobile/sos`
+- `POST /api/mobile/staff-location`
+- `GET /api/mobile/sos-reports`
+- `POST /api/mobile/sos-reports/{id}/acknowledge`
+- `POST /api/mobile/sos-reports/{id}/resolve`
 
-```json
-{
-  "latitude": 21.422487,
-  "longitude": 39.826206,
-  "message": "Saya membutuhkan bantuan."
-}
-```
+## Endpoint khusus Tour Leader
 
-Endpoint GET lainnya:
+- `GET /api/mobile/group-pilgrims`
+- `GET /api/mobile/group-locations`
+- `POST /api/mobile/staff-checkpoints`
+- `PATCH /api/mobile/staff-checkpoints/{id}`
+- `DELETE /api/mobile/staff-checkpoints/{id}`
 
-- `{{base_url}}/api/mobile/profile`
-- `{{base_url}}/api/mobile/hotel`
-- `{{base_url}}/api/mobile/muthawwif-location`
-- `{{base_url}}/api/mobile/my-location-history?date_from=2026-06-01&date_to=2026-06-29`
+## Endpoint khusus Muthawwif
 
-## Request Tour Leader
+- `GET /api/mobile/assigned-pilgrims`
+- `GET /api/mobile/assigned-locations`
 
-Login menggunakan akun Tour Leader, kemudian:
-
-- `GET {{base_url}}/api/mobile/group-pilgrims`
-- `GET {{base_url}}/api/mobile/group-locations`
-- `GET {{base_url}}/api/mobile/group-sos?status=active`
-
-## Request Muthawwif
-
-Login menggunakan akun Muthawwif, kemudian:
-
-- `GET {{base_url}}/api/mobile/assigned-pilgrims`
-- `GET {{base_url}}/api/mobile/assigned-locations`
-- `GET {{base_url}}/api/mobile/assigned-sos?status=active`
-
-## Logout
-
-`POST {{base_url}}/api/mobile/logout`
-
-Token aktif akan dihapus. Respons validation, authentication, dan authorization selalu berbentuk JSON dengan status HTTP `422`, `401`, atau `403`.
+Respons validasi, autentikasi, dan otorisasi menggunakan status HTTP `422`,
+`401`, dan `403`. Endpoint yang tidak terdaftar di dokumen ini tidak boleh
+dianggap sebagai bagian API aktif.
