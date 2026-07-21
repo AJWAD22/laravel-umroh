@@ -28,6 +28,9 @@
                 ['label' => 'Tour Leader', 'resource' => 'tour-leaders', 'permission' => 'tour-leaders.manage', 'view' => 'tour-leaders.view'],
                 ['label' => 'Muthawwif', 'resource' => 'muthawwifs', 'permission' => 'muthawwifs.manage', 'view' => 'muthawwifs.view'],
                 ['label' => 'Rombongan', 'resource' => 'groups', 'permission' => 'groups.manage', 'view' => 'groups.view'],
+            ];
+            $supportMenus = [
+                ['label' => 'Jadwal Perjalanan', 'resource' => 'departures', 'permission' => 'departures.manage', 'view' => 'departures.view'],
                 ['label' => 'Tujuan & Titik Penting', 'resource' => 'checkpoints', 'permission' => 'hotels.manage', 'view' => 'hotels.view'],
             ];
             $organizationMenus = [
@@ -43,6 +46,24 @@
             </button>
             <div x-cloak x-show="open && !sidebarCollapsed" x-transition class="ml-5 mt-1 space-y-0.5 border-l border-slate-800 pl-5">
                 @foreach ($masterMenus as $menu)
+                    @canany([$menu['permission'], $menu['view']])
+                        <a href="{{ route('master-data.index', $menu['resource']) }}"
+                           class="sidebar-submenu-link {{ request()->route('resource') === $menu['resource'] ? 'sidebar-submenu-link-active' : '' }}">
+                            {{ $menu['label'] }}
+                        </a>
+                    @endcanany
+                @endforeach
+            </div>
+        </div>
+
+        <div x-data="{ open: {{ request()->routeIs('master-data.*') && in_array(request()->route('resource'), array_column($supportMenus, 'resource'), true) ? 'true' : 'false' }} }">
+            <button @click="open = !open" class="sidebar-link w-full">
+                <i data-lucide="calendar-range" class="size-5 shrink-0"></i>
+                <span x-show="!sidebarCollapsed" class="flex-1 text-left">Data Pendukung Sistem</span>
+                <i x-show="!sidebarCollapsed" data-lucide="chevron-down" class="size-4 transition" :class="{ 'rotate-180': open }"></i>
+            </button>
+            <div x-cloak x-show="open && !sidebarCollapsed" x-transition class="ml-5 mt-1 space-y-0.5 border-l border-slate-800 pl-5">
+                @foreach ($supportMenus as $menu)
                     @canany([$menu['permission'], $menu['view']])
                         <a href="{{ route('master-data.index', $menu['resource']) }}"
                            class="sidebar-submenu-link {{ request()->route('resource') === $menu['resource'] ? 'sidebar-submenu-link-active' : '' }}">

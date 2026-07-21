@@ -7,7 +7,7 @@ class AppConfig {
     defaultValue: 'https://mantauumroh.web.id',
   );
 
-  // Interval pengiriman lokasi berkala; 60 detik dipilih agar cukup realtime
+  // Interval pengiriman lokasi berkala; 20 detik dipilih agar lebih realtime
   // namun tetap hemat baterai dan kuota untuk sistem skala kecil.
-  static const trackingInterval = Duration(seconds: 60);
+  static const trackingInterval = Duration(seconds: 20);
 }

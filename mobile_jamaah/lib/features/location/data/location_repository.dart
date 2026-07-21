@@ -29,7 +29,7 @@ class LocationRepository {
         intervalDuration: AppConfig.trackingInterval,
         foregroundNotificationConfig: const ForegroundNotificationConfig(
           notificationTitle: 'Mantau Umroh',
-          notificationText: 'Tracking aktif - lokasi dikirim setiap 60 detik.',
+          notificationText: 'Tracking aktif - lokasi dikirim setiap 20 detik.',
           notificationChannelName: 'Tracking Jamaah',
           enableWakeLock: true,
           setOngoing: true,

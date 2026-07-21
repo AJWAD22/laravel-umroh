@@ -55,7 +55,8 @@
 
             <select id="monitoring-refresh" class="rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">
                 <option value="10000">Refresh 10 detik</option>
-                <option value="30000" selected>Refresh 30 detik</option>
+                <option value="15000" selected>Refresh 15 detik</option>
+                <option value="30000">Refresh 30 detik</option>
                 <option value="60000">Refresh 1 menit</option>
                 <option value="0">Nonaktifkan refresh</option>
             </select>

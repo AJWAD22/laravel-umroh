@@ -63,14 +63,14 @@ class MasterDataService
                 ['name' => 'Nama Hotel', 'branch.name' => 'Cabang', 'city' => 'Kota', 'geofence_radius_meters' => 'Radius (m)'],
                 ['name', 'address'], ['name', 'city', 'geofence_radius_meters'], ['branch']),
             'checkpoints' => $this->definition(Checkpoint::class, 'Tujuan & Titik Penting', 'hotels.manage',
-                ['name' => 'Nama Tujuan', 'category' => 'Kategori', 'city' => 'Kota', 'branch.name' => 'Cabang', 'departure.program_name' => 'Keberangkatan', 'group.name' => 'Rombongan', 'is_active' => 'Aktif'],
+                ['name' => 'Nama Tujuan', 'category' => 'Kategori', 'city' => 'Kota', 'branch.name' => 'Cabang', 'departure.program_name' => 'Jadwal Perjalanan', 'group.name' => 'Rombongan', 'is_active' => 'Aktif'],
                 ['name', 'address', 'description'], ['name', 'category', 'city', 'is_active'], ['branch', 'departure', 'group']),
-            'departures' => $this->definition(Departure::class, 'Keberangkatan', 'departures.manage',
-                ['code' => 'Kode', 'program_name' => 'Program', 'branch.name' => 'Cabang', 'departure_date' => 'Berangkat', 'status' => 'Status'],
+            'departures' => $this->definition(Departure::class, 'Jadwal Perjalanan', 'departures.manage',
+                ['code' => 'Kode', 'program_name' => 'Nama Program', 'branch.name' => 'Cabang', 'departure_date' => 'Tanggal Berangkat', 'status' => 'Status'],
                 ['code', 'program_name', 'departure_airport'], ['code', 'program_name', 'departure_date', 'status'], ['branch']),
             'groups' => $this->definition(Group::class, 'Rombongan', 'groups.manage',
-                ['code' => 'Kode', 'name' => 'Nama Rombongan', 'branch.name' => 'Cabang', 'is_active' => 'Aktif'],
-                ['code', 'name'], ['code', 'name', 'is_active'], ['branch']),
+                ['code' => 'Kode', 'name' => 'Nama Rombongan', 'branch.name' => 'Cabang', 'departure.program_name' => 'Jadwal Perjalanan', 'is_active' => 'Aktif'],
+                ['code', 'name'], ['code', 'name', 'is_active'], ['branch', 'departure']),
         ];
     }
 
