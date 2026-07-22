@@ -1,5 +1,5 @@
 
-
+import './tracking-history';
 import Alpine from 'alpinejs';
 import Chart from 'chart.js/auto';
 import L from 'leaflet';
