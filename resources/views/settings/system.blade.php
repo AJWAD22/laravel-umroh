@@ -17,9 +17,14 @@
                     @foreach ($items as $setting)
                         <label class="block">
                             <span class="mb-1.5 block text-sm font-medium">{{ $setting->label }}</span>
-                            <input type="{{ $setting->type === 'email' ? 'email' : ($setting->type === 'integer' ? 'number' : 'text') }}"
-                                   name="{{ $setting->key }}" value="{{ old($setting->key, $setting->value) }}"
-                                   class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">
+                            @if ($setting->type === 'textarea')
+                                <textarea name="{{ $setting->key }}" rows="4"
+                                          class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">{{ old($setting->key, $setting->value) }}</textarea>
+                            @else
+                                <input type="{{ $setting->type === 'email' ? 'email' : ($setting->type === 'integer' ? 'number' : 'text') }}"
+                                       name="{{ $setting->key }}" value="{{ old($setting->key, $setting->value) }}"
+                                       class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">
+                            @endif
                             @if ($setting->description)<span class="mt-1 block text-xs text-slate-500">{{ $setting->description }}</span>@endif
                             @error($setting->key)<span class="mt-1 block text-xs text-red-600">{{ $message }}</span>@enderror
                         </label>

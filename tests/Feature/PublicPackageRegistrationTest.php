@@ -6,7 +6,9 @@ use App\Enums\UserRole;
 use App\Models\Branch;
 use App\Models\Departure;
 use App\Models\PilgrimRegistration;
+use App\Models\SystemSetting;
 use App\Models\User;
+use Database\Seeders\PublicPackageDemoSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -14,6 +16,27 @@ use Tests\TestCase;
 class PublicPackageRegistrationTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_landing_renders_verified_travel_profile_and_demo_packages(): void
+    {
+        SystemSetting::query()->where('key', 'company_name')->update(['value' => 'PT Travel Amanah']);
+        SystemSetting::query()->where('key', 'company_tagline')->update(['value' => 'Melayani perjalanan ibadah dengan sepenuh hati.']);
+        SystemSetting::query()->where('key', 'company_license')->update(['value' => 'PPIU-TERVERIFIKASI']);
+
+        $this->seed(PublicPackageDemoSeeder::class);
+
+        $this->get(route('landing'))
+            ->assertOk()
+            ->assertSee('PT Travel Amanah')
+            ->assertSee('Melayani perjalanan ibadah dengan sepenuh hati.')
+            ->assertSee('PPIU-TERVERIFIKASI')
+            ->assertSee('Umroh Hemat 9 Hari')
+            ->assertSee('Umroh Reguler 12 Hari')
+            ->assertSee('Umroh Plus Thaif 12 Hari');
+
+        $this->assertDatabaseCount('departures', 3);
+        $this->assertDatabaseCount('departure_itineraries', 20);
+    }
 
     public function test_public_landing_shows_scheduled_packages_and_accepts_registration(): void
     {
