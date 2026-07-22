@@ -19,7 +19,10 @@
                     <img src="{{ asset('images/mantau-umroh-icon-dark.png') }}" alt="Mantau Umroh" class="size-11 rounded-xl object-contain ring-1 ring-white/15">
                     <span class="text-lg font-extrabold">Mantau Umroh</span>
                 </a>
-                <a href="{{ route('login') }}" class="rounded-full border border-white/25 px-4 py-2 text-sm font-bold text-white/90 transition hover:bg-white hover:text-slate-950">Login Admin</a>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('public-registration.create') }}" class="rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-teal-50">Daftar Umroh</a>
+                    <a href="{{ route('login') }}" class="hidden rounded-full border border-white/25 px-4 py-2 text-sm font-bold text-white/90 transition hover:bg-white hover:text-slate-950 sm:inline-flex">Login Admin</a>
+                </div>
             </nav>
 
             <div class="relative mx-auto grid min-h-[560px] max-w-7xl content-center gap-10 px-5 pb-14 pt-12 lg:grid-cols-[1.08fr_.92fr] lg:items-center">
@@ -28,8 +31,8 @@
                     <h1 class="mt-4 max-w-3xl text-4xl font-extrabold leading-tight sm:text-6xl">Pilih paket, registrasi, lalu perjalanan jamaah terpantau.</h1>
                     <p class="mt-5 max-w-2xl text-lg leading-8 text-slate-100">Lihat jadwal keberangkatan, hotel, pesawat, durasi hari, dan agenda perjalanan dari cabang resmi.</p>
                     <div class="mt-8 flex flex-wrap gap-3">
-                        <a href="#paket" class="button-primary bg-none shadow-none">Lihat Paket</a>
-                        <a href="{{ route('login') }}" class="button-secondary border-white/30 bg-white/10 text-white hover:bg-white/20">Portal Admin</a>
+                        <a href="{{ route('public-registration.create') }}" class="button-primary bg-none shadow-none">Daftar Sekarang</a>
+                        <a href="#paket" class="button-secondary border-white/30 bg-white/10 text-white hover:bg-white/20">Lihat Paket</a>
                     </div>
                 </div>
                 <div class="rounded-[2rem] border border-white/15 bg-white/10 p-5 shadow-2xl backdrop-blur">

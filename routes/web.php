@@ -8,6 +8,7 @@ use App\Http\Controllers\MonitoringMapController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PublicRegistrationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RegistrationManagementController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SosReportController;
 use App\Http\Controllers\SystemSettingController;
@@ -16,7 +17,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', LandingPageController::class)->name('landing');
 Route::get('/paket/{departure}', [LandingPageController::class, 'show'])->name('packages.show');
-Route::post('/registrasi', PublicRegistrationController::class)->name('public-registration.store');
+Route::get('/registrasi', [PublicRegistrationController::class, 'create'])->name('public-registration.create');
+Route::post('/registrasi/biodata', [PublicRegistrationController::class, 'storeBiodata'])->name('public-registration.biodata.store');
+Route::get('/registrasi/pilih-paket', [PublicRegistrationController::class, 'packages'])->name('public-registration.packages');
+Route::post('/registrasi/selesai', [PublicRegistrationController::class, 'complete'])->name('public-registration.complete');
 
 // Semua route berikut adalah website admin. Middleware memastikan akun aktif
 // dan hanya role Super Admin/Admin Cabang yang dapat mengaksesnya.
@@ -30,6 +34,8 @@ Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->
     Route::get('/monitoring/sos/{sosReport}', [SosReportController::class, 'show'])->name('monitoring.sos.show');
     Route::patch('/monitoring/sos/{sosReport}/resolve', [SosReportController::class, 'resolve'])->name('monitoring.sos.resolve');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/registrations', [RegistrationManagementController::class, 'index'])->name('registrations.index');
+    Route::patch('/registrations/{registration}', [RegistrationManagementController::class, 'update'])->name('registrations.update');
     Route::patch('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
     Route::delete('/notifications/delete-all', [NotificationController::class, 'destroyAll'])->name('notifications.destroy-all');
     Route::patch('/notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');

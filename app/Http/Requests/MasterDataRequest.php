@@ -3,11 +3,14 @@
 namespace App\Http\Requests;
 
 use App\Enums\UserRole;
+use App\Models\Group;
 use App\Models\Muthawwif;
 use App\Models\TourLeader;
 use App\Services\MasterDataService;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class MasterDataRequest extends FormRequest
 {
@@ -141,5 +144,67 @@ class MasterDataRequest extends FormRequest
             ],
             default => abort(404),
         };
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
+            if ($this->route('resource') === 'checkpoints'
+                && $this->filled('group_id')
+                && $this->filled('departure_id')) {
+                $matches = Group::query()
+                    ->whereKey($this->integer('group_id'))
+                    ->where('departure_id', $this->integer('departure_id'))
+                    ->exists();
+
+                if (! $matches) {
+                    $validator->errors()->add(
+                        'group_id',
+                        'Rombongan harus berasal dari jadwal perjalanan yang dipilih.',
+                    );
+                }
+            }
+
+            if ($this->route('resource') !== 'departures' || ! $this->filled('itinerary_plan')) {
+                return;
+            }
+
+            $duration = CarbonImmutable::parse($this->input('departure_date'))
+                ->diffInDays(CarbonImmutable::parse($this->input('return_date'))) + 1;
+            $days = [];
+
+            foreach (preg_split('/\r\n|\r|\n/', (string) $this->input('itinerary_plan')) as $index => $line) {
+                if (blank(trim($line))) {
+                    continue;
+                }
+
+                $parts = array_map('trim', explode('|', $line, 4));
+                $day = is_numeric($parts[0] ?? null) ? (int) $parts[0] : $index + 1;
+
+                if ($day < 1 || $day > $duration) {
+                    $validator->errors()->add(
+                        'itinerary_plan',
+                        "Hari ke-{$day} berada di luar rentang paket {$duration} hari.",
+                    );
+
+                    return;
+                }
+
+                if (in_array($day, $days, true)) {
+                    $validator->errors()->add(
+                        'itinerary_plan',
+                        "Jadwal hari ke-{$day} ditulis lebih dari satu kali.",
+                    );
+
+                    return;
+                }
+
+                $days[] = $day;
+            }
+        });
     }
 }

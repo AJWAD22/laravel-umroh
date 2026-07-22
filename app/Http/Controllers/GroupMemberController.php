@@ -115,7 +115,9 @@ class GroupMemberController extends Controller
 
         $result = $this->activations->resetPinsForGroup($request->user(), $group);
 
-        return back()->with('success', "{$result['count']} PIN aktivasi jamaah rombongan berhasil direset.");
+        return back()
+            ->with('success', "{$result['count']} PIN aktivasi jamaah rombongan berhasil direset.")
+            ->with('reset_pins', $result['pins']);
     }
 
     private function authorizeGroup(Request $request, Group $group): void

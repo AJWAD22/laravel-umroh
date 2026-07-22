@@ -15,10 +15,11 @@
         <div class="flex items-center gap-2"><i data-lucide="calendar-days" class="size-4 text-teal-700"></i>{{ $package->departure_date->translatedFormat('d M Y') }} - {{ $package->return_date->translatedFormat('d M Y') }}</div>
         <div class="flex items-center gap-2"><i data-lucide="plane" class="size-4 text-teal-700"></i>{{ $package->airline ?: 'Maskapai menyusul' }} {{ $package->flight_number }}</div>
         <div class="flex items-center gap-2"><i data-lucide="hotel" class="size-4 text-teal-700"></i>{{ $package->hotels->pluck('name')->take(2)->implode(', ') ?: 'Hotel menyusul' }}</div>
+        <div class="flex items-center gap-2"><i data-lucide="users" class="size-4 text-teal-700"></i>{{ $package->remaining_quota === null ? 'Kuota fleksibel' : $package->remaining_quota.' kursi tersisa' }}</div>
     </dl>
 
     <div class="mt-6 flex items-center justify-between gap-3 border-t border-slate-100 pt-5">
         <p class="text-lg font-extrabold text-slate-950">{{ $price }}</p>
-        <a href="{{ route('packages.show', $package) }}" class="button-primary">Detail</a>
+        <a href="{{ route('packages.show', $package) }}" class="button-primary">{{ $package->remaining_quota === 0 ? 'Lihat Paket' : 'Detail & Daftar' }}</a>
     </div>
 </article>

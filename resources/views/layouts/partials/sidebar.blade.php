@@ -22,6 +22,15 @@
             </a>
         </div>
 
+        <div>
+            <p x-show="!sidebarCollapsed" class="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600">Paket Publik</p>
+            <a href="{{ route('registrations.index') }}" title="Registrasi Paket"
+               class="sidebar-link {{ request()->routeIs('registrations.*') ? 'sidebar-link-active' : '' }}">
+                <i data-lucide="clipboard-list" class="size-5 shrink-0"></i>
+                <span x-show="!sidebarCollapsed">Registrasi Paket</span>
+            </a>
+        </div>
+
         @php
             $masterMenus = [
                 ['label' => 'Jamaah', 'resource' => 'pilgrims', 'permission' => 'pilgrims.manage', 'view' => 'pilgrims.view'],

@@ -21,6 +21,22 @@
         <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ $errors->first() }}</div>
     @endif
 
+    @if (session('reset_pins'))
+        <section class="mb-5 rounded-2xl border border-violet-200 bg-violet-50 p-5 dark:border-violet-900 dark:bg-violet-950/30">
+            <h2 class="font-bold text-violet-950 dark:text-violet-100">PIN baru rombongan</h2>
+            <p class="mt-1 text-sm text-violet-700 dark:text-violet-300">Daftar ini hanya ditampilkan setelah reset. Salin PIN sebelum meninggalkan halaman.</p>
+            <div class="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                @foreach (session('reset_pins') as $item)
+                    <div class="rounded-xl border border-violet-200 bg-white p-3 dark:border-violet-900 dark:bg-slate-900">
+                        <p class="truncate text-sm font-semibold">{{ $item['name'] }}</p>
+                        <p class="text-xs text-slate-500">{{ $item['registration_number'] }}</p>
+                        <p class="mt-2 font-mono text-xl font-bold tracking-[0.2em] text-violet-800 dark:text-violet-200">{{ $item['pin'] }}</p>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     <section class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         @foreach ([
             ['label' => 'Anggota Aktif', 'value' => $group->members()->where('status', 'active')->count()],

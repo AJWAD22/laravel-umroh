@@ -2,8 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\Branch;
 use App\Models\Departure;
+use App\Models\PilgrimRegistration;
+use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -28,11 +32,22 @@ class PublicPackageRegistrationTest extends TestCase
             ->assertOk()
             ->assertSee('Umroh Publik 12 Hari');
 
-        $this->post(route('public-registration.store'), [
-            'departure_id' => $departure->id,
+        $this->post(route('public-registration.biodata.store'), [
             'full_name' => 'Jamaah Publik',
+            'nik' => '6371010101010001',
             'gender' => 'male',
             'phone' => '081234567890',
+            'birth_date' => '1990-01-01',
+            'address' => 'Banjarmasin',
+        ])->assertRedirect(route('public-registration.packages'));
+
+        $this->get(route('public-registration.packages'))
+            ->assertOk()
+            ->assertSee('Jamaah Publik')
+            ->assertSee('Umroh Publik 12 Hari');
+
+        $this->post(route('public-registration.complete'), [
+            'departure_id' => $departure->id,
         ])->assertRedirect(route('packages.show', $departure));
 
         $this->assertDatabaseHas('pilgrim_registrations', [
@@ -40,6 +55,85 @@ class PublicPackageRegistrationTest extends TestCase
             'departure_id' => $departure->id,
             'full_name' => 'Jamaah Publik',
             'status' => 'submitted',
+        ]);
+    }
+
+    public function test_duplicate_registration_and_registration_over_quota_are_rejected(): void
+    {
+        $branch = Branch::create(['code' => 'QTA', 'name' => 'Cabang Kuota', 'city' => 'Banjarmasin']);
+        $departure = Departure::create([
+            'branch_id' => $branch->id,
+            'code' => 'QTA-DEP-001',
+            'program_name' => 'Umroh Kuota Satu',
+            'departure_date' => today()->addMonth(),
+            'return_date' => today()->addMonth()->addDays(9),
+            'quota' => 1,
+            'status' => 'scheduled',
+            'is_public' => true,
+        ]);
+
+        $payload = [
+            'full_name' => 'Jamaah Pertama',
+            'nik' => '6371010101010001',
+            'gender' => 'male',
+            'phone' => '081111111111',
+            'birth_date' => '1990-01-01',
+            'address' => 'Banjarmasin',
+        ];
+        $this->post(route('public-registration.biodata.store'), $payload)->assertSessionHasNoErrors();
+        $this->post(route('public-registration.complete'), ['departure_id' => $departure->id])
+            ->assertSessionHasNoErrors();
+
+        $this->post(route('public-registration.biodata.store'), $payload)->assertSessionHasNoErrors();
+        $this->post(route('public-registration.complete'), ['departure_id' => $departure->id])
+            ->assertSessionHasErrors('departure_id');
+
+        $this->post(route('public-registration.biodata.store'), [
+            ...$payload,
+            'full_name' => 'Jamaah Kedua',
+            'nik' => '6371010101010002',
+            'phone' => '082222222222',
+        ])->assertSessionHasNoErrors();
+        $this->post(route('public-registration.complete'), ['departure_id' => $departure->id])
+            ->assertSessionHasErrors('departure_id');
+
+        $this->assertDatabaseCount('pilgrim_registrations', 1);
+    }
+
+    public function test_branch_admin_can_manage_only_its_registration_status(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $branch = Branch::create(['code' => 'REG', 'name' => 'Cabang Registrasi', 'city' => 'Banjarmasin']);
+        $departure = Departure::create([
+            'branch_id' => $branch->id,
+            'code' => 'REG-DEP-001',
+            'program_name' => 'Paket Registrasi',
+            'departure_date' => today()->addMonth(),
+            'return_date' => today()->addMonth()->addDays(9),
+            'status' => 'scheduled',
+        ]);
+        $registration = PilgrimRegistration::create([
+            'branch_id' => $branch->id,
+            'departure_id' => $departure->id,
+            'full_name' => 'Calon Jamaah',
+            'gender' => 'female',
+            'phone' => '083333333333',
+        ]);
+        $admin = User::factory()->create(['branch_id' => $branch->id]);
+        $admin->assignRole(UserRole::BranchAdmin->value);
+
+        $this->actingAs($admin)
+            ->get(route('registrations.index'))
+            ->assertOk()
+            ->assertSee('Calon Jamaah');
+
+        $this->patch(route('registrations.update', $registration), ['status' => 'contacted'])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('pilgrim_registrations', [
+            'id' => $registration->id,
+            'status' => 'contacted',
         ]);
     }
 }

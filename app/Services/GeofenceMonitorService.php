@@ -39,7 +39,10 @@ class GeofenceMonitorService
                 });
 
                 if ($group->departure_id) {
-                    $query->orWhere('departure_id', $group->departure_id);
+                    $query->orWhere(function ($query) use ($group): void {
+                        $query->whereNull('group_id')
+                            ->where('departure_id', $group->departure_id);
+                    });
                 }
 
                 $query->orWhere('group_id', $group->id);
@@ -78,11 +81,13 @@ class GeofenceMonitorService
         }
 
         $defaultRadiusMeters = max(10, (int) $this->settings->get('default_geofence_radius_meters', 250));
-        $nearest = $geofences
+        $evaluated = $geofences
             ->map(function (array $geofence) use ($latitude, $longitude, $defaultRadiusMeters): array {
+                $radius = max(10, (int) ($geofence['radius'] ?: $defaultRadiusMeters));
+
                 return [
                     'name' => $geofence['name'],
-                    'radius' => max(10, (int) ($geofence['radius'] ?: $defaultRadiusMeters)),
+                    'radius' => $radius,
                     'distance' => $this->distanceMeters(
                         $latitude,
                         $longitude,
@@ -91,15 +96,21 @@ class GeofenceMonitorService
                     ),
                 ];
             })
-            ->sortBy('distance')
-            ->first();
+            ->map(fn (array $geofence): array => [
+                ...$geofence,
+                'is_inside' => $geofence['distance'] <= $geofence['radius'],
+            ]);
+
+        $nearest = $evaluated->sortBy('distance')->first();
 
         if (! $nearest) {
             return;
         }
 
         $radiusMeters = $nearest['radius'];
-        $isOutside = $nearest['distance'] > $radiusMeters;
+        // Jamaah masih aman jika berada di dalam salah satu geofence yang
+        // berlaku, walaupun titik terdekat kebetulan mempunyai radius kecil.
+        $isOutside = ! $evaluated->contains('is_inside', true);
         $shouldNotify = Cache::lock("{$stateKey}:lock", 5)->get(function () use ($stateKey, $isOutside): bool {
             $previousState = Cache::get($stateKey);
             $currentState = $isOutside ? 'outside' : 'inside';
@@ -117,6 +128,7 @@ class GeofenceMonitorService
                 $nearest['name'],
                 round($nearest['distance'], 1),
                 $radiusMeters,
+                $group,
             );
         }
     }

@@ -1,17 +1,20 @@
 @php
     $editing = $record !== null;
-    $value = fn (string $key, mixed $default = null) => old(
-        $key,
-        $key === 'email' && in_array($resource, ['tour-leaders', 'muthawwifs'], true)
-            ? data_get($record, 'user.email', $default)
-            : ($resource === 'departures' && $key === 'hotel_ids'
-                ? $record?->hotels?->pluck('id')->all() ?? $default
-                : ($resource === 'departures' && $key === 'itinerary_plan'
-                    ? $record?->itineraries?->map(fn ($item) => "{$item->day_number}|{$item->title}|{$item->city}|{$item->description}")->implode("\n") ?? $default
-            : ($resource === 'pilgrims' && $key === 'group_id'
-                ? data_get($record?->groupMemberships?->firstWhere('status', 'active'), 'group_id', $default)
-                : data_get($record, $key, $default)))
-    );
+    $value = function (string $key, mixed $default = null) use ($record, $resource) {
+        $stored = match (true) {
+            $key === 'email' && in_array($resource, ['tour-leaders', 'muthawwifs'], true)
+                => data_get($record, 'user.email', $default),
+            $resource === 'departures' && $key === 'hotel_ids'
+                => $record?->hotels?->pluck('id')->all() ?? $default,
+            $resource === 'departures' && $key === 'itinerary_plan'
+                => $record?->itineraries?->map(fn ($item) => "{$item->day_number}|{$item->title}|{$item->city}|{$item->description}")->implode("\n") ?? $default,
+            $resource === 'pilgrims' && $key === 'group_id'
+                => data_get($record?->groupMemberships?->firstWhere('status', 'active'), 'group_id', $default),
+            default => data_get($record, $key, $default),
+        };
+
+        return old($key, $stored);
+    };
     $commonBranch = [['branch_id', 'Cabang', 'select', $options['branches']]];
     $automaticCodeHelp = match ($resource) {
         'pilgrims' => 'Nomor registrasi dibuat otomatis, contoh BJM-JMH-00001.',

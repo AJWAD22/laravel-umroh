@@ -29,6 +29,10 @@ class LandingPageController extends Controller
     {
         return Departure::query()
             ->with(['branch', 'hotels', 'itineraries'])
+            ->withCount([
+                'registrations as active_registrations_count' => fn (Builder $query) => $query
+                    ->whereNotIn('status', ['cancelled']),
+            ])
             ->where('is_public', true)
             ->where('status', 'scheduled')
             ->whereDate('departure_date', '>=', today())

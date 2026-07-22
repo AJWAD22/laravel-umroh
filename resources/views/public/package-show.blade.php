@@ -39,6 +39,7 @@
                         <div class="travel-chip"><i data-lucide="clock" class="size-4"></i>{{ $package->duration_days }} hari</div>
                         <div class="travel-chip"><i data-lucide="plane" class="size-4"></i>{{ $package->airline ?: 'Maskapai menyusul' }} {{ $package->flight_number }}</div>
                         <div class="travel-chip"><i data-lucide="wallet" class="size-4"></i>{{ $package->price ? 'Rp '.number_format($package->price, 0, ',', '.') : 'Hubungi admin' }}</div>
+                        <div class="travel-chip"><i data-lucide="users" class="size-4"></i>{{ $package->remaining_quota === null ? 'Kuota fleksibel' : $package->remaining_quota.' kursi tersisa' }}</div>
                     </div>
                 </section>
 
@@ -77,24 +78,14 @@
             </div>
 
             <aside class="travel-panel h-fit p-6">
-                <h2 class="text-2xl font-extrabold">Registrasi Jamaah</h2>
-                <p class="mt-2 text-sm leading-6 text-slate-600">Isi biodata awal. Admin cabang akan menghubungi untuk validasi dokumen dan pembayaran.</p>
-                <form method="POST" action="{{ route('public-registration.store') }}" class="mt-5 grid gap-4">
-                    @csrf
-                    <input type="hidden" name="departure_id" value="{{ $package->id }}">
-                    <label><span class="mb-1 block text-sm font-bold">Nama Lengkap</span><input name="full_name" value="{{ old('full_name') }}" class="control-field w-full"></label>
-                    <label><span class="mb-1 block text-sm font-bold">NIK</span><input name="nik" value="{{ old('nik') }}" class="control-field w-full"></label>
-                    <label><span class="mb-1 block text-sm font-bold">Nomor Paspor</span><input name="passport_number" value="{{ old('passport_number') }}" class="control-field w-full"></label>
-                    <label><span class="mb-1 block text-sm font-bold">Jenis Kelamin</span><select name="gender" class="control-field w-full"><option value="male">Laki-laki</option><option value="female" @selected(old('gender') === 'female')>Perempuan</option></select></label>
-                    <label><span class="mb-1 block text-sm font-bold">Telepon/WhatsApp</span><input name="phone" value="{{ old('phone') }}" class="control-field w-full"></label>
-                    <label><span class="mb-1 block text-sm font-bold">Tanggal Lahir</span><input type="date" name="birth_date" value="{{ old('birth_date') }}" class="control-field w-full"></label>
-                    <label><span class="mb-1 block text-sm font-bold">Alamat</span><textarea name="address" rows="3" class="control-field w-full">{{ old('address') }}</textarea></label>
-                    <label><span class="mb-1 block text-sm font-bold">Catatan</span><textarea name="notes" rows="3" class="control-field w-full">{{ old('notes') }}</textarea></label>
-                    @if ($errors->any())
-                        <div class="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">{{ $errors->first() }}</div>
-                    @endif
-                    <button class="button-primary w-full">Kirim Registrasi</button>
-                </form>
+                <p class="text-sm font-bold uppercase tracking-[0.16em] text-teal-700">Tertarik paket ini?</p>
+                <h2 class="mt-2 text-2xl font-extrabold">Mulai Registrasi Jamaah</h2>
+                <p class="mt-3 text-sm leading-6 text-slate-600">Isi biodata jamaah terlebih dahulu, kemudian pilih paket perjalanan pada langkah berikutnya.</p>
+                @if ($package->remaining_quota === 0)
+                    <div class="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">Kuota paket ini sudah penuh. Silakan pilih paket keberangkatan lain.</div>
+                @else
+                    <a href="{{ route('public-registration.create') }}" class="button-primary mt-5 w-full justify-center">Isi Biodata & Daftar</a>
+                @endif
             </aside>
         </section>
     </main>

@@ -50,12 +50,21 @@ class CheckpointController extends Controller
             ->where('branch_id', $user->branch_id)
             ->where('is_active', true)
             ->where(function (Builder $query) use ($departureIds, $groupIds): void {
+                // Urutan cakupan harus tegas:
+                // - tanpa departure/group: tujuan umum cabang;
+                // - departure saja: seluruh rombongan pada perjalanan itu;
+                // - group terisi: hanya rombongan yang dituju.
+                // Checkpoint rombongan biasanya juga menyimpan departure_id,
+                // sehingga tidak boleh dicocokkan lewat departure OR group.
                 $query->where(function (Builder $query): void {
                     $query->whereNull('departure_id')->whereNull('group_id');
                 });
 
                 if ($departureIds->isNotEmpty()) {
-                    $query->orWhereIn('departure_id', $departureIds);
+                    $query->orWhere(function (Builder $query) use ($departureIds): void {
+                        $query->whereNull('group_id')
+                            ->whereIn('departure_id', $departureIds);
+                    });
                 }
 
                 if ($groupIds->isNotEmpty()) {

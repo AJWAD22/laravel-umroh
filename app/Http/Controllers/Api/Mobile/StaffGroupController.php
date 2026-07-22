@@ -21,6 +21,7 @@ use App\Services\MobileGroupAccessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class StaffGroupController extends Controller
 {
@@ -59,17 +60,29 @@ class StaffGroupController extends Controller
             : MobileRole::Muthawwif->value;
         $data = $request->validated();
         $recordedAt = isset($data['recorded_at']) ? Carbon::parse($data['recorded_at']) : now();
+        if ($recordedAt->isFuture()) {
+            $recordedAt = now();
+        }
         unset($data['recorded_at']);
 
-        $location = StaffLocation::query()->updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'branch_id' => $user->branch_id,
-                'role' => $role,
-                ...$data,
-                'recorded_at' => $recordedAt,
-            ],
-        );
+        $location = DB::transaction(function () use ($user, $role, $data, $recordedAt): StaffLocation {
+            $location = StaffLocation::query()
+                ->where('user_id', $user->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $location || $recordedAt->gte($location->recorded_at)) {
+                $location ??= new StaffLocation(['user_id' => $user->id]);
+                $location->fill([
+                    'branch_id' => $user->branch_id,
+                    'role' => $role,
+                    ...$data,
+                    'recorded_at' => $recordedAt,
+                ])->save();
+            }
+
+            return $location;
+        });
 
         return response()->json([
             'message' => 'Lokasi petugas berhasil disimpan.',

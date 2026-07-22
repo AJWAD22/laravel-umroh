@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\UserRole;
 use App\Events\AdminNotificationCreated;
+use App\Models\Group;
 use App\Models\Pilgrim;
 use App\Models\PilgrimLocation;
 use App\Models\SosReport;
@@ -65,18 +66,19 @@ class AdminNotificationService
         string $geofenceName,
         ?float $distanceMeters = null,
         ?int $radiusMeters = null,
+        ?Group $group = null,
     ): void {
-        $pilgrim->loadMissing([
-            'groups' => fn ($query) => $query
-                ->where('groups.is_active', true)
-                ->with([
-                    'tourLeader:id,user_id,full_name',
-                    'tourLeader.user:id,branch_id,name',
-                    'muthawwif:id,user_id,full_name',
-                    'muthawwif.user:id,branch_id,name',
-                ]),
+        $group ??= $pilgrim->groups()
+            ->where('groups.is_active', true)
+            ->latest('groups.id')
+            ->first();
+
+        $group?->loadMissing([
+            'tourLeader:id,user_id,full_name',
+            'tourLeader.user:id,branch_id,name',
+            'muthawwif:id,user_id,full_name',
+            'muthawwif.user:id,branch_id,name',
         ]);
-        $group = $pilgrim->groups->first();
         $message = $radiusMeters !== null && $distanceMeters !== null
             ? "{$pilgrim->full_name} keluar dari radius {$radiusMeters} meter area {$geofenceName} (jarak ".round($distanceMeters)." meter)."
             : "{$pilgrim->full_name} keluar dari area {$geofenceName}.";

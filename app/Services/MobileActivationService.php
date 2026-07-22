@@ -67,7 +67,7 @@ class MobileActivationService
     }
 
     /**
-     * @return array{count: int, pins: array<int, string>}
+     * @return array{count: int, pins: list<array{pilgrim_id: int, registration_number: string, name: string, pin: string}>}
      */
     public function resetPinsForGroup(User $actor, Group $group): array
     {
@@ -85,7 +85,12 @@ class MobileActivationService
             ->orderBy('full_name')
             ->get()
             ->each(function (Pilgrim $pilgrim) use ($actor, &$pins): void {
-                $pins[$pilgrim->id] = $this->generatePin($actor, $pilgrim);
+                $pins[] = [
+                    'pilgrim_id' => $pilgrim->id,
+                    'registration_number' => $pilgrim->registration_number,
+                    'name' => $pilgrim->full_name,
+                    'pin' => $this->generatePin($actor, $pilgrim),
+                ];
             });
 
         return [
@@ -115,9 +120,22 @@ class MobileActivationService
             // Aktivasi langsung disetujui otomatis. Tour Leader tidak perlu
             // menekan approve, tetapi relasi rombongan tetap dipakai untuk audit.
             $group = $this->groupAccess->activeGroupForPilgrim($pilgrim);
-            if ($group?->departure && in_array($group->departure->status, ['completed', 'cancelled'], true)) {
+            if (! $group) {
                 throw ValidationException::withMessages([
-                    'activation' => ['PIN aktivasi sudah tidak berlaku karena perjalanan selesai atau dibatalkan.'],
+                    'activation' => ['Jamaah belum ditempatkan pada rombongan aktif. Hubungi Admin Cabang.'],
+                ]);
+            }
+
+            $group->loadMissing('departure');
+            if (! $group->departure) {
+                throw ValidationException::withMessages([
+                    'activation' => ['Rombongan belum memiliki paket perjalanan. Hubungi Admin Cabang.'],
+                ]);
+            }
+
+            if (! in_array($group->departure->status, ['scheduled', 'departed'], true)) {
+                throw ValidationException::withMessages([
+                    'activation' => ['PIN hanya berlaku untuk perjalanan yang terjadwal atau sedang berlangsung.'],
                 ]);
             }
             $leaderUser = $group?->tourLeader?->user;

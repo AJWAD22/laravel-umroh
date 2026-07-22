@@ -20,7 +20,10 @@ class SendLocationRequest extends FormRequest
             'speed' => ['nullable', 'numeric', 'min:0'],
             'heading' => ['nullable', 'numeric', 'between:0,360'],
             'battery_level' => ['nullable', 'integer', 'between:0,100'],
-            'recorded_at' => ['nullable', 'date', 'before_or_equal:now'],
+            // Jam perangkat dapat berbeda beberapa detik dari jam server.
+            // Controller menormalisasi waktu masa depan ke waktu server agar
+            // tracking tidak gagal hanya karena clock skew pada ponsel.
+            'recorded_at' => ['nullable', 'date'],
         ];
     }
 }

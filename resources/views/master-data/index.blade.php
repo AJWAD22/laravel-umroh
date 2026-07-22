@@ -68,6 +68,28 @@
         </div>
     </x-slot:header>
 
+    @if ($resource === 'groups' && session('reset_pins'))
+        <section class="mb-5 rounded-2xl border border-violet-200 bg-violet-50 p-5 dark:border-violet-900 dark:bg-violet-950/30">
+            <div class="flex items-start gap-3">
+                <i data-lucide="key-round" class="mt-0.5 size-5 shrink-0 text-violet-700"></i>
+                <div class="min-w-0 flex-1">
+                    <h2 class="font-bold text-violet-950 dark:text-violet-100">PIN baru rombongan</h2>
+                    <p class="mt-1 text-sm text-violet-700 dark:text-violet-300">Salin dan bagikan PIN kepada jamaah terkait. Daftar ini hanya ditampilkan setelah proses reset.</p>
+                    <div class="mt-4 overflow-x-auto rounded-xl border border-violet-200 bg-white dark:border-violet-900 dark:bg-slate-900">
+                        <table class="w-full min-w-[560px] text-sm">
+                            <thead class="bg-violet-100/70 text-left text-xs uppercase text-violet-800 dark:bg-violet-950"><tr><th class="px-4 py-2.5">Nomor</th><th class="px-4 py-2.5">Nama Jamaah</th><th class="px-4 py-2.5">PIN Baru</th></tr></thead>
+                            <tbody class="divide-y divide-violet-100 dark:divide-violet-900">
+                                @foreach (session('reset_pins') as $item)
+                                    <tr><td class="px-4 py-2.5 font-mono">{{ $item['registration_number'] }}</td><td class="px-4 py-2.5">{{ $item['name'] }}</td><td class="px-4 py-2.5 font-mono text-lg font-bold tracking-[0.2em]">{{ $item['pin'] }}</td></tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    @endif
+
     <section class="surface-card overflow-hidden">
         <div class="border-b border-slate-200/80 p-4 dark:border-slate-800 sm:p-5">
             <form method="GET" class="flex flex-col gap-3 lg:flex-row lg:items-center">

@@ -6,7 +6,6 @@ use App\Models\LocationHistory;
 use App\Models\Pilgrim;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
-use App\Models\PilgrimLocation;
 
 class TrackingHistoryService
 {
@@ -16,24 +15,10 @@ class TrackingHistoryService
     public function history(Pilgrim $pilgrim, CarbonImmutable $date): array
     {
         $histories = LocationHistory::query()
-    ->where('pilgrim_id', $pilgrim->id)
-    ->whereBetween('recorded_at', [
-        $date->startOfDay(),
-        $date->endOfDay(),
-    ])
-    ->orderBy('recorded_at')
-    ->get();
-
-if ($histories->isEmpty()) {
-
-    $last = PilgrimLocation::where('pilgrim_id', $pilgrim->id)
-        ->first();
-
-    if ($last) {
-
-        $histories = collect([$last]);
-    }
-}
+            ->where('pilgrim_id', $pilgrim->id)
+            ->whereBetween('recorded_at', [$date->startOfDay(), $date->endOfDay()])
+            ->orderBy('recorded_at')
+            ->get();
 
         $points = $histories->values()->map(fn ($history, int $index) => [
             'sequence' => $index + 1,

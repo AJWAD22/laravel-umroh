@@ -63,6 +63,24 @@ class Departure extends Model
         return $this->hasMany(DepartureItinerary::class)->orderBy('day_number');
     }
 
+    public function registrations(): HasMany
+    {
+        return $this->hasMany(PilgrimRegistration::class);
+    }
+
+    public function getRemainingQuotaAttribute(): ?int
+    {
+        if ($this->quota === null) {
+            return null;
+        }
+
+        $used = array_key_exists('active_registrations_count', $this->attributes)
+            ? (int) $this->attributes['active_registrations_count']
+            : $this->registrations()->whereNotIn('status', ['cancelled'])->count();
+
+        return max(0, $this->quota - $used);
+    }
+
     public function getDurationDaysAttribute(): int
     {
         if (! $this->departure_date || ! $this->return_date) {

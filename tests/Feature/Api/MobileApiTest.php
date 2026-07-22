@@ -189,6 +189,47 @@ class MobileApiTest extends TestCase
         $this->assertDatabaseMissing('checkpoints', ['name' => 'Tidak Boleh Dibuat']);
     }
 
+    public function test_group_checkpoint_does_not_leak_to_another_group_on_same_departure(): void
+    {
+        $context = $this->scenario();
+        $otherLeaderUser = $this->mobileUser(
+            $context['group']->branch,
+            'api.tl.other@test.local',
+            'Tour Leader Lain',
+            MobileRole::TourLeader,
+        );
+        $otherLeader = TourLeader::create([
+            'branch_id' => $context['group']->branch_id,
+            'user_id' => $otherLeaderUser->id,
+            'employee_number' => 'API-TL-OTHER',
+            'full_name' => 'Tour Leader Lain',
+        ]);
+        Group::create([
+            'branch_id' => $context['group']->branch_id,
+            'departure_id' => $context['group']->departure_id,
+            'tour_leader_id' => $otherLeader->id,
+            'code' => 'API-GRP-OTHER',
+            'name' => 'Group Lain',
+        ]);
+        Checkpoint::create([
+            'branch_id' => $context['group']->branch_id,
+            'departure_id' => $context['group']->departure_id,
+            'group_id' => $context['group']->id,
+            'name' => 'Titik Khusus Group API',
+            'category' => 'titik_kumpul',
+            'city' => 'makkah',
+            'latitude' => 21.422487,
+            'longitude' => 39.826206,
+            'is_active' => true,
+        ]);
+
+        $token = $this->login($otherLeaderUser);
+        $this->withToken($token)
+            ->getJson('/api/mobile/checkpoints')
+            ->assertOk()
+            ->assertJsonMissing(['name' => 'Titik Khusus Group API']);
+    }
+
     public function test_mobile_endpoints_require_a_sanctum_token_and_validation_is_json(): void
     {
         $this->getJson('/api/mobile/profile')->assertUnauthorized();

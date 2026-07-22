@@ -34,9 +34,12 @@ class PilgrimController extends Controller
         $group = $this->access->activeGroupForPilgrim($pilgrim);
         $data = $request->validated();
         $recordedAt = isset($data['recorded_at']) ? CarbonImmutable::parse($data['recorded_at']) : now();
+        if ($recordedAt->isFuture()) {
+            $recordedAt = CarbonImmutable::now();
+        }
         unset($data['recorded_at']);
 
-        [$latest, $history] = DB::transaction(function () use ($pilgrim, $group, $data, $recordedAt): array {
+        [$latest, $history, $isCurrent] = DB::transaction(function () use ($pilgrim, $group, $data, $recordedAt): array {
             $attributes = [
                 ...$data,
                 'group_id' => $group?->id,
@@ -44,10 +47,18 @@ class PilgrimController extends Controller
             ];
 
             // pilgrim_locations hanya menyimpan posisi terbaru untuk Live Map.
-            $latest = PilgrimLocation::query()->updateOrCreate(
-                ['pilgrim_id' => $pilgrim->id],
-                [...$attributes, 'gps_status' => 'online'],
-            );
+            $latest = PilgrimLocation::query()
+                ->where('pilgrim_id', $pilgrim->id)
+                ->lockForUpdate()
+                ->first();
+
+            // Paket lokasi yang terlambat tetap masuk histori, tetapi tidak
+            // boleh menimpa snapshot terbaru yang ditampilkan pada Live Map.
+            $isCurrent = ! $latest || $recordedAt->gte($latest->recorded_at);
+            if ($isCurrent) {
+                $latest ??= new PilgrimLocation(['pilgrim_id' => $pilgrim->id]);
+                $latest->fill([...$attributes, 'gps_status' => 'online'])->save();
+            }
 
             // location_histories menyimpan seluruh riwayat untuk laporan.
             $history = LocationHistory::query()->create([
@@ -55,18 +66,20 @@ class PilgrimController extends Controller
                 ...$attributes,
             ]);
 
-            return [$latest, $history];
+            return [$latest, $history, $isCurrent];
         });
 
         // Setelah lokasi tersimpan, bandingkan posisi jamaah dengan titik
         // kumpul aktif rombongannya. Jika baru keluar radius, admin dan
         // petugas menerima notifikasi web/FCM tanpa mengirim alert berulang.
-        $this->geofence->check(
-            $pilgrim,
-            $group,
-            (float) $latest->latitude,
-            (float) $latest->longitude,
-        );
+        if ($isCurrent) {
+            $this->geofence->check(
+                $pilgrim,
+                $group,
+                (float) $latest->latitude,
+                (float) $latest->longitude,
+            );
+        }
 
         return response()->json([
             'message' => 'Lokasi berhasil disimpan.',

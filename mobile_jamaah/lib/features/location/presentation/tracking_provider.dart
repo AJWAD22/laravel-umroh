@@ -33,6 +33,12 @@ class TrackingProvider extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
+      // Kirim satu posisi segera saat tracking dimulai. Tanpa langkah ini,
+      // perangkat yang diam dapat menunggu terlalu lama sebelum stream GPS
+      // menghasilkan data pertama dan marker belum muncul di Live Map.
+      final initialPosition = await _repository.currentPosition();
+      await _send(initialPosition);
+
       // Repository mengecek izin GPS, lalu membuka stream lokasi foreground.
       final positions = await _repository.foregroundPositions();
       _positionSubscription = positions.listen(
