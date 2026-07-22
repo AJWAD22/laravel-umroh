@@ -4,9 +4,14 @@ namespace Tests\Feature;
 
 use App\Enums\UserRole;
 use App\Models\Branch;
+use App\Models\Checkpoint;
+use App\Models\Departure;
+use App\Models\Group;
 use App\Models\MobileDevice;
 use App\Models\Pilgrim;
 use App\Models\PilgrimLocation;
+use App\Models\StaffLocation;
+use App\Models\TourLeader;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,9 +28,11 @@ class MonitoringMapTest extends TestCase
         $this->actingAs($superAdmin)
             ->get(route('monitoring.map.index'))
             ->assertOk()
-            ->assertSee('Monitoring Jamaah')
-            ->assertSee('Data GPS Langsung')
-            ->assertSee('monitoring-detail', false);
+            ->assertSee('Monitoring Perjalanan')
+            ->assertSee('Pembaruan otomatis')
+            ->assertSee('monitoring-detail', false)
+            ->assertSee('monitoring-list', false)
+            ->assertSee('monitoring-departure', false);
     }
 
     public function test_super_admin_can_filter_real_markers_by_branch_and_status(): void
@@ -88,6 +95,92 @@ class MonitoringMapTest extends TestCase
         $this->assertTrue($markers->every(
             fn (array $marker) => $marker['branch_id'] === $branchAdmin->branch_id,
         ));
+    }
+
+    public function test_sos_filter_and_operational_layers_are_available_for_selected_group(): void
+    {
+        [, $branchAdmin, $branchB] = $this->users();
+        $branch = $branchAdmin->branch;
+        $departure = Departure::create([
+            'branch_id' => $branch->id,
+            'code' => 'MAP-DEP-A',
+            'program_name' => 'Perjalanan Monitoring A',
+            'departure_date' => today()->addDay(),
+            'return_date' => today()->addDays(10),
+            'status' => 'scheduled',
+        ]);
+        $staffUser = User::factory()->create(['branch_id' => $branch->id]);
+        $tourLeader = TourLeader::create([
+            'branch_id' => $branch->id,
+            'user_id' => $staffUser->id,
+            'employee_number' => 'TL-MAP-001',
+            'full_name' => 'Petugas Monitoring',
+            'is_active' => true,
+        ]);
+        $group = Group::create([
+            'branch_id' => $branch->id,
+            'departure_id' => $departure->id,
+            'tour_leader_id' => $tourLeader->id,
+            'code' => 'GRP-MAP-A',
+            'name' => 'Rombongan Monitoring A',
+            'is_active' => true,
+        ]);
+        StaffLocation::create([
+            'user_id' => $staffUser->id,
+            'branch_id' => $branch->id,
+            'role' => 'tour-leader',
+            'latitude' => 21.423,
+            'longitude' => 39.827,
+            'accuracy' => 5,
+            'recorded_at' => now(),
+        ]);
+        Checkpoint::create([
+            'branch_id' => $branch->id,
+            'departure_id' => $departure->id,
+            'name' => 'Titik Jadwal Perjalanan A',
+            'category' => 'transportasi',
+            'city' => 'jeddah',
+            'latitude' => 21.426,
+            'longitude' => 39.830,
+            'geofence_radius_meters' => 200,
+            'is_active' => true,
+        ]);
+        Checkpoint::create([
+            'branch_id' => $branch->id,
+            'departure_id' => $departure->id,
+            'group_id' => $group->id,
+            'name' => 'Titik Kumpul Rombongan A',
+            'category' => 'titik_kumpul',
+            'city' => 'makkah',
+            'latitude' => 21.424,
+            'longitude' => 39.828,
+            'geofence_radius_meters' => 150,
+            'is_active' => true,
+        ]);
+        Checkpoint::create([
+            'branch_id' => $branchB->id,
+            'name' => 'Titik Cabang Lain',
+            'category' => 'titik_kumpul',
+            'city' => 'makkah',
+            'latitude' => 21.425,
+            'longitude' => 39.829,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($branchAdmin)->getJson(route('monitoring.map.data', [
+            'departure_id' => $departure->id,
+            'group_id' => $group->id,
+            'status' => 'sos',
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('summary.staff', 1)
+            ->assertJsonPath('summary.checkpoints', 2)
+            ->assertJsonPath('staff.0.type', 'tour-leader')
+            ->assertJsonFragment(['name' => 'Titik Jadwal Perjalanan A'])
+            ->assertJsonFragment(['name' => 'Titik Kumpul Rombongan A'])
+            ->assertJsonMissing(['name' => 'Titik Cabang Lain']);
     }
 
     /**

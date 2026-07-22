@@ -24,8 +24,10 @@ class MonitoringMapRequest extends FormRequest
     {
         return [
             'branch_id' => ['nullable', 'integer', 'exists:branches,id'],
+            'departure_id' => ['nullable', 'integer', 'exists:departures,id'],
             'group_id' => ['nullable', 'integer', 'exists:groups,id'],
-            'status' => ['nullable', Rule::in(['online', 'offline'])],
+            'status' => ['nullable', Rule::in(['online', 'offline', 'sos'])],
+            'search' => ['nullable', 'string', 'max:80'],
         ];
     }
 }
