@@ -14,6 +14,10 @@ class RedirectIfPilgrimPortalAuthenticated
             return $next($request);
         }
 
+        if ($request->user()->canAccessAdminPanel()) {
+            return redirect()->route('dashboard');
+        }
+
         return $request->user()->portalAccount()->exists()
             ? redirect()->route('portal.dashboard')
             : redirect()->route('dashboard');

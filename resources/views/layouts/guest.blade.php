@@ -1,34 +1,13 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>Masuk · {{ config('app.name', 'Mantau Umroh') }}</title>
-        <link rel="icon" type="image/png" media="(prefers-color-scheme: light)" href="{{ asset('images/mantau-umroh-icon-light.png') }}">
-        <link rel="icon" type="image/png" media="(prefers-color-scheme: dark)" href="{{ asset('images/mantau-umroh-icon-dark.png') }}">
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet">
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
-    <body class="font-sans text-slate-900 antialiased">
-        <main class="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-8">
-            <section class="w-full max-w-md">
-                <div class="mb-6 text-center">
-                    <img src="{{ asset('images/mantau-umroh-icon-light.png') }}" alt="Logo Mantau Umroh"
-                         class="mx-auto size-16 rounded-2xl object-contain shadow-sm ring-1 ring-slate-200">
-                    <h1 class="mt-4 text-2xl font-bold tracking-tight text-slate-950">Mantau Umroh</h1>
-                    <p class="mt-1 text-sm text-slate-500">Portal administrasi monitoring jamaah</p>
-                </div>
-
-                <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-                    {{ $slot }}
-                </div>
-
-                <p class="mt-5 text-center text-xs text-slate-400">
-                    © {{ date('Y') }} Mantau Umroh
-                </p>
-            </section>
-        </main>
-    </body>
-</html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="csrf-token" content="{{ csrf_token() }}"><title>Masuk · {{ config('app.name', 'Mantau Umroh') }}</title><link rel="icon" type="image/png" href="{{ asset('images/mantau-umroh-icon-light.png') }}"><link rel="preconnect" href="https://fonts.bunny.net"><link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet">@vite(['resources/css/app.css','resources/js/app.js'])</head>
+<body class="font-sans text-slate-900 antialiased">
+<main class="grid min-h-screen bg-[#061321] lg:grid-cols-[1.05fr_.95fr]">
+    <section class="relative isolate hidden overflow-hidden p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14"><div class="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(20,184,166,.28),transparent_30%),radial-gradient(circle_at_85%_80%,rgba(37,99,235,.28),transparent_32%)]"></div><div class="absolute inset-0 opacity-[.05]" style="background-image:linear-gradient(rgba(255,255,255,.7) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.7) 1px,transparent 1px);background-size:50px 50px"></div>
+        <a href="{{ route('landing') }}" class="relative flex items-center gap-3"><img src="{{ asset('images/mantau-umroh-icon-dark.png') }}" alt="Logo" class="size-12 rounded-2xl shadow-xl"><div><p class="text-lg font-extrabold">{{ config('app.name', 'Mantau Umroh') }}</p><p class="text-xs text-slate-400">Integrated Umrah Management</p></div></a>
+        <div class="relative max-w-2xl"><span class="inline-flex rounded-full border border-teal-300/20 bg-teal-300/10 px-4 py-2 text-xs font-bold uppercase tracking-[.16em] text-teal-200">Satu Login · Semua Peran</span><h1 class="mt-6 text-5xl font-extrabold leading-[1.08] xl:text-6xl">Masuk lebih mudah ke sistem perjalanan Anda.</h1><p class="mt-6 max-w-xl text-lg leading-8 text-slate-300">Sistem mengenali akun secara otomatis dan membuka ruang kerja yang sesuai.</p><div class="mt-8 grid max-w-xl grid-cols-3 gap-3">@foreach ([['shield-check','Super Admin','Pusat kendali'],['building-2','Admin Cabang','Operasional'],['users','Jamaah','Portal perjalanan']] as $role)<div class="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur"><i data-lucide="{{ $role[0] }}" class="size-5 text-teal-300"></i><p class="mt-3 text-sm font-extrabold">{{ $role[1] }}</p><p class="mt-1 text-xs text-slate-500">{{ $role[2] }}</p></div>@endforeach</div></div>
+        <div class="relative flex items-center justify-between text-xs text-slate-500"><span>© {{ now()->year }} {{ config('app.name', 'Mantau Umroh') }}</span><span>Secure Access Portal</span></div>
+    </section>
+    <section class="grid place-items-center bg-slate-50 px-5 py-10 sm:px-8"><div class="w-full max-w-md"><a href="{{ route('landing') }}" class="mb-7 flex items-center justify-center gap-3 lg:hidden"><img src="{{ asset('images/mantau-umroh-icon-light.png') }}" alt="Logo" class="size-12 rounded-2xl"><span class="text-lg font-extrabold">{{ config('app.name', 'Mantau Umroh') }}</span></a><div class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,.12)] sm:p-8">{{ $slot }}</div><p class="mt-6 text-center text-xs text-slate-400">Akses terenkripsi untuk admin dan jamaah</p></div></section>
+</main>
+</body></html>

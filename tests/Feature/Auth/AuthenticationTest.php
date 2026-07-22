@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Enums\UserRole;
 use App\Models\Branch;
+use App\Models\PilgrimPortalAccount;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,7 +18,9 @@ class AuthenticationTest extends TestCase
     {
         $response = $this->get('/login');
 
-        $response->assertStatus(200);
+        $response
+            ->assertStatus(200)
+            ->assertSee('Email atau Nomor WhatsApp');
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void
@@ -25,7 +28,7 @@ class AuthenticationTest extends TestCase
         $user = $this->webAdmin();
 
         $response = $this->post('/login', [
-            'email' => $user->email,
+            'identity' => $user->email,
             'password' => 'password',
         ]);
 
@@ -38,7 +41,7 @@ class AuthenticationTest extends TestCase
         $user = User::factory()->create();
 
         $this->post('/login', [
-            'email' => $user->email,
+            'identity' => $user->email,
             'password' => 'wrong-password',
         ]);
 
@@ -60,12 +63,12 @@ class AuthenticationTest extends TestCase
         $user = $this->webAdmin(['is_active' => false]);
 
         $response = $this->post('/login', [
-            'email' => $user->email,
+            'identity' => $user->email,
             'password' => 'password',
         ]);
 
         $this->assertGuest();
-        $response->assertSessionHasErrors('email');
+        $response->assertSessionHasErrors('identity');
     }
 
     public function test_users_without_a_web_admin_role_cannot_authenticate(): void
@@ -74,12 +77,12 @@ class AuthenticationTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->post('/login', [
-            'email' => $user->email,
+            'identity' => $user->email,
             'password' => 'password',
         ]);
 
         $this->assertGuest();
-        $response->assertSessionHasErrors('email');
+        $response->assertSessionHasErrors('identity');
     }
 
     public function test_branch_admin_without_a_branch_cannot_authenticate(): void
@@ -89,12 +92,48 @@ class AuthenticationTest extends TestCase
         $user->assignRole(UserRole::BranchAdmin->value);
 
         $response = $this->post('/login', [
-            'email' => $user->email,
+            'identity' => $user->email,
             'password' => 'password',
         ]);
 
         $this->assertGuest();
-        $response->assertSessionHasErrors('email');
+        $response->assertSessionHasErrors('identity');
+    }
+
+    public function test_pilgrim_can_authenticate_with_whatsapp_number(): void
+    {
+        $user = User::factory()->create();
+        PilgrimPortalAccount::query()->create([
+            'user_id' => $user->id,
+            'phone' => '6281234567890',
+            'email' => 'jamaah@example.com',
+        ]);
+
+        $response = $this->post('/login', [
+            'identity' => '0812-3456-7890',
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticatedAs($user);
+        $response->assertRedirect(route('portal.dashboard'));
+    }
+
+    public function test_pilgrim_can_authenticate_with_registered_email(): void
+    {
+        $user = User::factory()->create();
+        PilgrimPortalAccount::query()->create([
+            'user_id' => $user->id,
+            'phone' => '6281234567891',
+            'email' => 'jamaah@example.com',
+        ]);
+
+        $response = $this->post('/login', [
+            'identity' => 'jamaah@example.com',
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticatedAs($user);
+        $response->assertRedirect(route('portal.dashboard'));
     }
 
     public function test_an_active_session_is_terminated_when_the_account_is_disabled(): void

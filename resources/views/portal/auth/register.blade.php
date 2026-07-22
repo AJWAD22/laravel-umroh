@@ -12,5 +12,5 @@
             <label class="flex items-start gap-3 text-sm leading-6 text-slate-600"><input required type="checkbox" name="terms" value="1" class="mt-1 rounded border-slate-300 text-teal-600"><span>Saya menyetujui penggunaan data untuk proses pendaftaran dan pelayanan perjalanan umroh.</span></label>
             @if ($errors->any())<div class="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">{{ $errors->first() }}</div>@endif
             <button class="button-primary w-full">Buat Akun & Lihat Paket</button>
-        </form><p class="mt-6 text-center text-sm text-slate-600">Sudah punya akun? <a href="{{ route('portal.login') }}" class="font-extrabold text-teal-700">Masuk di sini</a></p></div></div></section>
+        </form><p class="mt-6 text-center text-sm text-slate-600">Sudah punya akun? <a href="{{ route('login') }}" class="font-extrabold text-teal-700">Masuk di sini</a></p></div></div></section>
 </main></body></html>

@@ -13,7 +13,7 @@ class EnsurePilgrimPortalAccount
         if (! $request->user()) {
             $request->session()->put('url.intended', $request->fullUrl());
 
-            return redirect()->route('portal.login');
+            return redirect()->route('login');
         }
 
         if ($request->user()?->portalAccount()->exists()) {

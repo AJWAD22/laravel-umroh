@@ -22,10 +22,8 @@ Route::redirect('/registrasi', '/daftar-jamaah')->name('public-registration.crea
 Route::middleware('pilgrim.guest')->group(function () {
     Route::get('/daftar-jamaah', [PilgrimPortalController::class, 'register'])->name('portal.register');
     Route::post('/daftar-jamaah', [PilgrimPortalController::class, 'storeAccount'])->name('portal.register.store');
-    Route::get('/masuk-jamaah', [PilgrimPortalController::class, 'login'])->name('portal.login');
-    Route::post('/masuk-jamaah', [PilgrimPortalController::class, 'authenticate'])
-        ->middleware('throttle:6,1')->name('portal.login.store');
 });
+Route::redirect('/masuk-jamaah', '/login')->name('portal.login');
 
 Route::prefix('jamaah')->middleware('pilgrim.portal')->name('portal.')->group(function () {
     Route::get('/', [PilgrimPortalController::class, 'dashboard'])->name('dashboard');

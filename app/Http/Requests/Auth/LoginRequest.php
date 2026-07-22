@@ -2,10 +2,13 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\PilgrimPortalAccount;
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -28,7 +31,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'identity' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ];
     }
@@ -42,19 +45,19 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt([
-            'email' => $this->string('email')->toString(),
-            'password' => $this->string('password')->toString(),
-            'is_active' => true,
-        ], $this->boolean('remember'))) {
+        $identity = trim($this->string('identity')->toString());
+        $user = str_contains($identity, '@')
+            ? $this->userFromEmail($identity)
+            : $this->userFromPhone($identity);
+
+        if (! $user
+            || ! $user->is_active
+            || ! Hash::check($this->string('password')->toString(), $user->password)
+            || (! $user->canAccessAdminPanel() && ! $user->portalAccount()->exists())) {
             $this->throwFailedAuthenticationException();
         }
 
-        if (! Auth::user()?->canAccessAdminPanel()) {
-            Auth::guard('web')->logout();
-
-            $this->throwFailedAuthenticationException();
-        }
+        Auth::login($user, $this->boolean('remember'));
 
         RateLimiter::clear($this->throttleKey());
     }
@@ -75,7 +78,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
+            'identity' => trans('auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]),
@@ -87,7 +90,7 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('identity')).'|'.$this->ip());
     }
 
     /**
@@ -98,7 +101,21 @@ class LoginRequest extends FormRequest
         RateLimiter::hit($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.failed'),
+            'identity' => 'Email/nomor WhatsApp atau password tidak sesuai.',
         ]);
+    }
+
+    private function userFromEmail(string $email): ?User
+    {
+        return User::query()->where('email', $email)->first()
+            ?? PilgrimPortalAccount::query()->with('user')->where('email', $email)->first()?->user;
+    }
+
+    private function userFromPhone(string $phone): ?User
+    {
+        $phone = preg_replace('/\D+/', '', $phone) ?: '';
+        $phone = str_starts_with($phone, '0') ? '62'.substr($phone, 1) : $phone;
+
+        return PilgrimPortalAccount::query()->with('user')->where('phone', $phone)->first()?->user;
     }
 }

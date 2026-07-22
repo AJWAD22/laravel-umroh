@@ -13,7 +13,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -33,7 +32,13 @@ class PilgrimPortalController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'phone' => ['required', 'string', 'max:30'],
-            'email' => ['nullable', 'email', 'max:255', 'unique:pilgrim_portal_accounts,email'],
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+                Rule::unique('pilgrim_portal_accounts', 'email'),
+                Rule::unique('users', 'email'),
+            ],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'terms' => ['accepted'],
         ]);
@@ -69,34 +74,6 @@ class PilgrimPortalController extends Controller
 
         return redirect()->route('portal.packages.index')
             ->with('success', 'Akun berhasil dibuat. Silakan pilih paket perjalanan yang sesuai.');
-    }
-
-    public function login(): View
-    {
-        return view('portal.auth.login');
-    }
-
-    public function authenticate(Request $request): RedirectResponse
-    {
-        $credentials = $request->validate([
-            'phone' => ['required', 'string', 'max:30'],
-            'password' => ['required', 'string'],
-        ]);
-        $account = PilgrimPortalAccount::query()
-            ->with('user')
-            ->where('phone', $this->normalizePhone($credentials['phone']))
-            ->first();
-
-        if (! $account || ! $account->user->is_active || ! Hash::check($credentials['password'], $account->user->password)) {
-            throw ValidationException::withMessages([
-                'phone' => ['Nomor WhatsApp atau password tidak sesuai.'],
-            ]);
-        }
-
-        Auth::login($account->user, $request->boolean('remember'));
-        $request->session()->regenerate();
-
-        return redirect()->intended(route('portal.dashboard'));
     }
 
     public function logout(Request $request): RedirectResponse
