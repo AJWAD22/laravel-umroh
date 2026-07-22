@@ -17,10 +17,15 @@ class Departure extends Model
         'branch_id',
         'code',
         'program_name',
+        'description',
         'departure_date',
         'return_date',
         'departure_airport',
         'arrival_airport',
+        'airline',
+        'flight_number',
+        'price',
+        'is_public',
         'quota',
         'status',
     ];
@@ -30,6 +35,8 @@ class Departure extends Model
         return [
             'departure_date' => 'date',
             'return_date' => 'date',
+            'price' => 'integer',
+            'is_public' => 'boolean',
             'quota' => 'integer',
         ];
     }
@@ -49,5 +56,19 @@ class Departure extends Model
         return $this->belongsToMany(Hotel::class, 'departure_hotel')
             ->withPivot(['id', 'check_in_at', 'check_out_at', 'sequence'])
             ->withTimestamps();
+    }
+
+    public function itineraries(): HasMany
+    {
+        return $this->hasMany(DepartureItinerary::class)->orderBy('day_number');
+    }
+
+    public function getDurationDaysAttribute(): int
+    {
+        if (! $this->departure_date || ! $this->return_date) {
+            return 0;
+        }
+
+        return $this->departure_date->diffInDays($this->return_date) + 1;
     }
 }

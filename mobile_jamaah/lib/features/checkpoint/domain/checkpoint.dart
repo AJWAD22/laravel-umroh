@@ -9,6 +9,7 @@ class Checkpoint {
     this.departureId,
     this.groupId,
     this.address,
+    this.geofenceRadiusMeters,
     this.description,
   });
 
@@ -21,6 +22,7 @@ class Checkpoint {
   final int? departureId;
   final int? groupId;
   final String? address;
+  final int? geofenceRadiusMeters;
   final String? description;
 
   factory Checkpoint.fromJson(Map<String, dynamic> json) => Checkpoint(
@@ -33,6 +35,9 @@ class Checkpoint {
     departureId: int.tryParse(json['departure_id']?.toString() ?? ''),
     groupId: int.tryParse(json['group_id']?.toString() ?? ''),
     address: json['address']?.toString(),
+    geofenceRadiusMeters: int.tryParse(
+      json['geofence_radius_meters']?.toString() ?? '',
+    ),
     description: json['description']?.toString(),
   );
 }

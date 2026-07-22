@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Checkpoint;
 use App\Models\Group;
+use App\Models\Hotel;
 use App\Models\Pilgrim;
 use Illuminate\Support\Facades\Cache;
 
@@ -30,29 +31,63 @@ class GeofenceMonitorService
 
         $checkpoints = Checkpoint::query()
             ->where('branch_id', $pilgrim->branch_id)
-            ->where('group_id', $group->id)
-            ->where('category', 'titik_kumpul')
             ->where('is_active', true)
-            ->get(['id', 'name', 'latitude', 'longitude']);
+            ->whereIn('category', ['titik_kumpul', 'hotel'])
+            ->where(function ($query) use ($group): void {
+                $query->where(function ($query): void {
+                    $query->whereNull('departure_id')->whereNull('group_id');
+                });
+
+                if ($group->departure_id) {
+                    $query->orWhere('departure_id', $group->departure_id);
+                }
+
+                $query->orWhere('group_id', $group->id);
+            })
+            ->get(['id', 'name', 'latitude', 'longitude', 'geofence_radius_meters'])
+            ->map(fn (Checkpoint $checkpoint): array => [
+                'name' => $checkpoint->name,
+                'latitude' => (float) $checkpoint->latitude,
+                'longitude' => (float) $checkpoint->longitude,
+                'radius' => $checkpoint->geofence_radius_meters,
+            ]);
+
+        $hotels = collect();
+        if ($group->departure_id) {
+            $hotels = Hotel::query()
+                ->whereHas('departures', fn ($query) => $query->whereKey($group->departure_id))
+                ->whereNotNull('latitude')
+                ->whereNotNull('longitude')
+                ->get(['id', 'name', 'latitude', 'longitude', 'geofence_radius_meters'])
+                ->map(fn (Hotel $hotel): array => [
+                    'name' => $hotel->name,
+                    'latitude' => (float) $hotel->latitude,
+                    'longitude' => (float) $hotel->longitude,
+                    'radius' => $hotel->geofence_radius_meters,
+                ]);
+        }
+
+        $geofences = $checkpoints->concat($hotels)->values();
 
         $stateKey = "geofence:pilgrim:{$pilgrim->id}:group:{$group->id}";
 
-        if ($checkpoints->isEmpty()) {
+        if ($geofences->isEmpty()) {
             Cache::forget($stateKey);
 
             return;
         }
 
-        $radiusMeters = max(10, (int) $this->settings->get('default_geofence_radius_meters', 250));
-        $nearest = $checkpoints
-            ->map(function (Checkpoint $checkpoint) use ($latitude, $longitude): array {
+        $defaultRadiusMeters = max(10, (int) $this->settings->get('default_geofence_radius_meters', 250));
+        $nearest = $geofences
+            ->map(function (array $geofence) use ($latitude, $longitude, $defaultRadiusMeters): array {
                 return [
-                    'checkpoint' => $checkpoint,
+                    'name' => $geofence['name'],
+                    'radius' => max(10, (int) ($geofence['radius'] ?: $defaultRadiusMeters)),
                     'distance' => $this->distanceMeters(
                         $latitude,
                         $longitude,
-                        (float) $checkpoint->latitude,
-                        (float) $checkpoint->longitude,
+                        $geofence['latitude'],
+                        $geofence['longitude'],
                     ),
                 ];
             })
@@ -63,6 +98,7 @@ class GeofenceMonitorService
             return;
         }
 
+        $radiusMeters = $nearest['radius'];
         $isOutside = $nearest['distance'] > $radiusMeters;
         $shouldNotify = Cache::lock("{$stateKey}:lock", 5)->get(function () use ($stateKey, $isOutside): bool {
             $previousState = Cache::get($stateKey);
@@ -78,7 +114,7 @@ class GeofenceMonitorService
                 $pilgrim,
                 $latitude,
                 $longitude,
-                $nearest['checkpoint']->name,
+                $nearest['name'],
                 round($nearest['distance'], 1),
                 $radiusMeters,
             );

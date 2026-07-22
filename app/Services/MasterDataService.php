@@ -7,6 +7,7 @@ use App\Enums\UserRole;
 use App\Models\Branch;
 use App\Models\Checkpoint;
 use App\Models\Departure;
+use App\Models\DepartureItinerary;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\Hotel;
@@ -16,6 +17,7 @@ use App\Models\MobileDevice;
 use App\Models\Muthawwif;
 use App\Models\Pilgrim;
 use App\Models\PilgrimLocation;
+use App\Models\PilgrimRegistration;
 use App\Models\SosReport;
 use App\Models\StaffLocation;
 use App\Models\TourLeader;
@@ -66,8 +68,8 @@ class MasterDataService
                 ['name' => 'Nama Tujuan', 'category' => 'Kategori', 'city' => 'Kota', 'branch.name' => 'Cabang', 'departure.program_name' => 'Jadwal Perjalanan', 'group.name' => 'Rombongan', 'is_active' => 'Aktif'],
                 ['name', 'address', 'description'], ['name', 'category', 'city', 'is_active'], ['branch', 'departure', 'group']),
             'departures' => $this->definition(Departure::class, 'Jadwal Perjalanan', 'departures.manage',
-                ['code' => 'Kode', 'program_name' => 'Nama Program', 'branch.name' => 'Cabang', 'departure_date' => 'Tanggal Berangkat', 'status' => 'Status'],
-                ['code', 'program_name', 'departure_airport'], ['code', 'program_name', 'departure_date', 'status'], ['branch']),
+                ['code' => 'Kode', 'program_name' => 'Nama Paket', 'branch.name' => 'Cabang', 'duration_days' => 'Durasi', 'airline' => 'Pesawat', 'departure_date' => 'Tanggal Berangkat', 'status' => 'Status'],
+                ['code', 'program_name', 'departure_airport', 'airline', 'flight_number'], ['code', 'program_name', 'departure_date', 'status'], ['branch', 'hotels', 'itineraries']),
             'groups' => $this->definition(Group::class, 'Rombongan', 'groups.manage',
                 ['code' => 'Kode', 'name' => 'Nama Rombongan', 'branch.name' => 'Cabang', 'departure.program_name' => 'Jadwal Perjalanan', 'is_active' => 'Aktif'],
                 ['code', 'name'], ['code', 'name', 'is_active'], ['branch', 'departure']),
@@ -191,6 +193,14 @@ class MasterDataService
                 unset($data['group_id']);
             }
 
+            $hotelIds = [];
+            $itineraryPlan = null;
+            if ($resource === 'departures') {
+                $hotelIds = array_values(array_filter($data['hotel_ids'] ?? []));
+                $itineraryPlan = $data['itinerary_plan'] ?? null;
+                unset($data['hotel_ids'], $data['itinerary_plan']);
+            }
+
             if (! $record && in_array($resource, ['pilgrims', 'departures', 'groups'], true)) {
                 $generated = $this->codes->generate($resource, $data);
                 $data[$generated['column']] = $generated['value'];
@@ -211,6 +221,11 @@ class MasterDataService
 
             if ($resource === 'pilgrims') {
                 $this->syncPilgrimGroup($model, $groupId);
+            }
+
+            if ($resource === 'departures' && $model instanceof Departure) {
+                $this->syncDepartureHotels($model, $hotelIds);
+                $this->syncDepartureItinerary($model, $itineraryPlan);
             }
 
             return $model;
@@ -277,6 +292,45 @@ class MasterDataService
                 'status' => 'active',
             ],
         );
+    }
+
+    /**
+     * @param array<int, int|string> $hotelIds
+     */
+    private function syncDepartureHotels(Departure $departure, array $hotelIds): void
+    {
+        $sync = [];
+        foreach (array_values($hotelIds) as $index => $hotelId) {
+            $sync[(int) $hotelId] = ['sequence' => $index + 1];
+        }
+
+        $departure->hotels()->sync($sync);
+    }
+
+    private function syncDepartureItinerary(Departure $departure, ?string $plan): void
+    {
+        $rows = collect(preg_split('/\r\n|\r|\n/', (string) $plan))
+            ->map(fn (string $line) => trim($line))
+            ->filter()
+            ->values()
+            ->map(function (string $line, int $index): array {
+                $parts = array_map('trim', explode('|', $line, 4));
+
+                return [
+                    'day_number' => is_numeric($parts[0] ?? null) ? (int) $parts[0] : $index + 1,
+                    'title' => $parts[1] ?? $parts[0] ?? 'Agenda Perjalanan',
+                    'city' => $parts[2] ?? null,
+                    'description' => $parts[3] ?? null,
+                ];
+            })
+            ->filter(fn (array $row) => filled($row['title']))
+            ->values();
+
+        DepartureItinerary::query()
+            ->where('departure_id', $departure->id)
+            ->delete();
+
+        $rows->each(fn (array $row) => $departure->itineraries()->create($row));
     }
 
     private function deleteBranchWithChildren(Branch $branch): void
@@ -350,6 +404,7 @@ class MasterDataService
 
             DB::table('notifications')->where('branch_id', $branch->id)->delete();
 
+            PilgrimRegistration::query()->where('branch_id', $branch->id)->delete();
             Checkpoint::withTrashed()->where('branch_id', $branch->id)->forceDelete();
             Group::withTrashed()->where('branch_id', $branch->id)->forceDelete();
             Departure::withTrashed()->where('branch_id', $branch->id)->forceDelete();
@@ -384,6 +439,12 @@ class MasterDataService
                 ->where('is_active', true)->orderBy('full_name')->pluck('full_name', 'id')->all(),
             'groups' => Group::query()->when($branchId, fn (Builder $q) => $q->where('branch_id', $branchId))
                 ->where('is_active', true)->orderBy('name')->pluck('name', 'id')->all(),
+            'hotels' => Hotel::query()->when($branchId, fn (Builder $q) => $q->where('branch_id', $branchId))
+                ->orderBy('city')
+                ->orderBy('name')
+                ->get(['id', 'name', 'city'])
+                ->mapWithKeys(fn (Hotel $hotel) => [$hotel->id => "{$hotel->name} - ".ucfirst($hotel->city)])
+                ->all(),
         ];
     }
 

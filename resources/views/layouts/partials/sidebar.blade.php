@@ -31,6 +31,7 @@
             ];
             $supportMenus = [
                 ['label' => 'Jadwal Perjalanan', 'resource' => 'departures', 'permission' => 'departures.manage', 'view' => 'departures.view'],
+                ['label' => 'Hotel', 'resource' => 'hotels', 'permission' => 'hotels.manage', 'view' => 'hotels.view'],
                 ['label' => 'Tujuan & Titik Penting', 'resource' => 'checkpoints', 'permission' => 'hotels.manage', 'view' => 'hotels.view'],
             ];
             $organizationMenus = [

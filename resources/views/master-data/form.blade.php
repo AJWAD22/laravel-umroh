@@ -4,9 +4,13 @@
         $key,
         $key === 'email' && in_array($resource, ['tour-leaders', 'muthawwifs'], true)
             ? data_get($record, 'user.email', $default)
+            : ($resource === 'departures' && $key === 'hotel_ids'
+                ? $record?->hotels?->pluck('id')->all() ?? $default
+                : ($resource === 'departures' && $key === 'itinerary_plan'
+                    ? $record?->itineraries?->map(fn ($item) => "{$item->day_number}|{$item->title}|{$item->city}|{$item->description}")->implode("\n") ?? $default
             : ($resource === 'pilgrims' && $key === 'group_id'
                 ? data_get($record?->groupMemberships?->firstWhere('status', 'active'), 'group_id', $default)
-                : data_get($record, $key, $default))
+                : data_get($record, $key, $default)))
     );
     $commonBranch = [['branch_id', 'Cabang', 'select', $options['branches']]];
     $automaticCodeHelp = match ($resource) {
@@ -68,12 +72,18 @@
             ]],
             ['city','Kota','select',['makkah'=>'Makkah','madinah'=>'Madinah','jeddah'=>'Jeddah','other'=>'Lainnya']],
             ['address','Alamat','textarea'], ['latitude','Latitude','number'], ['longitude','Longitude','number'],
+            ['geofence_radius_meters','Radius Geofence (meter)','number'],
             ['description','Petunjuk Singkat','textarea'], ['is_active','Status','boolean'],
         ],
         'departures' => [...$commonBranch,
-            ['code','Kode Jadwal','text'], ['program_name','Nama Program','text'], ['departure_date','Tanggal Berangkat','date'],
+            ['code','Kode Jadwal','text'], ['program_name','Nama Paket','text'], ['description','Deskripsi Paket','textarea'],
+            ['departure_date','Tanggal Berangkat','date'],
             ['return_date','Tanggal Pulang','date'], ['departure_airport','Bandara Berangkat','text'],
-            ['arrival_airport','Bandara Kedatangan','text'], ['quota','Kuota','number'],
+            ['arrival_airport','Bandara Kedatangan','text'], ['airline','Maskapai','text'],
+            ['flight_number','Nomor Penerbangan','text'], ['price','Harga Paket','number'],
+            ['hotel_ids','Hotel Paket','multiselect',$options['hotels']],
+            ['itinerary_plan','Jadwal Harian','itinerary'],
+            ['quota','Kuota','number'], ['is_public','Tampil di Landing Page','boolean'],
             ['status','Status','select',['draft'=>'Draft','scheduled'=>'Terjadwal','departed'=>'Berangkat','completed'=>'Selesai','cancelled'=>'Batal']],
         ],
         'groups' => [...$commonBranch,
@@ -165,8 +175,19 @@
                                 <option value="{{ $optionValue }}" @selected((string) $current === (string) $optionValue)>{{ $optionLabel }}</option>
                             @endforeach
                         </select>
+                    @elseif ($type === 'multiselect')
+                        @php $selectedValues = collect($current ?? [])->map(fn ($item) => (string) $item)->all(); @endphp
+                        <select name="{{ $name }}[]" multiple class="control-field min-h-32 w-full">
+                            @foreach ($choices as $optionValue => $optionLabel)
+                                <option value="{{ $optionValue }}" @selected(in_array((string) $optionValue, $selectedValues, true))>{{ $optionLabel }}</option>
+                            @endforeach
+                        </select>
+                        <span class="mt-1.5 block text-xs leading-5 text-slate-500">Tahan Ctrl untuk memilih lebih dari satu hotel. Urutan pilihan mengikuti urutan hotel pada daftar.</span>
                     @elseif ($type === 'textarea')
                         <textarea name="{{ $name }}" rows="4" class="control-field w-full">{{ $current }}</textarea>
+                    @elseif ($type === 'itinerary')
+                        <textarea name="{{ $name }}" rows="7" class="control-field w-full" placeholder="1|Berangkat dari Indonesia|Jeddah|Penerbangan dan proses imigrasi.&#10;2|Umroh pertama|Makkah|Thawaf, sai, dan tahallul.">{{ $current }}</textarea>
+                        <span class="mt-1.5 block text-xs leading-5 text-slate-500">Format per baris: hari|judul|kota|keterangan.</span>
                     @elseif ($type === 'boolean')
                         <select name="{{ $name }}" class="control-field w-full">
                             <option value="1" @selected((string) $current === '1')>Aktif</option>

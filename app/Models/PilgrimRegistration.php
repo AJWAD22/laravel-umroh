@@ -5,34 +5,29 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Checkpoint extends Model
+class PilgrimRegistration extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
         'branch_id',
         'departure_id',
-        'group_id',
-        'name',
-        'category',
-        'city',
+        'full_name',
+        'nik',
+        'passport_number',
+        'gender',
+        'phone',
+        'birth_date',
         'address',
-        'latitude',
-        'longitude',
-        'geofence_radius_meters',
-        'description',
-        'is_active',
+        'notes',
+        'status',
     ];
 
     protected function casts(): array
     {
         return [
-            'latitude' => 'decimal:7',
-            'longitude' => 'decimal:7',
-            'geofence_radius_meters' => 'integer',
-            'is_active' => 'boolean',
+            'birth_date' => 'date',
         ];
     }
 
@@ -44,10 +39,5 @@ class Checkpoint extends Model
     public function departure(): BelongsTo
     {
         return $this->belongsTo(Departure::class);
-    }
-
-    public function group(): BelongsTo
-    {
-        return $this->belongsTo(Group::class);
     }
 }

@@ -19,6 +19,7 @@ class CheckpointResource extends JsonResource
             'address' => $this->address,
             'latitude' => (float) $this->latitude,
             'longitude' => (float) $this->longitude,
+            'geofence_radius_meters' => $this->geofence_radius_meters ? (int) $this->geofence_radius_meters : null,
             'description' => $this->description,
             'is_active' => (bool) $this->is_active,
         ];

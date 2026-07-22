@@ -4,6 +4,15 @@
            title="Kelola anggota" aria-label="Kelola anggota {{ $record->name }}">
             <i data-lucide="users-round" class="size-4"></i>
         </a>
+        <form method="POST" action="{{ route('groups.reset-pins', $record) }}"
+              data-confirm-title="Reset PIN Rombongan"
+              data-confirm="Semua PIN jamaah aktif di rombongan ini akan dibuat ulang dan perangkat lama dicabut. Lanjutkan?">
+            @csrf
+            <button class="icon-action text-violet-600 hover:text-violet-700" title="Reset PIN rombongan"
+                    aria-label="Reset PIN jamaah rombongan {{ $record->name }}">
+                <i data-lucide="key-round" class="size-4"></i>
+            </button>
+        </form>
     @endif
 
     @if ($resource === 'pilgrims')

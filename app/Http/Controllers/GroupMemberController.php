@@ -10,6 +10,7 @@ use App\Models\GroupMember;
 use App\Models\Muthawwif;
 use App\Models\Pilgrim;
 use App\Models\TourLeader;
+use App\Services\MobileActivationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,8 @@ use Illuminate\View\View;
 
 class GroupMemberController extends Controller
 {
+    public function __construct(private readonly MobileActivationService $activations) {}
+
     public function index(Request $request, Group $group): View
     {
         $this->authorizeGroup($request, $group);
@@ -104,6 +107,15 @@ class GroupMemberController extends Controller
         ]);
 
         return back()->with('success', 'Jamaah berhasil dikeluarkan dari group.');
+    }
+
+    public function resetPins(Request $request, Group $group): RedirectResponse
+    {
+        $this->authorizeGroup($request, $group);
+
+        $result = $this->activations->resetPinsForGroup($request->user(), $group);
+
+        return back()->with('success', "{$result['count']} PIN aktivasi jamaah rombongan berhasil direset.");
     }
 
     private function authorizeGroup(Request $request, Group $group): void

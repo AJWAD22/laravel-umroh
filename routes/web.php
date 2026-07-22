@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GroupMemberController;
+use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\MonitoringMapController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PublicRegistrationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SosReportController;
@@ -12,12 +14,9 @@ use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\TrackingHistoryController;
 use Illuminate\Support\Facades\Route;
 
-// Halaman root hanya mengarahkan pengguna ke login atau dashboard.
-Route::get('/', function () {
-    return auth()->check()
-        ? redirect()->route('dashboard')
-        : redirect()->route('login');
-});
+Route::get('/', LandingPageController::class)->name('landing');
+Route::get('/paket/{departure}', [LandingPageController::class, 'show'])->name('packages.show');
+Route::post('/registrasi', PublicRegistrationController::class)->name('public-registration.store');
 
 // Semua route berikut adalah website admin. Middleware memastikan akun aktif
 // dan hanya role Super Admin/Admin Cabang yang dapat mengaksesnya.
@@ -49,8 +48,10 @@ Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->
     Route::delete('/groups/{group}/members/{member}', [GroupMemberController::class, 'destroy'])->name('groups.members.destroy');
     Route::post('/master-data/pilgrims/{pilgrim}/regenerate-pin', [MasterDataController::class, 'regeneratePin'])
         ->name('master-data.pilgrims.regenerate-pin');
+    Route::post('/groups/{group}/reset-pins', [GroupMemberController::class, 'resetPins'])
+        ->name('groups.reset-pins');
     Route::prefix('master-data/{resource}')
-        ->whereIn('resource', ['branches', 'branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs', 'groups', 'checkpoints'])
+        ->whereIn('resource', ['branches', 'branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs', 'groups', 'checkpoints', 'departures', 'hotels'])
         ->name('master-data.')
         ->controller(MasterDataController::class)
         ->group(function () {

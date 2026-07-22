@@ -7,6 +7,7 @@ use App\Enums\UserRole;
 use App\Http\Resources\Mobile\ProfileResource;
 use App\Models\MobileActivationSession;
 use App\Models\MobileDevice;
+use App\Models\Group;
 use App\Models\Pilgrim;
 use App\Models\PilgrimLocation;
 use App\Models\User;
@@ -65,6 +66,34 @@ class MobileActivationService
         });
     }
 
+    /**
+     * @return array{count: int, pins: array<int, string>}
+     */
+    public function resetPinsForGroup(User $actor, Group $group): array
+    {
+        $isSuperAdmin = $actor->hasRole(UserRole::SuperAdmin->value);
+
+        if (! $isSuperAdmin
+            && (! $actor->can('pilgrims.manage')
+                || (int) $actor->branch_id !== (int) $group->branch_id)) {
+            throw new AuthorizationException;
+        }
+
+        $pins = [];
+        $group->pilgrims()
+            ->wherePivot('status', 'active')
+            ->orderBy('full_name')
+            ->get()
+            ->each(function (Pilgrim $pilgrim) use ($actor, &$pins): void {
+                $pins[$pilgrim->id] = $this->generatePin($actor, $pilgrim);
+            });
+
+        return [
+            'count' => count($pins),
+            'pins' => $pins,
+        ];
+    }
+
     public function claim(array $data): array
     {
         return DB::transaction(function () use ($data): array {
@@ -72,14 +101,12 @@ class MobileActivationService
             // Sistem mencari PIN yang masih aktif, belum dipakai, dan belum kedaluwarsa.
             $pilgrim = Pilgrim::query()
                 ->where('activation_pin_hash', $this->digest($data['numeric_code']))
-                ->whereNull('activation_pin_used_at')
-                ->where('activation_pin_generated_at', '>=', now()->subDays(30))
                 ->lockForUpdate()
                 ->first();
 
             if (! $pilgrim) {
                 throw ValidationException::withMessages([
-                    'activation' => ['PIN aktivasi tidak valid, sudah digunakan, atau kedaluwarsa.'],
+                    'activation' => ['PIN aktivasi tidak valid.'],
                 ]);
             }
 
@@ -88,6 +115,11 @@ class MobileActivationService
             // Aktivasi langsung disetujui otomatis. Tour Leader tidak perlu
             // menekan approve, tetapi relasi rombongan tetap dipakai untuk audit.
             $group = $this->groupAccess->activeGroupForPilgrim($pilgrim);
+            if ($group?->departure && in_array($group->departure->status, ['completed', 'cancelled'], true)) {
+                throw ValidationException::withMessages([
+                    'activation' => ['PIN aktivasi sudah tidak berlaku karena perjalanan selesai atau dibatalkan.'],
+                ]);
+            }
             $leaderUser = $group?->tourLeader?->user;
             $createdBy = $pilgrim->activation_pin_created_by
                 ?? $leaderUser?->id
@@ -191,12 +223,11 @@ class MobileActivationService
                 [MobileRole::Pilgrim->ability()],
             );
 
-            // PIN hanya sekali pakai. Setelah aktivasi selesai, PIN dihapus
-            // agar tidak bisa dipakai ulang oleh perangkat lain.
+            // PIN tetap disimpan agar bisa dipakai lagi selama perjalanan belum
+            // selesai, misalnya saat jamaah mengganti perangkat. Perangkat lama
+            // tetap dicabut sehingga satu jamaah hanya aktif pada satu perangkat.
             $session->update(['status' => 'completed', 'completed_at' => now()]);
             $session->pilgrim->forceFill([
-                'activation_pin_hash' => null,
-                'activation_pin_encrypted' => null,
                 'activation_pin_used_at' => now(),
             ])->save();
 
@@ -242,8 +273,6 @@ class MobileActivationService
             $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
             $exists = Pilgrim::query()
                 ->where('activation_pin_hash', $this->digest($code))
-                ->whereNull('activation_pin_used_at')
-                ->where('activation_pin_generated_at', '>=', now()->subDays(30))
                 ->exists();
         } while ($exists);
 

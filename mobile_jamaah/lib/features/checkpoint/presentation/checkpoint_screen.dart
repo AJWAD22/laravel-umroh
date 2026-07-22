@@ -123,6 +123,7 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
                     items: const [
                       DropdownMenuItem(value: 'semua', child: Text('Semua')),
                       DropdownMenuItem(value: 'ibadah', child: Text('Ibadah')),
+                      DropdownMenuItem(value: 'hotel', child: Text('Hotel')),
                       DropdownMenuItem(
                         value: 'titik_kumpul',
                         child: Text('Titik Kumpul'),
@@ -748,6 +749,7 @@ class _MessageCard extends StatelessWidget {
 
 IconData _categoryIcon(String category) => switch (category) {
   'ibadah' => Icons.mosque_rounded,
+  'hotel' => Icons.hotel_rounded,
   'titik_kumpul' => Icons.groups_rounded,
   'kesehatan' => Icons.local_hospital_rounded,
   'transportasi' => Icons.directions_bus_rounded,
@@ -757,6 +759,7 @@ IconData _categoryIcon(String category) => switch (category) {
 
 String _categoryLabel(String category) => switch (category) {
   'ibadah' => 'Tempat Ibadah',
+  'hotel' => 'Hotel',
   'titik_kumpul' => 'Titik Kumpul',
   'kesehatan' => 'Kesehatan',
   'transportasi' => 'Transportasi',
