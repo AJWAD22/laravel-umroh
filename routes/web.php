@@ -6,7 +6,7 @@ use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\MonitoringMapController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\PublicRegistrationController;
+use App\Http\Controllers\PilgrimPortalController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistrationManagementController;
 use App\Http\Controllers\ReportController;
@@ -17,10 +17,25 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', LandingPageController::class)->name('landing');
 Route::get('/paket/{departure}', [LandingPageController::class, 'show'])->name('packages.show');
-Route::get('/registrasi', [PublicRegistrationController::class, 'create'])->name('public-registration.create');
-Route::post('/registrasi/biodata', [PublicRegistrationController::class, 'storeBiodata'])->name('public-registration.biodata.store');
-Route::get('/registrasi/pilih-paket', [PublicRegistrationController::class, 'packages'])->name('public-registration.packages');
-Route::post('/registrasi/selesai', [PublicRegistrationController::class, 'complete'])->name('public-registration.complete');
+Route::redirect('/registrasi', '/daftar-jamaah')->name('public-registration.create');
+
+Route::middleware('pilgrim.guest')->group(function () {
+    Route::get('/daftar-jamaah', [PilgrimPortalController::class, 'register'])->name('portal.register');
+    Route::post('/daftar-jamaah', [PilgrimPortalController::class, 'storeAccount'])->name('portal.register.store');
+    Route::get('/masuk-jamaah', [PilgrimPortalController::class, 'login'])->name('portal.login');
+    Route::post('/masuk-jamaah', [PilgrimPortalController::class, 'authenticate'])
+        ->middleware('throttle:6,1')->name('portal.login.store');
+});
+
+Route::prefix('jamaah')->middleware('pilgrim.portal')->name('portal.')->group(function () {
+    Route::get('/', [PilgrimPortalController::class, 'dashboard'])->name('dashboard');
+    Route::get('/paket', [PilgrimPortalController::class, 'packages'])->name('packages.index');
+    Route::get('/paket/{departure}', [PilgrimPortalController::class, 'showPackage'])->name('packages.show');
+    Route::post('/paket/{departure}/pilih', [PilgrimPortalController::class, 'selectPackage'])->name('packages.select');
+    Route::get('/biodata', [PilgrimPortalController::class, 'biodata'])->name('biodata.edit');
+    Route::post('/biodata', [PilgrimPortalController::class, 'submitBiodata'])->name('biodata.store');
+    Route::post('/keluar', [PilgrimPortalController::class, 'logout'])->name('logout');
+});
 
 // Semua route berikut adalah website admin. Middleware memastikan akun aktif
 // dan hanya role Super Admin/Admin Cabang yang dapat mengaksesnya.

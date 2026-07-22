@@ -28,7 +28,7 @@ class AdminAccessTest extends TestCase
         $this->actingAs($user)
             ->get('/dashboard')
             ->assertOk()
-            ->assertSee('Dashboard Nasional');
+            ->assertSee('Pusat Kendali Nasional');
     }
 
     public function test_non_admin_cannot_open_dashboard(): void

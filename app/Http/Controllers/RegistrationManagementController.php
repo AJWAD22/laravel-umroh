@@ -29,6 +29,8 @@ class RegistrationManagementController extends Controller
                 ->where('departure_id', $request->integer('departure_id')))
             ->when($request->filled('status'), fn (Builder $query) => $query
                 ->where('status', $request->string('status')->toString()))
+            ->when($request->filled('payment_status'), fn (Builder $query) => $query
+                ->where('payment_status', $request->string('payment_status')->toString()))
             ->when($request->filled('search'), function (Builder $query) use ($request): void {
                 $search = $request->string('search')->toString();
                 $query->where(fn (Builder $query) => $query
@@ -58,6 +60,7 @@ class RegistrationManagementController extends Controller
 
         $data = $request->validate([
             'status' => ['required', Rule::in(['submitted', 'contacted', 'approved', 'cancelled'])],
+            'payment_status' => ['required', Rule::in(['pending_branch_payment', 'verified', 'cancelled'])],
         ]);
 
         $registration->update($data);

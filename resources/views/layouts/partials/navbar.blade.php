@@ -4,14 +4,15 @@
     </button>
 
     <div class="min-w-0">
-        <p class="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">Panel Administrasi</p>
+        <p class="truncate text-sm font-extrabold text-slate-800 dark:text-slate-100">{{ auth()->user()->hasRole('super-admin') ? 'Pusat Kendali Nasional' : 'Panel Operasional Cabang' }}</p>
         <div class="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
             <span class="size-1.5 rounded-full bg-emerald-500 ring-4 ring-emerald-500/10"></span>
-            <span>{{ auth()->user()->hasRole('super-admin') ? 'Operasional Nasional' : (auth()->user()->branch?->name ?? 'Operasional Cabang') }}</span>
+            <span>{{ auth()->user()->hasRole('super-admin') ? 'Pusat Kendali Nasional' : (auth()->user()->branch?->name ?? 'Operasional Cabang') }}</span>
         </div>
     </div>
 
     <div class="ml-auto flex items-center gap-2 sm:gap-3">
+        <a href="{{ route('landing') }}" target="_blank" class="hidden min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 shadow-sm transition hover:border-blue-200 hover:text-blue-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 lg:inline-flex"><i data-lucide="plane" class="size-4"></i>Lihat Website</a>
         <button @click="dark = !dark; localStorage.theme = dark ? 'dark' : 'light'" class="navbar-button" :aria-label="dark ? 'Gunakan tema terang' : 'Gunakan tema gelap'">
             <span x-show="!dark"><i data-lucide="moon" class="size-5"></i></span>
             <span x-cloak x-show="dark"><i data-lucide="sun" class="size-5"></i></span>

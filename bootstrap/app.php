@@ -17,6 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'active.account' => \App\Http\Middleware\EnsureActiveAccount::class,
             'mobile.role' => \App\Http\Middleware\EnsureMobileRole::class,
+            'pilgrim.portal' => \App\Http\Middleware\EnsurePilgrimPortalAccount::class,
+            'pilgrim.guest' => \App\Http\Middleware\RedirectIfPilgrimPortalAuthenticated::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,

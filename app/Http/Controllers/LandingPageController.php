@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Departure;
 use App\Services\SystemSettingService;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 
 class LandingPageController extends Controller
 {
@@ -14,33 +14,15 @@ class LandingPageController extends Controller
     public function __invoke(): View
     {
         return view('public.landing', [
-            'packages' => $this->publicPackages()->limit(6)->get(),
             'travel' => $this->travelProfile(),
         ]);
     }
 
-    public function show(Departure $departure): View
+    public function show(Departure $departure): RedirectResponse
     {
         abort_unless($departure->is_public && $departure->status === 'scheduled', 404);
 
-        return view('public.package-show', [
-            'package' => $departure->load(['branch', 'hotels', 'itineraries']),
-            'packages' => $this->publicPackages()->whereKeyNot($departure->id)->limit(3)->get(),
-        ]);
-    }
-
-    private function publicPackages(): Builder
-    {
-        return Departure::query()
-            ->with(['branch', 'hotels', 'itineraries'])
-            ->withCount([
-                'registrations as active_registrations_count' => fn (Builder $query) => $query
-                    ->whereNotIn('status', ['cancelled']),
-            ])
-            ->where('is_public', true)
-            ->where('status', 'scheduled')
-            ->whereDate('departure_date', '>=', today())
-            ->orderBy('departure_date');
+        return redirect()->route('portal.packages.show', $departure);
     }
 
     /** @return array<string, mixed> */

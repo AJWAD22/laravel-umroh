@@ -1,30 +1,14 @@
 <x-app-layout>
-    <x-slot:title>Dashboard {{ $scopeLabel }}</x-slot:title>
+    <x-slot:title>{{ $isNational ? 'Pusat Kendali Nasional' : 'Dashboard Cabang' }}</x-slot:title>
     <x-slot:header>
-        <div class="travel-panel overflow-hidden p-5 sm:p-6">
-            <div class="absolute -right-12 -top-16 size-44 rounded-full bg-blue-400/20 blur-3xl"></div>
-            <div class="absolute right-24 top-8 size-28 rounded-full bg-emerald-300/20 blur-2xl"></div>
-            <div class="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                    <div class="travel-chip mb-4 w-fit">
-                        <i data-lucide="plane" class="size-4 text-blue-600"></i>
-                        Travel Operations Center
-                    </div>
-                    <nav class="mb-2 text-sm font-medium text-slate-500">Beranda / Dashboard</nav>
-                    <h1 class="text-3xl font-black tracking-tight text-slate-950 dark:text-white">Dashboard {{ $scopeLabel }}</h1>
-                    <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                        Ringkasan jamaah, petugas, rombongan, dan monitoring GPS dalam satu panel.
-                    </p>
-                </div>
-                <div class="inline-flex items-center gap-2 self-start rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700 shadow-sm dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300">
-                    <span class="relative flex size-2.5">
-                        <span class="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex size-2.5 rounded-full bg-emerald-500"></span>
-                    </span>
-                    Diperbarui {{ now()->format('H:i') }} WITA
-                </div>
+        <section class="relative isolate overflow-hidden rounded-[1.75rem] bg-[#071827] p-6 text-white shadow-2xl shadow-slate-950/10 sm:p-8">
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_80%_15%,rgba(20,184,166,.25),transparent_28%),radial-gradient(circle_at_15%_90%,rgba(37,99,235,.22),transparent_26%)]"></div>
+            <div class="absolute inset-0 opacity-[.06]" style="background-image:linear-gradient(rgba(255,255,255,.6) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.6) 1px,transparent 1px);background-size:42px 42px"></div>
+            <div class="relative flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
+                <div><div class="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[.14em] text-teal-200"><span class="size-2 rounded-full bg-emerald-400"></span>{{ $isNational ? 'National Control Center' : 'Branch Operations Center' }}</div><p class="text-sm text-slate-400">{{ now()->translatedFormat('l, d F Y') }}</p><h1 class="mt-2 text-3xl font-black tracking-tight sm:text-4xl">{{ $isNational ? 'Pusat Kendali Nasional' : $scopeLabel }}</h1><p class="mt-3 max-w-2xl leading-7 text-slate-300">{{ $isNational ? 'Pantau kesehatan operasional, perjalanan aktif, dan eskalasi seluruh cabang dari satu pusat kendali.' : 'Selesaikan pendaftaran, pembayaran, keberangkatan, dan kebutuhan jamaah cabang secara terarah.' }}</p></div>
+                <div class="grid grid-cols-2 gap-3 sm:flex"><div class="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur"><p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Status Sistem</p><p class="mt-1 flex items-center gap-2 text-sm font-extrabold"><span class="size-2 rounded-full bg-emerald-400"></span>Operasional</p></div><div class="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur"><p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pembaruan</p><p class="mt-1 text-sm font-extrabold">{{ now()->format('H:i') }} WITA</p></div></div>
             </div>
-        </div>
+        </section>
     </x-slot:header>
 
     @php
@@ -39,57 +23,42 @@
         ];
     @endphp
 
-    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6" aria-label="Ringkasan operasional">
         @foreach ($cards as $card)
-            <article class="surface-card relative overflow-hidden p-5 transition hover:-translate-y-0.5 hover:shadow-xl dark:bg-slate-900">
-                <div class="absolute inset-x-0 top-0 h-1.5 {{ $colorClasses[$card['color']]['accent'] }}"></div>
-                <div class="absolute -right-8 -top-10 size-24 rounded-full {{ $colorClasses[$card['color']]['accent'] }} opacity-10 blur-2xl"></div>
-                <div class="flex items-start justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-slate-500">{{ $card['label'] }}</p>
-                        <p class="mt-3 text-3xl font-bold tracking-tight">{{ number_format($card['value']) }}</p>
-                    </div>
-                    <span class="grid size-11 place-items-center rounded-xl {{ $colorClasses[$card['color']]['icon'] }}">
-                        <i data-lucide="{{ $card['icon'] }}" class="size-5"></i>
-                    </span>
-                </div>
-            </article>
+            <article class="surface-card relative overflow-hidden p-5 transition duration-200 hover:-translate-y-1 hover:shadow-xl"><div class="absolute inset-x-0 top-0 h-1 {{ $colorClasses[$card['color']]['accent'] }}"></div><div class="flex items-start justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-[.08em] text-slate-500">{{ $card['label'] }}</p><p class="mt-3 text-3xl font-black tracking-tight">{{ number_format($card['value']) }}</p></div><span class="grid size-11 place-items-center rounded-2xl {{ $colorClasses[$card['color']]['icon'] }}"><i data-lucide="{{ $card['icon'] }}" class="size-5"></i></span></div></article>
         @endforeach
     </section>
 
-    <section class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
-        <article class="surface-card p-5 sm:p-6">
-            <div>
-                <h2 class="font-semibold">Statistik 6 Bulan</h2>
-                <p class="mt-1 text-sm text-slate-500">Jamaah baru dan rombongan baru.</p>
-            </div>
-            <div class="mt-6 h-80">
-                <canvas id="dashboard-statistics-chart" aria-label="Grafik statistik enam bulan"></canvas>
-            </div>
-        </article>
-
-        <article class="surface-card p-5 sm:p-6">
-            <h2 class="font-semibold">Ringkasan Monitoring</h2>
-            <p class="mt-1 text-sm text-slate-500">Status GPS terakhir dari perangkat jamaah.</p>
-
-            <div class="mt-6 space-y-4">
+    <section class="mt-6 grid gap-6 xl:grid-cols-[1.25fr_.75fr]">
+        <article class="surface-card p-5 sm:p-6"><div class="flex items-center justify-between"><div><p class="text-xs font-bold uppercase tracking-[.14em] text-blue-600">Pekerjaan Prioritas</p><h2 class="mt-1 text-xl font-extrabold">Perlu Ditindaklanjuti</h2></div><span class="travel-chip">Hari ini</span></div>
+            <div class="mt-5 grid gap-3 sm:grid-cols-2">
                 @foreach ([
-                    ['label' => 'GPS Online', 'value' => $monitoring['online'], 'dot' => 'bg-emerald-500'],
-                    ['label' => 'GPS Offline', 'value' => $monitoring['offline'], 'dot' => 'bg-red-500'],
-                    ['label' => 'Status Belum Diketahui', 'value' => $monitoring['unknown'], 'dot' => 'bg-slate-400'],
+                    ['label'=>'Pendaftaran baru','value'=>$priorities['registrations'],'help'=>'Periksa kelengkapan biodata','icon'=>'clipboard-list','route'=>route('registrations.index', ['status'=>'submitted']),'iconClass'=>'bg-blue-50 text-blue-600','hoverClass'=>'hover:border-blue-200 hover:bg-blue-50/50'],
+                    ['label'=>'Menunggu pembayaran','value'=>$priorities['payments'],'help'=>'Verifikasi pembayaran cabang','icon'=>'wallet','route'=>route('registrations.index', ['payment_status'=>'pending_branch_payment']),'iconClass'=>'bg-amber-50 text-amber-600','hoverClass'=>'hover:border-amber-200 hover:bg-amber-50/50'],
+                    ['label'=>'SOS aktif','value'=>$priorities['sos'],'help'=>'Prioritas keselamatan jamaah','icon'=>'siren','route'=>route('monitoring.sos.index'),'iconClass'=>'bg-red-50 text-red-600','hoverClass'=>'hover:border-red-200 hover:bg-red-50/50'],
+                    ['label'=>'Perjalanan aktif','value'=>$priorities['departures'],'help'=>'Jadwal dan rombongan berjalan','icon'=>'plane','route'=>route('master-data.index', ['resource'=>'departures','status'=>'scheduled']),'iconClass'=>'bg-violet-50 text-violet-600','hoverClass'=>'hover:border-violet-200 hover:bg-violet-50/50'],
                 ] as $item)
-                    <div class="flex items-center rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-800/70">
-                        <span class="size-2.5 rounded-full {{ $item['dot'] }}"></span>
-                        <span class="ml-3 text-sm text-slate-600 dark:text-slate-300">{{ $item['label'] }}</span>
-                        <span class="ml-auto text-lg font-bold">{{ number_format($item['value']) }}</span>
-                    </div>
+                    <a href="{{ $item['route'] }}" class="group flex items-center gap-4 rounded-2xl border border-slate-200 p-4 transition {{ $item['hoverClass'] }} dark:border-slate-800 dark:hover:bg-slate-800"><span class="grid size-11 shrink-0 place-items-center rounded-2xl {{ $item['iconClass'] }} dark:bg-slate-800"><i data-lucide="{{ $item['icon'] }}" class="size-5"></i></span><span class="min-w-0 flex-1"><strong class="block text-sm">{{ $item['label'] }}</strong><small class="mt-1 block truncate text-slate-500">{{ $item['help'] }}</small></span><strong class="text-2xl">{{ number_format($item['value']) }}</strong></a>
                 @endforeach
             </div>
         </article>
+
+        <article class="surface-card p-5 sm:p-6"><p class="text-xs font-bold uppercase tracking-[.14em] text-teal-600">Akses Cepat</p><h2 class="mt-1 text-xl font-extrabold">Menu Utama</h2><div class="mt-5 grid grid-cols-2 gap-3">
+            @php $quickActions = $isNational ? [
+                ['Live Map', 'map', route('monitoring.map.index')], ['Data Cabang', 'building-2', route('master-data.index','branches')], ['Admin Cabang', 'shield-check', route('master-data.index','branch-admins')], ['Pengaturan', 'settings', route('settings.system.edit')],
+            ] : [
+                ['Pendaftaran', 'clipboard-list', route('registrations.index')], ['Live Map', 'map', route('monitoring.map.index')], ['Jadwal', 'plane', route('master-data.index','departures')], ['Rombongan', 'users-round', route('master-data.index','groups')],
+            ]; @endphp
+            @foreach ($quickActions as $action)<a href="{{ $action[2] }}" class="grid min-h-24 place-items-center rounded-2xl border border-slate-200 p-3 text-center transition hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50 dark:border-slate-800 dark:hover:bg-slate-800"><i data-lucide="{{ $action[1] }}" class="size-5 text-blue-600"></i><span class="mt-2 text-xs font-extrabold">{{ $action[0] }}</span></a>@endforeach
+        </div></article>
     </section>
 
+    <section class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,.55fr)]">
+        <article class="surface-card p-5 sm:p-6"><div class="flex items-center justify-between"><div><h2 class="text-lg font-extrabold">Tren Operasional 6 Bulan</h2><p class="mt-1 text-sm text-slate-500">Pertumbuhan jamaah dan rombongan baru.</p></div><span class="hidden travel-chip sm:inline-flex">Analitik</span></div><div class="mt-6 h-80"><canvas id="dashboard-statistics-chart" aria-label="Grafik statistik enam bulan"></canvas></div></article>
+        <article class="surface-card overflow-hidden"><div class="border-b border-slate-200 p-5 dark:border-slate-800"><div class="flex items-center justify-between"><div><p class="text-xs font-bold uppercase tracking-[.14em] text-red-600">Kondisi Darurat</p><h2 class="mt-1 text-lg font-extrabold">SOS Aktif</h2></div><a href="{{ route('monitoring.sos.index') }}" class="text-xs font-bold text-blue-600">Lihat Semua</a></div></div><div class="divide-y divide-slate-100 dark:divide-slate-800">@forelse ($recentSos as $sos)<a href="{{ route('monitoring.sos.show', $sos) }}" class="flex items-center gap-3 p-4 transition hover:bg-red-50/50 dark:hover:bg-red-950/10"><span class="grid size-10 shrink-0 place-items-center rounded-2xl bg-red-50 text-red-600 dark:bg-red-950/40"><i data-lucide="siren" class="size-4"></i></span><span class="min-w-0 flex-1"><strong class="block truncate text-sm">{{ $sos->pilgrim?->full_name }}</strong><small class="mt-1 block truncate text-slate-500">{{ $sos->branch?->name }} · {{ $sos->reported_at?->diffForHumans() }}</small></span><span class="rounded-full bg-red-50 px-2 py-1 text-[10px] font-bold uppercase text-red-700">{{ $sos->status }}</span></a>@empty<div class="p-8 text-center"><span class="mx-auto grid size-12 place-items-center rounded-2xl bg-emerald-50 text-emerald-600"><i data-lucide="circle-check" class="size-5"></i></span><p class="mt-3 text-sm font-extrabold">Tidak ada SOS aktif</p><p class="mt-1 text-xs text-slate-500">Kondisi operasional saat ini aman.</p></div>@endforelse</div></article>
+    </section>
 
-    <script>
-        window.dashboardChartData = {{ Illuminate\Support\Js::from($chart) }};
-    </script>
+    <section class="mt-6 surface-card p-5 sm:p-6"><div class="flex flex-col gap-5 lg:flex-row lg:items-center"><div class="min-w-0 flex-1"><p class="text-xs font-bold uppercase tracking-[.14em] text-slate-500">Kesehatan GPS</p><h2 class="mt-1 text-lg font-extrabold">Ringkasan Perangkat Jamaah</h2></div>@foreach ([['GPS Online',$monitoring['online'],'bg-emerald-500'],['GPS Offline',$monitoring['offline'],'bg-red-500'],['Belum Diketahui',$monitoring['unknown'],'bg-slate-400']] as $item)<div class="flex min-w-48 items-center rounded-2xl bg-slate-50 px-4 py-3 dark:bg-slate-800"><span class="size-2.5 rounded-full {{ $item[2] }}"></span><span class="ml-3 text-xs font-semibold text-slate-500">{{ $item[0] }}</span><strong class="ml-auto text-xl">{{ number_format($item[1]) }}</strong></div>@endforeach<a href="{{ route('monitoring.map.index') }}" class="button-primary shrink-0">Buka Monitoring</a></div></section>
+
+    <script>window.dashboardChartData = {{ Illuminate\Support\Js::from($chart) }};</script>
 </x-app-layout>

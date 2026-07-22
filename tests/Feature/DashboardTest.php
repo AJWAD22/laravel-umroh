@@ -27,10 +27,10 @@ class DashboardTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSee('Dashboard Nasional')
+            ->assertSee('Pusat Kendali Nasional')
             ->assertViewHas('scopeLabel', 'Nasional');
 
-        $this->assertCardValue($response, 'Total Cabang', 2);
+        $this->assertCardValue($response, 'Cabang Aktif', 2);
         $this->assertCardValue($response, 'Total Jamaah', 3);
     }
 
@@ -42,7 +42,8 @@ class DashboardTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSee('Dashboard Cabang A')
+            ->assertSee('Branch Operations Center')
+            ->assertSee('Cabang A')
             ->assertDontSee('Jamaah Rahasia Cabang B')
             ->assertViewHas('scopeLabel', 'Cabang A');
 

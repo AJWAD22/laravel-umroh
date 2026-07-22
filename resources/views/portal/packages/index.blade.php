@@ -1,0 +1,12 @@
+@extends('portal.layout')
+@section('title', 'Paket Umroh')
+@section('content')
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p class="text-sm font-bold uppercase tracking-[.18em] text-teal-700">Pilihan Perjalanan</p><h1 class="mt-2 text-3xl font-extrabold tracking-tight">Pilih Paket Umroh</h1><p class="mt-2 text-slate-600">Pelajari detail paket terlebih dahulu. Biodata belum diperlukan pada tahap ini.</p></div><span class="travel-chip">{{ $packages->count() }} paket tersedia</span></div>
+    <div class="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        @forelse ($packages as $package)
+            <article class="group flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"><div class="h-2 bg-gradient-to-r from-teal-500 via-cyan-500 to-blue-600"></div><div class="flex flex-1 flex-col p-6"><div class="flex items-start justify-between gap-4"><div><p class="text-xs font-bold uppercase tracking-[.14em] text-teal-700">{{ $package->branch?->name }}</p><h2 class="mt-2 text-xl font-extrabold">{{ $package->program_name }}</h2></div><span class="rounded-full bg-teal-50 px-3 py-1 text-xs font-bold text-teal-700">{{ $package->duration_days }} hari</span></div><p class="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{{ $package->description }}</p><dl class="mt-5 grid gap-3 text-sm text-slate-600"><div class="flex gap-2"><i data-lucide="calendar-days" class="size-4 text-teal-700"></i>{{ $package->departure_date->translatedFormat('d M Y') }}</div><div class="flex gap-2"><i data-lucide="plane" class="size-4 text-teal-700"></i>{{ $package->airline ?: 'Maskapai menyusul' }}</div><div class="flex gap-2"><i data-lucide="hotel" class="size-4 text-teal-700"></i>{{ $package->hotels->pluck('name')->take(2)->join(' & ') ?: 'Hotel menyusul' }}</div></dl><div class="mt-auto border-t border-slate-100 pt-5"><p class="text-xs text-slate-500">Mulai dari</p><p class="mt-1 text-2xl font-extrabold">{{ $package->price ? 'Rp '.number_format($package->price, 0, ',', '.') : 'Hubungi cabang' }}</p><a href="{{ route('portal.packages.show', $package) }}" class="button-primary mt-4 w-full">Lihat Detail Paket</a></div></div></article>
+        @empty
+            <div class="travel-panel p-10 text-center md:col-span-2 xl:col-span-3"><h2 class="font-extrabold">Belum ada paket tersedia</h2><p class="mt-2 text-sm text-slate-500">Silakan periksa kembali nanti.</p></div>
+        @endforelse
+    </div>
+@endsection

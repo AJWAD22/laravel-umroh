@@ -68,6 +68,16 @@ class User extends Authenticatable
         return $this->hasOne(StaffLocation::class);
     }
 
+    public function portalAccount(): HasOne
+    {
+        return $this->hasOne(PilgrimPortalAccount::class);
+    }
+
+    public function portalRegistrations(): HasMany
+    {
+        return $this->hasMany(PilgrimRegistration::class);
+    }
+
     public function mobileDevices(): HasMany
     {
         return $this->hasMany(MobileDevice::class);

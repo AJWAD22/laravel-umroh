@@ -17,7 +17,7 @@ class PublicPackageRegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_landing_renders_verified_travel_profile_and_demo_packages(): void
+    public function test_landing_renders_travel_profile_without_exposing_package_details(): void
     {
         SystemSetting::query()->where('key', 'company_name')->update(['value' => 'PT Travel Amanah']);
         SystemSetting::query()->where('key', 'company_tagline')->update(['value' => 'Melayani perjalanan ibadah dengan sepenuh hati.']);
@@ -30,16 +30,17 @@ class PublicPackageRegistrationTest extends TestCase
             ->assertSee('PT Travel Amanah')
             ->assertSee('Melayani perjalanan ibadah dengan sepenuh hati.')
             ->assertSee('PPIU-TERVERIFIKASI')
-            ->assertSee('Umroh Hemat 9 Hari')
-            ->assertSee('Umroh Reguler 12 Hari')
-            ->assertSee('Umroh Plus Thaif 12 Hari');
+            ->assertSee('Buat Akun Jamaah')
+            ->assertDontSee('Umroh Hemat 9 Hari')
+            ->assertDontSee('Rp 28.900.000');
 
         $this->assertDatabaseCount('departures', 3);
         $this->assertDatabaseCount('departure_itineraries', 20);
     }
 
-    public function test_public_landing_shows_scheduled_packages_and_accepts_registration(): void
+    public function test_jamaah_creates_account_selects_package_then_submits_biodata(): void
     {
+        $this->seed(RolePermissionSeeder::class);
         $branch = Branch::create(['code' => 'PUB', 'name' => 'Cabang Publik', 'city' => 'Makassar']);
         $departure = Departure::create([
             'branch_id' => $branch->id,
@@ -51,38 +52,60 @@ class PublicPackageRegistrationTest extends TestCase
             'is_public' => true,
         ]);
 
-        $this->get(route('landing'))
+        $this->post(route('portal.register.store'), [
+            'name' => 'Jamaah Publik',
+            'phone' => '081234567890',
+            'email' => 'jamaah@example.com',
+            'password' => 'password-rahasia',
+            'password_confirmation' => 'password-rahasia',
+            'terms' => '1',
+        ])->assertRedirect(route('portal.packages.index'));
+
+        $user = User::query()->where('name', 'Jamaah Publik')->firstOrFail();
+        $this->assertAuthenticatedAs($user);
+        $this->assertDatabaseHas('pilgrim_portal_accounts', [
+            'user_id' => $user->id,
+            'phone' => '6281234567890',
+        ]);
+
+        $this->get(route('portal.packages.index'))
             ->assertOk()
             ->assertSee('Umroh Publik 12 Hari');
 
-        $this->post(route('public-registration.biodata.store'), [
+        $this->post(route('portal.packages.select', $departure))
+            ->assertRedirect(route('portal.biodata.edit'));
+
+        $this->get(route('portal.biodata.edit'))
+            ->assertOk()
+            ->assertSee('Umroh Publik 12 Hari')
+            ->assertSee('Lengkapi Biodata Jamaah');
+
+        $this->post(route('portal.biodata.store'), [
             'full_name' => 'Jamaah Publik',
             'nik' => '6371010101010001',
             'gender' => 'male',
-            'phone' => '081234567890',
             'birth_date' => '1990-01-01',
+            'passport_number' => 'A1234567',
+            'passport_expired_at' => today()->addYears(2)->toDateString(),
             'address' => 'Banjarmasin',
-        ])->assertRedirect(route('public-registration.packages'));
-
-        $this->get(route('public-registration.packages'))
-            ->assertOk()
-            ->assertSee('Jamaah Publik')
-            ->assertSee('Umroh Publik 12 Hari');
-
-        $this->post(route('public-registration.complete'), [
-            'departure_id' => $departure->id,
-        ])->assertRedirect(route('packages.show', $departure));
+            'emergency_contact_name' => 'Keluarga Jamaah',
+            'emergency_contact_phone' => '081200000000',
+            'confirmation' => '1',
+        ])->assertRedirect(route('portal.dashboard'));
 
         $this->assertDatabaseHas('pilgrim_registrations', [
+            'user_id' => $user->id,
             'branch_id' => $branch->id,
             'departure_id' => $departure->id,
             'full_name' => 'Jamaah Publik',
             'status' => 'submitted',
+            'payment_status' => 'pending_branch_payment',
         ]);
     }
 
-    public function test_duplicate_registration_and_registration_over_quota_are_rejected(): void
+    public function test_package_quota_is_checked_again_when_biodata_is_submitted(): void
     {
+        $this->seed(RolePermissionSeeder::class);
         $branch = Branch::create(['code' => 'QTA', 'name' => 'Cabang Kuota', 'city' => 'Banjarmasin']);
         $departure = Departure::create([
             'branch_id' => $branch->id,
@@ -95,30 +118,28 @@ class PublicPackageRegistrationTest extends TestCase
             'is_public' => true,
         ]);
 
-        $payload = [
-            'full_name' => 'Jamaah Pertama',
-            'nik' => '6371010101010001',
+        PilgrimRegistration::create([
+            'branch_id' => $branch->id,
+            'departure_id' => $departure->id,
+            'full_name' => 'Pengisi Kuota',
             'gender' => 'male',
             'phone' => '081111111111',
-            'birth_date' => '1990-01-01',
-            'address' => 'Banjarmasin',
-        ];
-        $this->post(route('public-registration.biodata.store'), $payload)->assertSessionHasNoErrors();
-        $this->post(route('public-registration.complete'), ['departure_id' => $departure->id])
-            ->assertSessionHasNoErrors();
+        ]);
+        $user = User::factory()->create(['name' => 'Jamaah Kedua']);
+        \App\Models\PilgrimPortalAccount::create(['user_id' => $user->id, 'phone' => '6282222222222']);
+        $user->assignRole('jamaah');
+        $this->actingAs($user)->post(route('portal.packages.select', $departure));
 
-        $this->post(route('public-registration.biodata.store'), $payload)->assertSessionHasNoErrors();
-        $this->post(route('public-registration.complete'), ['departure_id' => $departure->id])
-            ->assertSessionHasErrors('departure_id');
-
-        $this->post(route('public-registration.biodata.store'), [
-            ...$payload,
+        $this->post(route('portal.biodata.store'), [
             'full_name' => 'Jamaah Kedua',
             'nik' => '6371010101010002',
-            'phone' => '082222222222',
-        ])->assertSessionHasNoErrors();
-        $this->post(route('public-registration.complete'), ['departure_id' => $departure->id])
-            ->assertSessionHasErrors('departure_id');
+            'gender' => 'female',
+            'birth_date' => '1992-01-01',
+            'address' => 'Banjarmasin',
+            'emergency_contact_name' => 'Keluarga',
+            'emergency_contact_phone' => '081200000000',
+            'confirmation' => '1',
+        ])->assertSessionHasErrors('confirmation');
 
         $this->assertDatabaseCount('pilgrim_registrations', 1);
     }
@@ -150,13 +171,17 @@ class PublicPackageRegistrationTest extends TestCase
             ->assertOk()
             ->assertSee('Calon Jamaah');
 
-        $this->patch(route('registrations.update', $registration), ['status' => 'contacted'])
+        $this->patch(route('registrations.update', $registration), [
+            'status' => 'contacted',
+            'payment_status' => 'verified',
+        ])
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('pilgrim_registrations', [
             'id' => $registration->id,
             'status' => 'contacted',
+            'payment_status' => 'verified',
         ]);
     }
 }

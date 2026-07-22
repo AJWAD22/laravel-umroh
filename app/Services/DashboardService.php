@@ -4,11 +4,12 @@ namespace App\Services;
 
 use App\Enums\UserRole;
 use App\Models\Branch;
+use App\Models\Departure;
 use App\Models\Group;
-use App\Models\Muthawwif;
 use App\Models\Pilgrim;
 use App\Models\PilgrimLocation;
-use App\Models\TourLeader;
+use App\Models\PilgrimRegistration;
+use App\Models\SosReport;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,43 +27,76 @@ class DashboardService
             ? $user->branch_id
             : null;
 
+        $monitoring = $this->monitoring($branchId);
+
         return [
+            'isNational' => $branchId === null,
             'scopeLabel' => $branchId ? $user->branch?->name ?? 'Cabang' : 'Nasional',
-            'cards' => $this->cards($branchId),
+            'cards' => $this->cards($branchId, $monitoring),
             'chart' => $this->chart($branchId),
-            'monitoring' => $this->monitoring($branchId),
+            'monitoring' => $monitoring,
+            'priorities' => $this->priorities($branchId),
+            'recentSos' => SosReport::query()
+                ->with(['pilgrim:id,full_name', 'branch:id,name'])
+                ->active()
+                ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
+                ->latest('reported_at')
+                ->limit(5)
+                ->get(),
         ];
     }
 
     /**
      * @return list<array{label: string, value: int, icon: string, color: string}>
      */
-    private function cards(?int $branchId): array
+    private function cards(?int $branchId, array $monitoring): array
     {
         $scopedCount = static fn (string $model): int => $model::query()
             ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
             ->count();
 
-        $operationalCards = [
-            ['label' => 'Total Jamaah', 'value' => $scopedCount(Pilgrim::class), 'icon' => 'users', 'color' => 'blue'],
-            ['label' => 'Tour Leader', 'value' => $scopedCount(TourLeader::class), 'icon' => 'user-round-check', 'color' => 'emerald'],
-            ['label' => 'Muthawwif', 'value' => $scopedCount(Muthawwif::class), 'icon' => 'book-open', 'color' => 'violet'],
-            ['label' => 'Total Rombongan', 'value' => $scopedCount(Group::class), 'icon' => 'users-round', 'color' => 'amber'],
-        ];
-
         if ($branchId) {
-            return $operationalCards;
+            return [
+                ['label' => 'Total Jamaah', 'value' => $scopedCount(Pilgrim::class), 'icon' => 'users', 'color' => 'blue'],
+                ['label' => 'Pendaftaran Baru', 'value' => PilgrimRegistration::where('branch_id', $branchId)->where('status', 'submitted')->count(), 'icon' => 'clipboard-list', 'color' => 'cyan'],
+                ['label' => 'Menunggu Pembayaran', 'value' => PilgrimRegistration::where('branch_id', $branchId)->where('payment_status', 'pending_branch_payment')->where('status', '!=', 'cancelled')->count(), 'icon' => 'wallet', 'color' => 'amber'],
+                ['label' => 'Perjalanan Aktif', 'value' => Departure::where('branch_id', $branchId)->whereIn('status', ['scheduled', 'departed'])->count(), 'icon' => 'plane', 'color' => 'violet'],
+                ['label' => 'SOS Aktif', 'value' => SosReport::active()->where('branch_id', $branchId)->count(), 'icon' => 'siren', 'color' => 'red'],
+                ['label' => 'GPS Perlu Diperiksa', 'value' => $monitoring['offline'], 'icon' => 'triangle-alert', 'color' => 'indigo'],
+            ];
         }
 
         return [
-            ['label' => 'Total Cabang', 'value' => Branch::count(), 'icon' => 'building-2', 'color' => 'blue'],
+            ['label' => 'Cabang Aktif', 'value' => Branch::where('is_active', true)->count(), 'icon' => 'building-2', 'color' => 'blue'],
             [
                 'label' => 'Admin Cabang',
                 'value' => User::role(UserRole::BranchAdmin->value)->count(),
                 'icon' => 'shield-check',
                 'color' => 'cyan',
             ],
-            ...$operationalCards,
+            ['label' => 'Total Jamaah', 'value' => $scopedCount(Pilgrim::class), 'icon' => 'users', 'color' => 'emerald'],
+            ['label' => 'Perjalanan Aktif', 'value' => Departure::whereIn('status', ['scheduled', 'departed'])->count(), 'icon' => 'plane', 'color' => 'violet'],
+            ['label' => 'SOS Nasional', 'value' => SosReport::active()->count(), 'icon' => 'siren', 'color' => 'red'],
+            ['label' => 'GPS Perlu Diperiksa', 'value' => $monitoring['offline'], 'icon' => 'triangle-alert', 'color' => 'indigo'],
+        ];
+    }
+
+    /** @return array<string, int> */
+    private function priorities(?int $branchId): array
+    {
+        return [
+            'registrations' => PilgrimRegistration::query()
+                ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
+                ->where('status', 'submitted')->count(),
+            'payments' => PilgrimRegistration::query()
+                ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
+                ->where('payment_status', 'pending_branch_payment')
+                ->where('status', '!=', 'cancelled')->count(),
+            'sos' => SosReport::query()->active()
+                ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))->count(),
+            'departures' => Departure::query()
+                ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
+                ->whereIn('status', ['scheduled', 'departed'])->count(),
         ];
     }
 
