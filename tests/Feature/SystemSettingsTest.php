@@ -25,6 +25,8 @@ class SystemSettingsTest extends TestCase
             ->put(route('settings.system.update'), [
                 'application_name' => 'Umrah Command Center',
                 'company_name' => 'PT Travel Amanah',
+                'company_tagline' => 'Perjalanan ibadah aman dan terpantau.',
+                'company_about' => 'Travel umroh dengan pelayanan cabang dan pendampingan perjalanan.',
                 'support_email' => 'support@amanah.test',
                 'support_phone' => '0800123456',
                 'gps_offline_threshold_minutes' => 15,

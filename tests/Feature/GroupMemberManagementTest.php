@@ -139,6 +139,26 @@ class GroupMemberManagementTest extends TestCase
         $this->assertSame($muthawwif->id, $group->fresh()->muthawwif_id);
     }
 
+    public function test_branch_admin_can_reset_activation_pins_for_its_group(): void
+    {
+        [$admin, $group, $pilgrim] = $this->scenario();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'pilgrim_id' => $pilgrim->id,
+            'status' => 'active',
+            'joined_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('groups.reset-pins', $group))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('reset_pins', fn (array $pins) => count($pins) === 1);
+
+        $this->assertNotNull($pilgrim->fresh()->activation_pin_hash);
+        $this->assertSame($admin->id, $pilgrim->fresh()->activation_pin_created_by);
+    }
+
     /**
      * @return array{User, Group, Pilgrim}
      */

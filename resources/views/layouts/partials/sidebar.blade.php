@@ -45,7 +45,7 @@
             $supportMenus = [
                 ['label' => 'Jadwal Perjalanan', 'resource' => 'departures', 'permission' => 'departures.manage', 'view' => 'departures.view'],
                 ['label' => 'Hotel', 'resource' => 'hotels', 'permission' => 'hotels.manage', 'view' => 'hotels.view'],
-                ['label' => 'Tujuan & Titik Penting', 'resource' => 'checkpoints', 'permission' => 'hotels.manage', 'view' => 'hotels.view'],
+                ['label' => 'Tujuan & Titik Penting', 'resource' => 'checkpoints', 'permission' => 'checkpoints.manage', 'view' => 'checkpoints.view'],
             ];
             $organizationMenus = [
                 ['label' => 'Data Cabang', 'resource' => 'branches', 'permission' => 'branches.manage', 'view' => 'branches.manage'],
@@ -108,18 +108,20 @@
             </div>
         @endcanany
 
-        <div x-data="{ open: {{ request()->routeIs('monitoring.*') ? 'true' : 'false' }} }">
-            <button @click="open = !open" class="sidebar-link w-full">
-                <i data-lucide="map" class="size-5 shrink-0"></i>
-                <span x-show="!sidebarCollapsed" class="flex-1 text-left">Monitoring</span>
-                <i x-show="!sidebarCollapsed" data-lucide="chevron-down" class="size-4 transition" :class="{ 'rotate-180': open }"></i>
-            </button>
-            <div x-cloak x-show="open && !sidebarCollapsed" x-transition class="ml-5 mt-1 space-y-0.5 border-l border-slate-800 pl-5">
-                <a href="{{ route('monitoring.map.index') }}" class="sidebar-submenu-link {{ request()->routeIs('monitoring.map.*') ? 'sidebar-submenu-link-active' : '' }}">Live Map</a>
-                <a href="{{ route('monitoring.tracking.index') }}" class="sidebar-submenu-link {{ request()->routeIs('monitoring.tracking.*') ? 'sidebar-submenu-link-active' : '' }}">Histori Tracking</a>
-                <a href="{{ route('monitoring.sos.index') }}" class="sidebar-submenu-link {{ request()->routeIs('monitoring.sos.*') ? 'sidebar-submenu-link-active' : '' }}">SOS Jamaah</a>
+        @role('admin-cabang')
+            <div x-data="{ open: {{ request()->routeIs('monitoring.*') ? 'true' : 'false' }} }">
+                <button @click="open = !open" class="sidebar-link w-full">
+                    <i data-lucide="map" class="size-5 shrink-0"></i>
+                    <span x-show="!sidebarCollapsed" class="flex-1 text-left">Monitoring</span>
+                    <i x-show="!sidebarCollapsed" data-lucide="chevron-down" class="size-4 transition" :class="{ 'rotate-180': open }"></i>
+                </button>
+                <div x-cloak x-show="open && !sidebarCollapsed" x-transition class="ml-5 mt-1 space-y-0.5 border-l border-slate-800 pl-5">
+                    <a href="{{ route('monitoring.map.index') }}" class="sidebar-submenu-link {{ request()->routeIs('monitoring.map.*') ? 'sidebar-submenu-link-active' : '' }}">Live Map</a>
+                    <a href="{{ route('monitoring.tracking.index') }}" class="sidebar-submenu-link {{ request()->routeIs('monitoring.tracking.*') ? 'sidebar-submenu-link-active' : '' }}">Histori Tracking</a>
+                    <a href="{{ route('monitoring.sos.index') }}" class="sidebar-submenu-link {{ request()->routeIs('monitoring.sos.*') ? 'sidebar-submenu-link-active' : '' }}">SOS Jamaah</a>
+                </div>
             </div>
-        </div>
+        @endrole
 
         <div x-data="{ open: {{ request()->routeIs('reports.*') ? 'true' : 'false' }} }">
             <button @click="open = !open" class="sidebar-link w-full">

@@ -64,7 +64,7 @@ class MasterDataService
             'hotels' => $this->definition(Hotel::class, 'Hotel', 'hotels.manage',
                 ['name' => 'Nama Hotel', 'branch.name' => 'Cabang', 'city' => 'Kota', 'geofence_radius_meters' => 'Radius (m)'],
                 ['name', 'address'], ['name', 'city', 'geofence_radius_meters'], ['branch']),
-            'checkpoints' => $this->definition(Checkpoint::class, 'Tujuan & Titik Penting', 'hotels.manage',
+            'checkpoints' => $this->definition(Checkpoint::class, 'Tujuan & Titik Penting', 'checkpoints.manage',
                 ['name' => 'Nama Tujuan', 'category' => 'Kategori', 'city' => 'Kota', 'branch.name' => 'Cabang', 'departure.program_name' => 'Jadwal Perjalanan', 'group.name' => 'Rombongan', 'is_active' => 'Aktif'],
                 ['name', 'address', 'description'], ['name', 'category', 'city', 'is_active'], ['branch', 'departure', 'group']),
             'departures' => $this->definition(Departure::class, 'Jadwal Perjalanan', 'departures.manage',
@@ -226,6 +226,10 @@ class MasterDataService
             if ($resource === 'departures' && $model instanceof Departure) {
                 $this->syncDepartureHotels($model, $hotelIds);
                 $this->syncDepartureItinerary($model, $itineraryPlan);
+
+                if (in_array($model->status, ['completed', 'cancelled'], true)) {
+                    $this->closeDepartureAccess($model);
+                }
             }
 
             return $model;
@@ -331,6 +335,53 @@ class MasterDataService
             ->delete();
 
         $rows->each(fn (array $row) => $departure->itineraries()->create($row));
+    }
+
+    /**
+     * Menutup akses operasional ketika perjalanan selesai atau dibatalkan.
+     * Riwayat lokasi dipertahankan, sedangkan snapshot aktif, token, perangkat,
+     * dan PIN dicabut agar tracking tidak terus berjalan setelah perjalanan.
+     */
+    private function closeDepartureAccess(Departure $departure): void
+    {
+        $groupIds = Group::query()
+            ->where('departure_id', $departure->id)
+            ->pluck('id');
+
+        if ($groupIds->isEmpty()) {
+            return;
+        }
+
+        $pilgrimIds = GroupMember::query()
+            ->whereIn('group_id', $groupIds)
+            ->where('status', 'active')
+            ->pluck('pilgrim_id')
+            ->unique();
+        $userIds = Pilgrim::query()
+            ->whereIn('id', $pilgrimIds)
+            ->pluck('user_id')
+            ->filter()
+            ->unique();
+
+        User::query()->whereIn('id', $userIds)->get()
+            ->each(fn (User $user) => $user->tokens()->delete());
+        MobileDevice::query()
+            ->whereIn('user_id', $userIds)
+            ->whereNull('revoked_at')
+            ->update(['revoked_at' => now()]);
+        MobileActivationSession::query()
+            ->whereIn('pilgrim_id', $pilgrimIds)
+            ->whereIn('status', ['created', 'awaiting_approval', 'approved'])
+            ->update(['status' => 'cancelled']);
+        PilgrimLocation::query()->whereIn('pilgrim_id', $pilgrimIds)->delete();
+        Pilgrim::query()->whereIn('id', $pilgrimIds)->update([
+            'status' => $departure->status === 'completed' ? 'completed' : 'cancelled',
+            'monitoring_status' => 'normal',
+            'activation_pin_hash' => null,
+            'activation_pin_encrypted' => null,
+            'activation_pin_used_at' => now(),
+        ]);
+        Group::query()->whereIn('id', $groupIds)->update(['is_active' => false]);
     }
 
     private function deleteBranchWithChildren(Branch $branch): void

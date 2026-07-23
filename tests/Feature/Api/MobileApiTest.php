@@ -189,6 +189,41 @@ class MobileApiTest extends TestCase
         $this->assertDatabaseMissing('checkpoints', ['name' => 'Tidak Boleh Dibuat']);
     }
 
+    public function test_checkpoint_created_by_branch_admin_is_visible_to_assigned_pilgrim(): void
+    {
+        $context = $this->scenario();
+        $admin = User::factory()->create(['branch_id' => $context['group']->branch_id]);
+        $admin->assignRole('admin-cabang');
+
+        $this->actingAs($admin)
+            ->post(route('master-data.store', 'checkpoints'), [
+                'branch_id' => $context['group']->branch_id,
+                'departure_id' => $context['group']->departure_id,
+                'group_id' => $context['group']->id,
+                'name' => 'Titik Tujuan dari Web',
+                'category' => 'titik_kumpul',
+                'city' => 'makkah',
+                'latitude' => 21.422487,
+                'longitude' => 39.826206,
+                'geofence_radius_meters' => 250,
+                'is_active' => '1',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('master-data.index', 'checkpoints'));
+
+        // Lepaskan autentikasi guard web Admin Cabang sebelum mensimulasikan
+        // request terpisah dari APK jamaah menggunakan token Sanctum.
+        $this->app['auth']->forgetGuards();
+        $token = $this->login($context['pilgrimUser']);
+        $this->withToken($token)
+            ->getJson('/api/mobile/checkpoints')
+            ->assertOk()
+            ->assertJsonFragment([
+                'name' => 'Titik Tujuan dari Web',
+                'group_id' => $context['group']->id,
+            ]);
+    }
+
     public function test_group_checkpoint_does_not_leak_to_another_group_on_same_departure(): void
     {
         $context = $this->scenario();
@@ -241,6 +276,26 @@ class MobileApiTest extends TestCase
             ->postJson('/api/mobile/send-location', ['latitude' => 999, 'longitude' => 999])
             ->assertUnprocessable()
             ->assertJsonStructure(['message', 'errors' => ['latitude', 'longitude']]);
+    }
+
+    public function test_tracking_is_stopped_when_pilgrim_journey_is_completed(): void
+    {
+        $context = $this->scenario();
+        $token = $this->login($context['pilgrimUser']);
+        $context['group']->departure()->update(['status' => 'completed']);
+
+        $this->withToken($token)
+            ->postJson('/api/mobile/send-location', [
+                'latitude' => 21.422487,
+                'longitude' => 39.826206,
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('journey');
+
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+        $this->assertDatabaseMissing('pilgrim_locations', [
+            'pilgrim_id' => $context['pilgrim']->id,
+        ]);
     }
 
     public function test_authenticated_mobile_user_can_register_and_refresh_its_fcm_token(): void

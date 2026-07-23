@@ -5,11 +5,14 @@ namespace Tests\Feature;
 use App\Enums\UserRole;
 use App\Models\Branch;
 use App\Models\Departure;
+use App\Models\Group;
+use App\Models\Pilgrim;
 use App\Models\PilgrimRegistration;
 use App\Models\SystemSetting;
 use App\Models\User;
 use Database\Seeders\PublicPackageDemoSeeder;
 use Database\Seeders\RolePermissionSeeder;
+use Database\Seeders\SystemSettingSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -19,6 +22,7 @@ class PublicPackageRegistrationTest extends TestCase
 
     public function test_landing_renders_travel_profile_without_exposing_package_details(): void
     {
+        $this->seed(SystemSettingSeeder::class);
         SystemSetting::query()->where('key', 'company_name')->update(['value' => 'PT Travel Amanah']);
         SystemSetting::query()->where('key', 'company_tagline')->update(['value' => 'Melayani perjalanan ibadah dengan sepenuh hati.']);
         SystemSetting::query()->where('key', 'company_license')->update(['value' => 'PPIU-TERVERIFIKASI']);
@@ -182,6 +186,66 @@ class PublicPackageRegistrationTest extends TestCase
             'id' => $registration->id,
             'status' => 'contacted',
             'payment_status' => 'verified',
+        ]);
+    }
+
+    public function test_verified_registration_becomes_operational_pilgrim_in_selected_group(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $branch = Branch::create(['code' => 'OPS', 'name' => 'Cabang Operasional', 'city' => 'Banjarmasin']);
+        $departure = Departure::create([
+            'branch_id' => $branch->id,
+            'code' => 'OPS-DEP-001',
+            'program_name' => 'Paket Operasional',
+            'departure_date' => today()->addMonth(),
+            'return_date' => today()->addMonth()->addDays(9),
+            'status' => 'scheduled',
+        ]);
+        $group = Group::create([
+            'branch_id' => $branch->id,
+            'departure_id' => $departure->id,
+            'code' => 'OPS-GRP-001',
+            'name' => 'Rombongan Operasional',
+            'capacity' => 45,
+        ]);
+        $portalUser = User::factory()->create(['branch_id' => null, 'name' => 'Pendaftar Portal']);
+        \App\Models\PilgrimPortalAccount::create([
+            'user_id' => $portalUser->id,
+            'phone' => '6281234500000',
+        ]);
+        $portalUser->assignRole('jamaah');
+        $registration = PilgrimRegistration::create([
+            'user_id' => $portalUser->id,
+            'branch_id' => $branch->id,
+            'departure_id' => $departure->id,
+            'full_name' => 'Pendaftar Portal',
+            'nik' => '6371010101010099',
+            'gender' => 'male',
+            'phone' => '6281234500000',
+            'birth_date' => '1990-01-01',
+            'address' => 'Banjarmasin',
+        ]);
+        $admin = User::factory()->create(['branch_id' => $branch->id]);
+        $admin->assignRole(UserRole::BranchAdmin->value);
+
+        $this->actingAs($admin)
+            ->patch(route('registrations.update', $registration), [
+                'status' => 'approved',
+                'payment_status' => 'verified',
+                'group_id' => $group->id,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('success');
+
+        $pilgrim = Pilgrim::query()->where('user_id', $portalUser->id)->firstOrFail();
+        $this->assertSame($branch->id, $portalUser->fresh()->branch_id);
+        $this->assertMatchesRegularExpression('/^OPS-JMH-\d{5}$/', $pilgrim->registration_number);
+        $this->assertNotNull($pilgrim->activation_pin_hash);
+        $this->assertDatabaseHas('group_members', [
+            'group_id' => $group->id,
+            'pilgrim_id' => $pilgrim->id,
+            'status' => 'active',
         ]);
     }
 }

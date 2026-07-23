@@ -4,7 +4,7 @@ namespace App\Policies;
 
 class CheckpointPolicy extends MasterDataPolicy
 {
-    protected string $permission = 'hotels.manage';
+    protected string $permission = 'checkpoints.manage';
 
-    protected ?string $viewPermission = 'hotels.view';
+    protected ?string $viewPermission = 'checkpoints.view';
 }

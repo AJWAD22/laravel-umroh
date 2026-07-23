@@ -21,11 +21,11 @@ class MonitoringMapTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_authorized_admin_can_open_live_map(): void
+    public function test_branch_admin_can_open_live_map(): void
     {
-        [$superAdmin] = $this->users();
+        [, $branchAdmin] = $this->users();
 
-        $this->actingAs($superAdmin)
+        $this->actingAs($branchAdmin)
             ->get(route('monitoring.map.index'))
             ->assertOk()
             ->assertSee('Monitoring Perjalanan')
@@ -35,49 +35,14 @@ class MonitoringMapTest extends TestCase
             ->assertSee('monitoring-departure', false);
     }
 
-    public function test_super_admin_can_filter_real_markers_by_branch_and_status(): void
+    public function test_super_admin_cannot_access_live_map_data(): void
     {
         [$superAdmin, , $branchB] = $this->users();
 
-        $response = $this->actingAs($superAdmin)->getJson(route('monitoring.map.data', [
+        $this->actingAs($superAdmin)->getJson(route('monitoring.map.data', [
             'branch_id' => $branchB->id,
             'status' => 'online',
-        ]));
-
-        $response
-            ->assertOk()
-            ->assertJsonPath('source', 'database')
-            ->assertJsonPath('summary.offline', 0)
-            ->assertJsonStructure([
-                'markers' => [
-                    '*' => [
-                        'id',
-                        'type',
-                        'name',
-                        'registration_number',
-                        'photo_url',
-                        'phone',
-                        'branch',
-                        'group',
-                        'tour_leader',
-                        'muthawwif',
-                        'location_name',
-                        'latitude',
-                        'longitude',
-                        'accuracy',
-                        'battery',
-                        'status',
-                        'updated_at',
-                    ],
-                ],
-            ]);
-
-        $markers = collect($response->json('markers'));
-        $this->assertNotEmpty($markers);
-        $this->assertTrue($markers->every(
-            fn (array $marker) => $marker['branch_id'] === $branchB->id
-                && $marker['status'] === 'online',
-        ));
+        ]))->assertForbidden();
     }
 
     public function test_branch_admin_cannot_override_its_branch_scope(): void

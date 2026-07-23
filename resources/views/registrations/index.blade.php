@@ -74,6 +74,22 @@
                                                 <option value="{{ $value }}" @selected($registration->payment_status === $value)>{{ $label }}</option>
                                             @endforeach
                                         </select>
+                                        @php
+                                            $matchingGroups = $groups->where('departure_id', $registration->departure_id);
+                                            $activeMembership = $registration->user?->pilgrim?->groupMemberships
+                                                ?->firstWhere('status', 'active');
+                                        @endphp
+                                        <select name="group_id" class="control-field text-xs">
+                                            <option value="">Pilih rombongan saat disetujui</option>
+                                            @foreach ($matchingGroups as $group)
+                                                <option value="{{ $group->id }}" @selected((int) $activeMembership?->group_id === (int) $group->id)>
+                                                    {{ $group->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @if ($matchingGroups->isEmpty())
+                                            <p class="text-[11px] leading-4 text-amber-600">Buat rombongan untuk paket ini sebelum menyetujui registrasi.</p>
+                                        @endif
                                         <button class="button-primary min-h-9 py-2 text-xs">Simpan</button>
                                     </form>
                                 @else

@@ -36,13 +36,17 @@ class DashboardService
             'chart' => $this->chart($branchId),
             'monitoring' => $monitoring,
             'priorities' => $this->priorities($branchId),
-            'recentSos' => SosReport::query()
-                ->with(['pilgrim:id,full_name', 'branch:id,name'])
-                ->active()
-                ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
-                ->latest('reported_at')
-                ->limit(5)
-                ->get(),
+            // Super Admin hanya menerima angka agregat. Detail individu dan
+            // tindak lanjut SOS tetap menjadi tanggung jawab Admin Cabang.
+            'recentSos' => $branchId
+                ? SosReport::query()
+                    ->with(['pilgrim:id,full_name', 'branch:id,name'])
+                    ->active()
+                    ->where('branch_id', $branchId)
+                    ->latest('reported_at')
+                    ->limit(5)
+                    ->get()
+                : collect(),
         ];
     }
 

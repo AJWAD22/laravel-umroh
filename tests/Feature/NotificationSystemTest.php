@@ -40,7 +40,7 @@ class NotificationSystemTest extends TestCase
         );
 
         $this->assertSame(2, Notification::where('notifiable_id', $branchAdmin->id)->count());
-        $this->assertSame(2, Notification::where('notifiable_id', $superAdmin->id)->count());
+        $this->assertSame(0, Notification::where('notifiable_id', $superAdmin->id)->count());
         $this->assertSame(0, Notification::where('notifiable_id', $foreignAdmin->id)->count());
         $this->assertEqualsCanonicalizing(
             ['gps_offline', 'geofence_exit'],

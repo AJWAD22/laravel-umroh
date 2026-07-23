@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Mobile\SendSosRequest;
 use App\Http\Resources\Mobile\LocationResource;
 use App\Http\Resources\Mobile\SosReportResource;
 use App\Models\LocationHistory;
+use App\Models\Group;
 use App\Models\PilgrimLocation;
 use App\Models\SosReport;
 use App\Services\AdminNotificationService;
@@ -17,6 +18,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PilgrimController extends Controller
 {
@@ -31,7 +33,7 @@ class PilgrimController extends Controller
         // Endpoint ini dipanggil APK jamaah secara berkala.
         // Tujuannya menyimpan lokasi terakhir dan riwayat lokasi.
         $pilgrim = $request->user()->pilgrim;
-        $group = $this->access->activeGroupForPilgrim($pilgrim);
+        $group = $this->activeJourney($request);
         $data = $request->validated();
         $recordedAt = isset($data['recorded_at']) ? CarbonImmutable::parse($data['recorded_at']) : now();
         if ($recordedAt->isFuture()) {
@@ -93,7 +95,7 @@ class PilgrimController extends Controller
         // Endpoint darurat. Jamaah menekan SOS, lalu sistem menyimpan laporan
         // dan mengirim notifikasi ke admin/petugas.
         $pilgrim = $request->user()->pilgrim;
-        $group = $this->access->activeGroupForPilgrim($pilgrim);
+        $group = $this->activeJourney($request);
         $data = $request->validated();
 
         $report = DB::transaction(function () use ($pilgrim, $group, $data): SosReport {
@@ -144,7 +146,7 @@ class PilgrimController extends Controller
 
     public function staffLocations(Request $request): JsonResponse
     {
-        $group = $this->access->activeGroupForPilgrim($request->user()->pilgrim);
+        $group = $this->activeJourney($request);
         $group?->loadMissing([
             'tourLeader.user.staffLocation',
             'muthawwif.user.staffLocation',
@@ -171,6 +173,24 @@ class PilgrimController extends Controller
         })->values();
 
         return response()->json(['data' => $staff]);
+    }
+
+    private function activeJourney(Request $request): Group
+    {
+        $group = $this->access->activeGroupForPilgrim($request->user()->pilgrim);
+        $group?->loadMissing('departure');
+
+        if (! $group?->departure
+            || ! in_array($group->departure->status, ['scheduled', 'departed'], true)
+            || $group->departure->return_date?->endOfDay()->isPast()) {
+            $request->user()->currentAccessToken()?->delete();
+
+            throw ValidationException::withMessages([
+                'journey' => ['Perjalanan tidak aktif atau telah selesai. Tracking dan SOS dihentikan.'],
+            ]);
+        }
+
+        return $group;
     }
 
 }

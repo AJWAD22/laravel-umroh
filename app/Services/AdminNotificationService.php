@@ -232,17 +232,11 @@ class AdminNotificationService
 
     private function recipients(int $branchId): Collection
     {
-        $superAdmins = User::query()
-            ->active()
-            ->whereHas('roles', fn ($query) => $query->where('name', UserRole::SuperAdmin->value))
-            ->get();
-        $branchAdmins = User::query()
+        return User::query()
             ->active()
             ->where('branch_id', $branchId)
             ->whereHas('roles', fn ($query) => $query->where('name', UserRole::BranchAdmin->value))
             ->get();
-
-        return $superAdmins->concat($branchAdmins)->unique('id')->values();
     }
 
     private function staffRecipients($group): Collection

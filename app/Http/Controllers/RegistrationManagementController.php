@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
 use App\Models\Departure;
+use App\Models\Group;
 use App\Models\PilgrimRegistration;
+use App\Services\RegistrationApprovalService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,13 +15,25 @@ use Illuminate\View\View;
 
 class RegistrationManagementController extends Controller
 {
+    public function __construct(
+        private readonly RegistrationApprovalService $approvals,
+    ) {}
+
     public function index(Request $request): View
     {
         $user = $request->user();
+        abort_unless(
+            $user->can('registrations.view') || $user->can('registrations.manage'),
+            403,
+        );
         $branchId = $user->hasRole(UserRole::SuperAdmin->value) ? null : $user->branch_id;
 
         $registrations = PilgrimRegistration::query()
-            ->with(['branch:id,name', 'departure:id,branch_id,program_name,departure_date'])
+            ->with([
+                'branch:id,name',
+                'departure:id,branch_id,program_name,departure_date',
+                'user.pilgrim.groupMemberships.group:id,name',
+            ])
             ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
             ->when(
                 $user->hasRole(UserRole::SuperAdmin->value) && $request->filled('branch_id'),
@@ -48,23 +62,37 @@ class RegistrationManagementController extends Controller
                 ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
                 ->latest('departure_date')
                 ->pluck('program_name', 'id'),
-            'canManage' => $user->hasRole(UserRole::BranchAdmin->value),
+            'groups' => Group::query()
+                ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
+                ->where('is_active', true)
+                ->whereNotNull('departure_id')
+                ->orderBy('name')
+                ->get(['id', 'departure_id', 'name', 'capacity']),
+            'canManage' => $user->can('registrations.manage'),
         ]);
     }
 
     public function update(Request $request, PilgrimRegistration $registration): RedirectResponse
     {
         $user = $request->user();
-        abort_unless($user->hasRole(UserRole::BranchAdmin->value), 403);
+        abort_unless($user->can('registrations.manage'), 403);
         abort_unless((int) $registration->branch_id === (int) $user->branch_id, 404);
 
         $data = $request->validate([
             'status' => ['required', Rule::in(['submitted', 'contacted', 'approved', 'cancelled'])],
             'payment_status' => ['required', Rule::in(['pending_branch_payment', 'verified', 'cancelled'])],
+            'group_id' => ['nullable', 'integer'],
         ]);
 
-        $registration->update($data);
+        $result = $this->approvals->update($user, $registration, $data);
+        $message = 'Status registrasi jamaah berhasil diperbarui.';
+        if ($result['pilgrim']) {
+            $message = 'Registrasi disetujui dan jamaah sudah masuk ke operasional perjalanan.';
+        }
+        if ($result['pin']) {
+            $message .= " PIN aktivasi: {$result['pin']}";
+        }
 
-        return back()->with('success', 'Status registrasi jamaah berhasil diperbarui.');
+        return back()->with('success', $message);
     }
 }

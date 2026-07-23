@@ -21,7 +21,6 @@ class AdminNotificationCreated implements ShouldBroadcastNow
     {
         return [
             new PrivateChannel("branches.{$this->branchId}"),
-            new PrivateChannel('admins.national'),
         ];
     }
 

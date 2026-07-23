@@ -39,13 +39,23 @@ Route::prefix('jamaah')->middleware('pilgrim.portal')->name('portal.')->group(fu
 // dan hanya role Super Admin/Admin Cabang yang dapat mengaksesnya.
 Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
-    Route::get('/monitoring/live-map', [MonitoringMapController::class, 'index'])->name('monitoring.map.index');
-    Route::get('/monitoring/live-map/data', [MonitoringMapController::class, 'data'])->name('monitoring.map.data');
-    Route::get('/monitoring/tracking-history', [TrackingHistoryController::class, 'index'])->name('monitoring.tracking.index');
-    Route::get('/monitoring/tracking-history/data', [TrackingHistoryController::class, 'data'])->name('monitoring.tracking.data');
-    Route::get('/monitoring/sos', [SosReportController::class, 'index'])->name('monitoring.sos.index');
-    Route::get('/monitoring/sos/{sosReport}', [SosReportController::class, 'show'])->name('monitoring.sos.show');
-    Route::patch('/monitoring/sos/{sosReport}/resolve', [SosReportController::class, 'resolve'])->name('monitoring.sos.resolve');
+
+    // Monitoring operasional hanya menjadi tanggung jawab Admin Cabang.
+    // Super Admin menerima ringkasan nasional dari dashboard dan laporan,
+    // tanpa akses ke lokasi maupun histori individu jamaah.
+    Route::middleware('role:admin-cabang')->group(function () {
+        Route::get('/monitoring/live-map', [MonitoringMapController::class, 'index'])->name('monitoring.map.index');
+        Route::get('/monitoring/live-map/data', [MonitoringMapController::class, 'data'])->name('monitoring.map.data');
+        Route::get('/monitoring/tracking-history', [TrackingHistoryController::class, 'index'])->name('monitoring.tracking.index');
+        Route::get('/monitoring/tracking-history/data', [TrackingHistoryController::class, 'data'])->name('monitoring.tracking.data');
+        Route::get('/monitoring/sos', [SosReportController::class, 'index'])->name('monitoring.sos.index');
+        Route::get('/monitoring/sos/{sosReport}', [SosReportController::class, 'show'])->name('monitoring.sos.show');
+        Route::patch('/monitoring/sos/{sosReport}/resolve', [SosReportController::class, 'resolve'])->name('monitoring.sos.resolve');
+        Route::post('/master-data/pilgrims/{pilgrim}/regenerate-pin', [MasterDataController::class, 'regeneratePin'])
+            ->name('master-data.pilgrims.regenerate-pin');
+        Route::post('/groups/{group}/reset-pins', [GroupMemberController::class, 'resetPins'])
+            ->name('groups.reset-pins');
+    });
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/registrations', [RegistrationManagementController::class, 'index'])->name('registrations.index');
     Route::patch('/registrations/{registration}', [RegistrationManagementController::class, 'update'])->name('registrations.update');
@@ -65,10 +75,6 @@ Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->
     Route::patch('/groups/{group}/staff', [GroupMemberController::class, 'updateStaff'])->name('groups.staff.update');
     Route::post('/groups/{group}/members', [GroupMemberController::class, 'store'])->name('groups.members.store');
     Route::delete('/groups/{group}/members/{member}', [GroupMemberController::class, 'destroy'])->name('groups.members.destroy');
-    Route::post('/master-data/pilgrims/{pilgrim}/regenerate-pin', [MasterDataController::class, 'regeneratePin'])
-        ->name('master-data.pilgrims.regenerate-pin');
-    Route::post('/groups/{group}/reset-pins', [GroupMemberController::class, 'resetPins'])
-        ->name('groups.reset-pins');
     Route::prefix('master-data/{resource}')
         ->whereIn('resource', ['branches', 'branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs', 'groups', 'checkpoints', 'departures', 'hotels'])
         ->name('master-data.')

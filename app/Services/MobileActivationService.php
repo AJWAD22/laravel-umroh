@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\MobileRole;
-use App\Enums\UserRole;
 use App\Http\Resources\Mobile\ProfileResource;
 use App\Models\MobileActivationSession;
 use App\Models\MobileDevice;
@@ -24,11 +23,8 @@ class MobileActivationService
     /** Membuat PIN aktivasi baru untuk jamaah yang dikelola admin. */
     public function generatePin(User $actor, Pilgrim $pilgrim): string
     {
-        $isSuperAdmin = $actor->hasRole(UserRole::SuperAdmin->value);
-
-        if (! $isSuperAdmin
-            && (! $actor->can('pilgrims.manage')
-                || (int) $actor->branch_id !== (int) $pilgrim->branch_id)) {
+        if (! $actor->can('pilgrims.manage')
+            || (int) $actor->branch_id !== (int) $pilgrim->branch_id) {
             throw new AuthorizationException;
         }
 
@@ -71,11 +67,8 @@ class MobileActivationService
      */
     public function resetPinsForGroup(User $actor, Group $group): array
     {
-        $isSuperAdmin = $actor->hasRole(UserRole::SuperAdmin->value);
-
-        if (! $isSuperAdmin
-            && (! $actor->can('pilgrims.manage')
-                || (int) $actor->branch_id !== (int) $group->branch_id)) {
+        if (! $actor->can('pilgrims.manage')
+            || (int) $actor->branch_id !== (int) $group->branch_id) {
             throw new AuthorizationException;
         }
 
@@ -133,9 +126,10 @@ class MobileActivationService
                 ]);
             }
 
-            if (! in_array($group->departure->status, ['scheduled', 'departed'], true)) {
+            if (! in_array($group->departure->status, ['scheduled', 'departed'], true)
+                || $group->departure->return_date?->endOfDay()->isPast()) {
                 throw ValidationException::withMessages([
-                    'activation' => ['PIN hanya berlaku untuk perjalanan yang terjadwal atau sedang berlangsung.'],
+                    'activation' => ['PIN hanya berlaku sampai perjalanan selesai. Hubungi Admin Cabang jika status perjalanan belum diperbarui.'],
                 ]);
             }
             $leaderUser = $group?->tourLeader?->user;

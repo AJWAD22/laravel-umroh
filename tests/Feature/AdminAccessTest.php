@@ -3,9 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Branch;
+use App\Models\Departure;
+use App\Models\Group;
 use App\Models\Pilgrim;
 use App\Models\User;
-use App\Services\MobileActivationService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -44,7 +45,7 @@ class AdminAccessTest extends TestCase
         $this->get('/register')->assertNotFound();
     }
 
-    public function test_super_admin_can_generate_pilgrim_activation_pin_across_branches(): void
+    public function test_super_admin_cannot_open_operational_monitoring_or_reset_pilgrim_pin(): void
     {
         $this->seed(RolePermissionSeeder::class);
         $superAdmin = User::factory()->create(['branch_id' => null]);
@@ -64,13 +65,35 @@ class AdminAccessTest extends TestCase
             'status' => 'registered',
             'monitoring_status' => 'normal',
         ]);
-
-        $pin = app(MobileActivationService::class)->generatePin($superAdmin, $pilgrim);
-
-        $this->assertMatchesRegularExpression('/^\d{6}$/', $pin);
-        $this->assertDatabaseHas('pilgrims', [
-            'id' => $pilgrim->id,
-            'activation_pin_created_by' => $superAdmin->id,
+        $departure = Departure::create([
+            'branch_id' => $branch->id,
+            'code' => 'BJM-DEP-TEST-001',
+            'program_name' => 'Paket Uji Akses',
+            'departure_date' => today()->addMonth(),
+            'return_date' => today()->addMonth()->addDays(9),
+            'status' => 'scheduled',
         ]);
+        $group = Group::create([
+            'branch_id' => $branch->id,
+            'departure_id' => $departure->id,
+            'code' => 'BJM-GRP-TEST-001',
+            'name' => 'Rombongan Uji Akses',
+        ]);
+
+        $this->actingAs($superAdmin)
+            ->get(route('monitoring.map.index'))
+            ->assertForbidden();
+        $this->actingAs($superAdmin)
+            ->get(route('monitoring.tracking.index'))
+            ->assertForbidden();
+        $this->actingAs($superAdmin)
+            ->get(route('monitoring.sos.index'))
+            ->assertForbidden();
+        $this->actingAs($superAdmin)
+            ->post(route('master-data.pilgrims.regenerate-pin', $pilgrim))
+            ->assertForbidden();
+        $this->actingAs($superAdmin)
+            ->post(route('groups.reset-pins', $group))
+            ->assertForbidden();
     }
 }
