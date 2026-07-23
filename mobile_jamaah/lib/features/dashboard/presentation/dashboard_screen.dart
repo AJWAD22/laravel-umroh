@@ -150,6 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       isSending: tracking.isSending,
                       lastSentAt: tracking.lastSentAt,
                       error: tracking.error,
+                      onRetry: () => context.read<TrackingProvider>().restart(),
                     ),
                     const SizedBox(height: 14),
                     _SosButton(isSending: _sendingSos, onPressed: _sendSos),
@@ -412,12 +413,14 @@ class _MonitoringStatusCard extends StatelessWidget {
     required this.isSending,
     required this.lastSentAt,
     required this.error,
+    required this.onRetry,
   });
 
   final bool isTracking;
   final bool isSending;
   final DateTime? lastSentAt;
   final String? error;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -468,6 +471,14 @@ class _MonitoringStatusCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                  if (error != null) ...[
+                    const SizedBox(height: 10),
+                    FilledButton.icon(
+                      onPressed: isSending ? null : onRetry,
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Mulai Ulang Tracking'),
+                    ),
+                  ],
                 ],
               ),
             ),

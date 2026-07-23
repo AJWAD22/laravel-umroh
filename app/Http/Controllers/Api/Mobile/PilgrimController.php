@@ -44,6 +44,7 @@ class PilgrimController extends Controller
         [$latest, $history, $isCurrent] = DB::transaction(function () use ($pilgrim, $group, $data, $recordedAt): array {
             $attributes = [
                 ...$data,
+                'branch_id' => $pilgrim->branch_id,
                 'group_id' => $group?->id,
                 'recorded_at' => $recordedAt,
             ];

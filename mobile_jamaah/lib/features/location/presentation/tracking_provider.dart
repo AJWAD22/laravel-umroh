@@ -67,6 +67,11 @@ class TrackingProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> restart({bool asStaff = false}) async {
+    await stop();
+    await start(asStaff: asStaff);
+  }
+
   Future<void> _send(Position position) async {
     if (isSending) return;
     isSending = true;

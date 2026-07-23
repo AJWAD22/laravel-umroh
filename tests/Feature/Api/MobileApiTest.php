@@ -69,10 +69,12 @@ class MobileApiTest extends TestCase
 
         $this->assertDatabaseHas('pilgrim_locations', [
             'pilgrim_id' => $context['pilgrim']->id,
+            'branch_id' => $context['pilgrim']->branch_id,
             'gps_status' => 'online',
         ]);
         $this->assertDatabaseHas('location_histories', [
             'pilgrim_id' => $context['pilgrim']->id,
+            'branch_id' => $context['pilgrim']->branch_id,
         ]);
         $this->assertDatabaseMissing('location_histories', [
             'pilgrim_id' => $context['foreignPilgrim']->id,

@@ -66,6 +66,10 @@ class MonitoringService
                         ->orWhere('phone', 'like', "%{$search}%");
                 }))
                 ->whereHas('user.mobileDevices', fn (Builder $deviceQuery) => $deviceQuery->whereNull('revoked_at')))
+            ->when($branchId, fn (Builder $query) => $query->where(function (Builder $query) use ($branchId): void {
+                $query->where('branch_id', $branchId)
+                    ->orWhereNull('branch_id');
+            }))
             ->when($departureId, fn (Builder $query) => $query->whereHas(
                 'group',
                 fn (Builder $groupQuery) => $groupQuery->where('departure_id', $departureId),

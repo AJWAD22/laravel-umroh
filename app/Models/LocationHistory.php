@@ -12,6 +12,7 @@ class LocationHistory extends Model
 
     protected $fillable = [
         'pilgrim_id',
+        'branch_id',
         'group_id',
         'latitude',
         'longitude',
@@ -38,6 +39,11 @@ class LocationHistory extends Model
     public function pilgrim(): BelongsTo
     {
         return $this->belongsTo(Pilgrim::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function group(): BelongsTo

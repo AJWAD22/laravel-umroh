@@ -109,6 +109,10 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                       isTracking: tracking.isTracking,
                       lastSentAt: tracking.lastSentAt,
                       error: tracking.error,
+                      onRetry:
+                          () => context
+                              .read<TrackingProvider>()
+                              .restart(asStaff: true),
                     ),
                     const SizedBox(height: 24),
                     Text(
@@ -472,12 +476,14 @@ class _OperationalHintCard extends StatelessWidget {
     required this.isTracking,
     required this.lastSentAt,
     required this.error,
+    required this.onRetry,
   });
 
   final bool isLeader;
   final bool isTracking;
   final DateTime? lastSentAt;
   final String? error;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -511,22 +517,35 @@ class _OperationalHintCard extends StatelessWidget {
           ),
           const SizedBox(width: 14),
           Expanded(
-            child: Text(
-              hasError
-                  ? 'Tracking lokasi petugas belum aktif: $error'
-                  : isTracking
-                  ? 'Tracking petugas aktif${sentText == null ? '' : ' • terakhir $sentText'}. Jamaah dapat melihat posisi terakhir Anda saat membutuhkan bantuan.'
-                  : isLeader
-                  ? 'Prioritaskan pengecekan lokasi jamaah. Aktivasi jamaah tersedia untuk perangkat baru.'
-                  : 'Pantau jamaah bimbingan Anda dan cek lokasi terakhir saat dibutuhkan.',
-              style: TextStyle(
-                color:
-                    hasError
-                        ? const Color(0xFF991B1B)
-                        : const Color(0xFF14532D),
-                fontWeight: FontWeight.w600,
-                height: 1.35,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  hasError
+                      ? 'Tracking lokasi petugas belum aktif: $error'
+                      : isTracking
+                      ? 'Tracking petugas aktif${sentText == null ? '' : ' - terakhir $sentText'}. Jamaah dapat melihat posisi terakhir Anda saat membutuhkan bantuan.'
+                      : isLeader
+                      ? 'Prioritaskan pengecekan lokasi jamaah. Aktivasi jamaah tersedia untuk perangkat baru.'
+                      : 'Pantau jamaah bimbingan Anda dan cek lokasi terakhir saat dibutuhkan.',
+                  style: TextStyle(
+                    color:
+                        hasError
+                            ? const Color(0xFF991B1B)
+                            : const Color(0xFF14532D),
+                    fontWeight: FontWeight.w600,
+                    height: 1.35,
+                  ),
+                ),
+                if (hasError) ...[
+                  const SizedBox(height: 10),
+                  FilledButton.icon(
+                    onPressed: onRetry,
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Mulai Ulang Tracking'),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
