@@ -18,18 +18,26 @@ use Illuminate\Validation\ValidationException;
 
 class MobileActivationService
 {
-    public function __construct(private readonly MobileGroupAccessService $groupAccess) {}
+    public function __construct(
+        private readonly MobileGroupAccessService $groupAccess,
+        private readonly AuditLogService $audit,
+    ) {}
 
     /** Membuat PIN aktivasi baru untuk jamaah yang dikelola admin. */
-    public function generatePin(User $actor, Pilgrim $pilgrim): string
+    public function generatePin(User $actor, Pilgrim $pilgrim, ?string $reason = null): string
     {
         if (! $actor->can('pilgrims.manage')
             || (int) $actor->branch_id !== (int) $pilgrim->branch_id) {
             throw new AuthorizationException;
         }
 
-        return DB::transaction(function () use ($actor, $pilgrim): string {
+        return DB::transaction(function () use ($actor, $pilgrim, $reason): string {
             $user = $this->ensurePilgrimUser($pilgrim);
+            $before = $pilgrim->only([
+                'activation_pin_hash',
+                'activation_pin_generated_at',
+                'activation_pin_used_at',
+            ]);
 
             // Mengganti PIN juga mencabut sesi login perangkat lama.
             $user->tokens()->delete();
@@ -58,6 +66,23 @@ class MobileActivationService
                 'activation_pin_used_at' => null,
             ])->save();
 
+            $this->audit->record(
+                $actor,
+                'activation.pin.generated',
+                $pilgrim,
+                $before,
+                $pilgrim->only([
+                    'activation_pin_hash',
+                    'activation_pin_generated_at',
+                    'activation_pin_used_at',
+                ]),
+                [
+                    'branch_id' => $pilgrim->branch_id,
+                    'reason' => $reason ?: 'Pembuatan atau reset PIN aktivasi.',
+                    'revoked_existing_devices' => true,
+                ],
+            );
+
             return $numericCode;
         });
     }
@@ -65,7 +90,7 @@ class MobileActivationService
     /**
      * @return array{count: int, pins: list<array{pilgrim_id: int, registration_number: string, name: string, pin: string}>}
      */
-    public function resetPinsForGroup(User $actor, Group $group): array
+    public function resetPinsForGroup(User $actor, Group $group, ?string $reason = null): array
     {
         if (! $actor->can('pilgrims.manage')
             || (int) $actor->branch_id !== (int) $group->branch_id) {
@@ -77,14 +102,26 @@ class MobileActivationService
             ->wherePivot('status', 'active')
             ->orderBy('full_name')
             ->get()
-            ->each(function (Pilgrim $pilgrim) use ($actor, &$pins): void {
+            ->each(function (Pilgrim $pilgrim) use ($actor, $reason, &$pins): void {
                 $pins[] = [
                     'pilgrim_id' => $pilgrim->id,
                     'registration_number' => $pilgrim->registration_number,
                     'name' => $pilgrim->full_name,
-                    'pin' => $this->generatePin($actor, $pilgrim),
+                    'pin' => $this->generatePin($actor, $pilgrim, $reason),
                 ];
             });
+
+        $this->audit->record(
+            $actor,
+            'activation.group_pins.reset',
+            $group,
+            [],
+            ['reset_count' => count($pins)],
+            [
+                'branch_id' => $group->branch_id,
+                'reason' => $reason ?: 'Reset PIN aktivasi rombongan.',
+            ],
+        );
 
         return [
             'count' => count($pins),

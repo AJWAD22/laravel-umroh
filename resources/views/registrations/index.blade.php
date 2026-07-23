@@ -8,7 +8,7 @@
 
     <section class="surface-card overflow-hidden">
         <form method="GET" class="grid gap-3 border-b border-slate-200 p-5 dark:border-slate-800 md:grid-cols-5">
-            <input name="search" value="{{ request('search') }}" placeholder="Nama, telepon, atau NIK" class="control-field w-full">
+            <input name="search" value="{{ request('search') }}" placeholder="Nama atau telepon" class="control-field w-full">
             <select name="departure_id" class="control-field w-full">
                 <option value="">Semua paket</option>
                 @foreach ($departures as $id => $name)
@@ -55,8 +55,8 @@
                             </td>
                             <td class="px-5 py-4">{{ $registration->phone }}</td>
                             <td class="px-5 py-4 text-xs leading-5 text-slate-600">
-                                <p>NIK: {{ $registration->nik ?: '-' }}</p>
-                                <p>Paspor: {{ $registration->passport_number ?: '-' }}</p>
+                                <p>NIK: {{ $registration->maskedNik() }}</p>
+                                <p>Paspor: {{ $registration->maskedPassportNumber() }}</p>
                                 <p>{{ $registration->gender === 'male' ? 'Laki-laki' : 'Perempuan' }}</p>
                             </td>
                             <td class="px-5 py-4">{{ $registration->created_at->translatedFormat('d M Y H:i') }}</td>

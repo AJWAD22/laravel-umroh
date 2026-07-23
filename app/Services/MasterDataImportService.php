@@ -163,11 +163,15 @@ class MasterDataImportService
         $record = null;
 
         if ($nik) {
-            $record = Pilgrim::withTrashed()->where('nik', $nik)->first();
+            $record = Pilgrim::withTrashed()
+                ->where('nik_hash', Pilgrim::identityDigest($nik))
+                ->first();
         }
 
         if (! $record && $passport) {
-            $record = Pilgrim::withTrashed()->where('passport_number', $passport)->first();
+            $record = Pilgrim::withTrashed()
+                ->where('passport_number_hash', Pilgrim::identityDigest($passport))
+                ->first();
         }
 
         return [

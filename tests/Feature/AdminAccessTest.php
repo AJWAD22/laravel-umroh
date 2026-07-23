@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Branch;
+use App\Models\AuditLog;
 use App\Models\Departure;
 use App\Models\Group;
 use App\Models\Pilgrim;
@@ -95,5 +96,38 @@ class AdminAccessTest extends TestCase
         $this->actingAs($superAdmin)
             ->post(route('groups.reset-pins', $group))
             ->assertForbidden();
+    }
+
+    public function test_audit_log_visibility_is_scoped_by_role(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $branchA = Branch::create(['code' => 'AUD-A', 'name' => 'Cabang Audit A', 'city' => 'Makassar']);
+        $branchB = Branch::create(['code' => 'AUD-B', 'name' => 'Cabang Audit B', 'city' => 'Jakarta']);
+        $superAdmin = User::factory()->create();
+        $superAdmin->assignRole('super-admin');
+        $adminA = User::factory()->create(['branch_id' => $branchA->id]);
+        $adminA->assignRole('admin-cabang');
+
+        AuditLog::create([
+            'branch_id' => $branchA->id,
+            'actor_id' => $adminA->id,
+            'action' => 'groups.members.assigned',
+        ]);
+        AuditLog::create([
+            'branch_id' => $branchB->id,
+            'action' => 'activation.group_pins.reset',
+        ]);
+
+        $this->actingAs($superAdmin)
+            ->get(route('audit-logs.index'))
+            ->assertOk()
+            ->assertSee('groups.members.assigned')
+            ->assertSee('activation.group_pins.reset');
+
+        $this->actingAs($adminA)
+            ->get(route('audit-logs.index'))
+            ->assertOk()
+            ->assertSee('groups.members.assigned')
+            ->assertDontSee('activation.group_pins.reset');
     }
 }

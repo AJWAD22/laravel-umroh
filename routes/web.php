@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\GroupMemberController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\MasterDataController;
@@ -39,6 +40,7 @@ Route::prefix('jamaah')->middleware('pilgrim.portal')->name('portal.')->group(fu
 // dan hanya role Super Admin/Admin Cabang yang dapat mengaksesnya.
 Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/audit-logs', AuditLogController::class)->name('audit-logs.index');
 
     // Monitoring operasional hanya menjadi tanggung jawab Admin Cabang.
     // Super Admin menerima ringkasan nasional dari dashboard dan laporan,

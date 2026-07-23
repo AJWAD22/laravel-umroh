@@ -187,7 +187,7 @@ class PilgrimPortalController extends Controller
                 ->where('status', '!=', 'cancelled')
                 ->where(fn (Builder $query) => $query
                     ->where('user_id', $request->user()->id)
-                    ->orWhere('nik', $data['nik']))
+                    ->orWhere('nik_hash', PilgrimRegistration::identityDigest($data['nik'])))
                 ->exists()) {
                 throw ValidationException::withMessages([
                     'confirmation' => ['Akun atau NIK ini sudah terdaftar pada paket yang dipilih.'],

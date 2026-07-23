@@ -155,6 +155,25 @@ class MobileApiTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_staff_location_is_rejected_when_assigned_journey_is_not_active(): void
+    {
+        $context = $this->scenario();
+        $token = $this->login($context['leaderUser']);
+        $context['group']->departure()->update(['status' => 'completed']);
+
+        $this->withToken($token)
+            ->postJson('/api/mobile/staff-location', [
+                'latitude' => 21.422487,
+                'longitude' => 39.826206,
+            ])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Petugas belum ditugaskan ke rombongan dengan perjalanan aktif.');
+
+        $this->assertDatabaseMissing('staff_locations', [
+            'user_id' => $context['leaderUser']->id,
+        ]);
+    }
+
     public function test_only_tour_leader_can_manage_mobile_meeting_points(): void
     {
         $context = $this->scenario();

@@ -5,9 +5,14 @@
             <i data-lucide="users-round" class="size-4"></i>
         </a>
         <form method="POST" action="{{ route('groups.reset-pins', $record) }}"
+              class="flex items-center gap-1"
               data-confirm-title="Reset PIN Rombongan"
               data-confirm="Semua PIN jamaah aktif di rombongan ini akan dibuat ulang dan perangkat lama dicabut. Lanjutkan?">
             @csrf
+            <input name="reason" required minlength="8" maxlength="255"
+                   placeholder="Alasan reset"
+                   class="control-field h-9 w-32 text-xs md:w-40"
+                   aria-label="Alasan reset PIN rombongan {{ $record->name }}">
             <button class="icon-action text-violet-600 hover:text-violet-700" title="Reset PIN rombongan"
                     aria-label="Reset PIN jamaah rombongan {{ $record->name }}">
                 <i data-lucide="key-round" class="size-4"></i>
@@ -17,9 +22,14 @@
 
     @if ($resource === 'pilgrims')
         <form method="POST" action="{{ route('master-data.pilgrims.regenerate-pin', $record) }}"
+              class="flex items-center gap-1"
               data-confirm-title="Buat Ulang PIN"
               data-confirm="PIN lama akan langsung dibatalkan. Lanjutkan membuat PIN aktivasi baru?">
             @csrf
+            <input name="reason" required minlength="8" maxlength="255"
+                   placeholder="Alasan reset"
+                   class="control-field h-9 w-32 text-xs md:w-40"
+                   aria-label="Alasan buat ulang PIN {{ $record->full_name }}">
             <button class="icon-action text-violet-600 hover:text-violet-700" title="Buat PIN baru"
                     aria-label="Buat PIN baru untuk {{ $record->full_name }}">
                 <i data-lucide="key-round" class="size-4"></i>

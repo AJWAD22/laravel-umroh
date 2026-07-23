@@ -58,6 +58,14 @@ class StaffGroupController extends Controller
         $role = $user->hasRole(MobileRole::TourLeader->value)
             ? MobileRole::TourLeader->value
             : MobileRole::Muthawwif->value;
+        $roleEnum = $role === MobileRole::TourLeader->value
+            ? MobileRole::TourLeader
+            : MobileRole::Muthawwif;
+        abort_if(
+            $this->access->groupIdsForStaff($user, $roleEnum)->isEmpty(),
+            422,
+            'Petugas belum ditugaskan ke rombongan dengan perjalanan aktif.',
+        );
         $data = $request->validated();
         $recordedAt = isset($data['recorded_at']) ? Carbon::parse($data['recorded_at']) : now();
         if ($recordedAt->isFuture()) {

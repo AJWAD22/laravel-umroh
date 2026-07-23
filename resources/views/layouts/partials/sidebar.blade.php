@@ -134,6 +134,16 @@
             </div>
         </div>
 
+        @canany(['audit.global.view', 'audit.branch.view'])
+            <div>
+                <a href="{{ route('audit-logs.index') }}" title="Audit Log"
+                   class="sidebar-link {{ request()->routeIs('audit-logs.*') ? 'sidebar-link-active' : '' }}">
+                    <i data-lucide="history" class="size-5 shrink-0"></i>
+                    <span x-show="!sidebarCollapsed">Audit Log</span>
+                </a>
+            </div>
+        @endcanany
+
         <div x-data="{ open: {{ request()->routeIs('profile.*', 'settings.*') ? 'true' : 'false' }} }">
             <button @click="open = !open" class="sidebar-link w-full">
                 <i data-lucide="settings" class="size-5 shrink-0"></i>

@@ -11,6 +11,7 @@ use App\Models\Muthawwif;
 use App\Models\Pilgrim;
 use App\Models\TourLeader;
 use App\Services\MobileActivationService;
+use App\Services\AuditLogService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,10 @@ use Illuminate\View\View;
 
 class GroupMemberController extends Controller
 {
-    public function __construct(private readonly MobileActivationService $activations) {}
+    public function __construct(
+        private readonly MobileActivationService $activations,
+        private readonly AuditLogService $audit,
+    ) {}
 
     public function index(Request $request, Group $group): View
     {
@@ -77,7 +81,16 @@ class GroupMemberController extends Controller
     public function updateStaff(AssignGroupStaffRequest $request, Group $group): RedirectResponse
     {
         $this->authorizeGroup($request, $group);
+        $before = $group->only(['tour_leader_id', 'muthawwif_id']);
         $group->update($request->validated());
+        $this->audit->record(
+            $request->user(),
+            'groups.staff.updated',
+            $group,
+            $before,
+            $group->fresh()->only(['tour_leader_id', 'muthawwif_id']),
+            ['branch_id' => $group->branch_id],
+        );
 
         return back()->with('success', 'Petugas rombongan berhasil ditentukan.');
     }
@@ -92,6 +105,14 @@ class GroupMemberController extends Controller
                 );
             }
         });
+        $this->audit->record(
+            $request->user(),
+            'groups.members.assigned',
+            $group,
+            [],
+            ['pilgrim_ids' => $request->validated('pilgrim_ids')],
+            ['branch_id' => $group->branch_id],
+        );
 
         return back()->with('success', 'Jamaah berhasil ditambahkan ke group.');
     }
@@ -105,15 +126,27 @@ class GroupMemberController extends Controller
             'status' => 'removed',
             'left_at' => now(),
         ]);
+        $this->audit->record(
+            $request->user(),
+            'groups.members.removed',
+            $group,
+            ['member_id' => $member->id, 'pilgrim_id' => $member->pilgrim_id],
+            ['status' => 'removed'],
+            ['branch_id' => $group->branch_id],
+        );
 
         return back()->with('success', 'Jamaah berhasil dikeluarkan dari group.');
     }
 
     public function resetPins(Request $request, Group $group): RedirectResponse
     {
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'min:8', 'max:255'],
+        ]);
+
         $this->authorizeGroup($request, $group);
 
-        $result = $this->activations->resetPinsForGroup($request->user(), $group);
+        $result = $this->activations->resetPinsForGroup($request->user(), $group, $data['reason']);
 
         return back()
             ->with('success', "{$result['count']} PIN aktivasi jamaah rombongan berhasil direset.")

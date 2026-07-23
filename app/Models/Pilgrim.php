@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ProtectsSensitiveIdentity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Crypt;
 
 class Pilgrim extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, ProtectsSensitiveIdentity, SoftDeletes;
 
     protected $fillable = [
         'branch_id',
@@ -21,7 +22,9 @@ class Pilgrim extends Model
         'registration_number',
         'full_name',
         'nik',
+        'nik_hash',
         'passport_number',
+        'passport_number_hash',
         'passport_expired_at',
         'gender',
         'phone',

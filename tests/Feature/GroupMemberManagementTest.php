@@ -150,13 +150,28 @@ class GroupMemberManagementTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->post(route('groups.reset-pins', $group))
+            ->post(route('groups.reset-pins', $group), ['reason' => 'Jamaah mengganti perangkat sebelum berangkat'])
             ->assertRedirect()
             ->assertSessionHasNoErrors()
             ->assertSessionHas('reset_pins', fn (array $pins) => count($pins) === 1);
 
         $this->assertNotNull($pilgrim->fresh()->activation_pin_hash);
         $this->assertSame($admin->id, $pilgrim->fresh()->activation_pin_created_by);
+        $this->assertDatabaseHas('audit_logs', [
+            'actor_id' => $admin->id,
+            'action' => 'activation.group_pins.reset',
+            'subject_type' => Group::class,
+            'subject_id' => $group->id,
+        ]);
+    }
+
+    public function test_reset_activation_pins_requires_a_reason(): void
+    {
+        [$admin, $group] = $this->scenario();
+
+        $this->actingAs($admin)
+            ->post(route('groups.reset-pins', $group), ['reason' => ''])
+            ->assertSessionHasErrors('reason');
     }
 
     /**

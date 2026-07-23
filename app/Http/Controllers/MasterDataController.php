@@ -165,8 +165,12 @@ class MasterDataController extends Controller
 
     public function regeneratePin(Request $request, Pilgrim $pilgrim): RedirectResponse
     {
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'min:8', 'max:255'],
+        ]);
+
         Gate::authorize('update', $pilgrim);
-        $pin = $this->activations->generatePin($request->user(), $pilgrim);
+        $pin = $this->activations->generatePin($request->user(), $pilgrim, $data['reason']);
 
         return back()->with('success', "PIN aktivasi {$pilgrim->full_name} diperbarui: {$pin}");
     }

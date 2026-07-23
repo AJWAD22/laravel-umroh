@@ -17,6 +17,7 @@ class RegistrationApprovalService
     public function __construct(
         private readonly MasterDataService $masterData,
         private readonly MobileActivationService $activations,
+        private readonly AuditLogService $audit,
     ) {}
 
     /**
@@ -37,6 +38,7 @@ class RegistrationApprovalService
                 ->findOrFail($registration->id);
 
             $pilgrim = $registration->user?->pilgrim;
+            $before = $registration->getOriginal();
             $pin = null;
             $isOperationallyApproved = $data['status'] === 'approved'
                 && $data['payment_status'] === 'verified';
@@ -76,6 +78,19 @@ class RegistrationApprovalService
                 'status' => $data['status'],
                 'payment_status' => $data['payment_status'],
             ])->save();
+
+            $this->audit->record(
+                $actor,
+                'registrations.status.updated',
+                $registration,
+                $before,
+                $registration->fresh()->getAttributes(),
+                [
+                    'branch_id' => $registration->branch_id,
+                    'approved_to_pilgrim_id' => $pilgrim?->id,
+                    'group_id' => $data['group_id'] ?? null,
+                ],
+            );
 
             return [
                 'registration' => $registration,
@@ -143,10 +158,10 @@ class RegistrationApprovalService
             ->when($pilgrim, fn (Builder $query) => $query->whereKeyNot($pilgrim->id))
             ->where(function (Builder $query) use ($registration): void {
                 if ($registration->nik) {
-                    $query->orWhere('nik', $registration->nik);
+                    $query->orWhere('nik_hash', Pilgrim::identityDigest($registration->nik));
                 }
                 if ($registration->passport_number) {
-                    $query->orWhere('passport_number', $registration->passport_number);
+                    $query->orWhere('passport_number_hash', Pilgrim::identityDigest($registration->passport_number));
                 }
             })
             ->exists();

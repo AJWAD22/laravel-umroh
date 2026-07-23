@@ -36,10 +36,18 @@ class RolePermissionSeeder extends Seeder
             'checkpoints.view',
             'monitoring.view',
             'tracking-history.view',
+            'tracking.live.view',
+            'tracking.history.view',
+            'sos.handle',
             'registrations.manage',
             'registrations.view',
+            'registrations.approve',
+            'payments.verify',
+            'activation.reset',
             'reports.view',
             'system-settings.manage',
+            'audit.branch.view',
+            'audit.global.view',
             'profile.manage',
         ];
 
@@ -60,6 +68,7 @@ class RolePermissionSeeder extends Seeder
             'registrations.view',
             'reports.view',
             'system-settings.manage',
+            'audit.global.view',
             'profile.manage',
         ]);
 
@@ -74,8 +83,15 @@ class RolePermissionSeeder extends Seeder
             'checkpoints.manage',
             'monitoring.view',
             'tracking-history.view',
+            'tracking.live.view',
+            'tracking.history.view',
+            'sos.handle',
             'registrations.manage',
             'reports.view',
+            'registrations.approve',
+            'payments.verify',
+            'activation.reset',
+            'audit.branch.view',
             'profile.manage',
         ]);
 

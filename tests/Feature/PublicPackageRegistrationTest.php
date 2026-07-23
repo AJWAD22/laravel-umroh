@@ -105,6 +105,18 @@ class PublicPackageRegistrationTest extends TestCase
             'status' => 'submitted',
             'payment_status' => 'pending_branch_payment',
         ]);
+        $registration = PilgrimRegistration::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertNotSame('6371010101010001', $registration->getRawOriginal('nik'));
+        $this->assertSame('6371010101010001', $registration->nik);
+        $this->assertSame('************0001', $registration->maskedNik());
+
+        $admin = User::factory()->create(['branch_id' => $branch->id]);
+        $admin->assignRole(UserRole::BranchAdmin->value);
+        $this->actingAs($admin)
+            ->get(route('registrations.index'))
+            ->assertOk()
+            ->assertSee('************0001')
+            ->assertDontSee('6371010101010001');
     }
 
     public function test_package_quota_is_checked_again_when_biodata_is_submitted(): void

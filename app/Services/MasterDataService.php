@@ -37,6 +37,7 @@ class MasterDataService
     public function __construct(
         private readonly ProfilePhotoService $photos,
         private readonly OperationalCodeGenerator $codes,
+        private readonly AuditLogService $audit,
     ) {}
 
     /**
@@ -53,7 +54,7 @@ class MasterDataService
                 ['name', 'email', 'phone_number'], ['name', 'email', 'is_active'], ['branch']),
             'pilgrims' => $this->definition(Pilgrim::class, 'Jamaah', 'pilgrims.manage',
                 ['photo_path' => 'Foto', 'registration_number' => 'No. Registrasi', 'full_name' => 'Nama', 'active_group' => 'Rombongan', 'branch.name' => 'Cabang', 'phone' => 'Telepon', 'activation_pin' => 'PIN Aktivasi', 'status' => 'Status'],
-                ['registration_number', 'full_name', 'nik', 'passport_number', 'phone'],
+                ['registration_number', 'full_name', 'phone'],
                 ['registration_number', 'full_name', 'phone', 'status'], ['branch', 'groupMemberships.group']),
             'tour-leaders' => $this->definition(TourLeader::class, 'Tour Leader', 'tour-leaders.manage',
                 ['photo_path' => 'Foto', 'employee_number' => 'No. Pegawai', 'full_name' => 'Nama', 'user.email' => 'Email Login', 'branch.name' => 'Cabang', 'phone' => 'Telepon', 'is_active' => 'Aktif'],
@@ -116,7 +117,10 @@ class MasterDataService
         unset($data['photo']);
 
         if (in_array($resource, ['tour-leaders', 'muthawwifs'], true)) {
-            return DB::transaction(function () use ($resource, $data, $record, $photo): Model {
+            return DB::transaction(function () use ($resource, $data, $actor, $record, $photo): Model {
+                $isNew = ! $record;
+                $before = $record?->getOriginal() ?? [];
+
                 if (! $record) {
                     $generated = $this->codes->generate($resource, $data);
                     $data[$generated['column']] = $generated['value'];
@@ -162,11 +166,22 @@ class MasterDataService
                     $user->forceFill(['photo_path' => $staff->photo_path])->save();
                 }
 
+                $this->audit->record(
+                    $actor,
+                    "master-data.{$resource}.".($isNew ? 'created' : 'updated'),
+                    $staff,
+                    $before,
+                    $staff->fresh()->getAttributes(),
+                    ['branch_id' => $staff->branch_id],
+                );
+
                 return $staff->load(['branch', 'user']);
             });
         }
 
         if ($resource === 'branch-admins') {
+            $before = $record?->getOriginal() ?? [];
+
             if (filled($data['password'] ?? null)) {
                 $data['password'] = Hash::make($data['password']);
             } else {
@@ -183,10 +198,21 @@ class MasterDataService
             }
             $admin->syncRoles(UserRole::BranchAdmin->value);
 
+            $this->audit->record(
+                $actor,
+                'master-data.branch-admins.'.($record ? 'updated' : 'created'),
+                $admin,
+                $before,
+                $admin->fresh()->getAttributes(),
+                ['branch_id' => $admin->branch_id],
+            );
+
             return $admin;
         }
 
-        return DB::transaction(function () use ($resource, $data, $record, $photo): Model {
+        return DB::transaction(function () use ($resource, $data, $actor, $record, $photo): Model {
+            $isNew = ! $record;
+            $before = $record?->getOriginal() ?? [];
             $groupId = null;
             if ($resource === 'pilgrims') {
                 $groupId = $data['group_id'] ?? null;
@@ -232,6 +258,15 @@ class MasterDataService
                 }
             }
 
+            $this->audit->record(
+                $actor,
+                "master-data.{$resource}.".($isNew ? 'created' : 'updated'),
+                $model,
+                $before,
+                $model->fresh()->getAttributes(),
+                ['branch_id' => $model->branch_id ?? null],
+            );
+
             return $model;
         });
     }
@@ -252,6 +287,7 @@ class MasterDataService
         }
 
         DB::transaction(function () use ($resource, $model): void {
+            $before = $model->getOriginal();
             $staffAccount = in_array($resource, ['tour-leaders', 'muthawwifs'], true)
                 ? $model->user
                 : null;
@@ -263,6 +299,15 @@ class MasterDataService
                 $staffAccount->mobileDevices()->update(['revoked_at' => now()]);
                 $staffAccount->forceFill(['is_active' => false])->save();
             }
+
+            $this->audit->record(
+                auth()->user(),
+                "master-data.{$resource}.deleted",
+                $model,
+                $before,
+                [],
+                ['branch_id' => $before['branch_id'] ?? null],
+            );
         });
     }
 

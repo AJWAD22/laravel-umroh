@@ -49,8 +49,7 @@ class RegistrationManagementController extends Controller
                 $search = $request->string('search')->toString();
                 $query->where(fn (Builder $query) => $query
                     ->where('full_name', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('nik', 'like', "%{$search}%"));
+                    ->orWhere('phone', 'like', "%{$search}%"));
             })
             ->latest()
             ->paginate(15)

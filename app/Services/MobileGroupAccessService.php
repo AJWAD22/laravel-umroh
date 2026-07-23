@@ -31,7 +31,14 @@ class MobileGroupAccessService
             default => null,
         };
 
-        return $profile?->groups()->where('is_active', true)->pluck('groups.id') ?? collect();
+        return $profile?->groups()
+            ->where('is_active', true)
+            ->whereHas('departure', fn (Builder $query) => $query
+                ->whereIn('status', ['scheduled', 'departed'])
+                ->where(fn (Builder $dateQuery) => $dateQuery
+                    ->whereNull('return_date')
+                    ->orWhereDate('return_date', '>=', today())))
+            ->pluck('groups.id') ?? collect();
     }
 
     public function pilgrimsForStaff(User $user, MobileRole $role): Builder

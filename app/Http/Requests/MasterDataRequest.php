@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Enums\UserRole;
 use App\Models\Group;
 use App\Models\Muthawwif;
+use App\Models\Pilgrim;
 use App\Models\TourLeader;
 use App\Services\MasterDataService;
 use Carbon\CarbonImmutable;
@@ -68,8 +69,8 @@ class MasterDataRequest extends FormRequest
                 'group_id' => ['nullable', Rule::exists('groups', 'id')->where('branch_id', $branchId)],
                 'registration_number' => ['exclude'],
                 'full_name' => ['required', 'string', 'max:255'],
-                'nik' => ['nullable', 'string', 'max:20', $unique('pilgrims', 'nik')],
-                'passport_number' => ['nullable', 'string', 'max:30', $unique('pilgrims', 'passport_number')],
+                'nik' => ['nullable', 'string', 'max:20'],
+                'passport_number' => ['nullable', 'string', 'max:30'],
                 'passport_expired_at' => ['nullable', 'date'],
                 'gender' => ['required', Rule::in(['male', 'female'])],
                 'phone' => ['nullable', 'string', 'max:30'],
@@ -166,6 +167,32 @@ class MasterDataRequest extends FormRequest
                         'group_id',
                         'Rombongan harus berasal dari jadwal perjalanan yang dipilih.',
                     );
+                }
+            }
+
+            if ($this->route('resource') === 'pilgrims') {
+                $id = (int) ($this->route('record') ?? 0);
+
+                if ($this->filled('nik')) {
+                    $exists = Pilgrim::query()
+                        ->where('nik_hash', Pilgrim::identityDigest($this->input('nik')))
+                        ->when($id, fn ($query) => $query->whereKeyNot($id))
+                        ->exists();
+
+                    if ($exists) {
+                        $validator->errors()->add('nik', 'NIK sudah digunakan jamaah lain.');
+                    }
+                }
+
+                if ($this->filled('passport_number')) {
+                    $exists = Pilgrim::query()
+                        ->where('passport_number_hash', Pilgrim::identityDigest($this->input('passport_number')))
+                        ->when($id, fn ($query) => $query->whereKeyNot($id))
+                        ->exists();
+
+                    if ($exists) {
+                        $validator->errors()->add('passport_number', 'Nomor paspor sudah digunakan jamaah lain.');
+                    }
                 }
             }
 

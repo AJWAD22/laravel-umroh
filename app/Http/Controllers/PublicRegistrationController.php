@@ -82,7 +82,7 @@ class PublicRegistrationController extends Controller
                 ->where(function (Builder $query) use ($biodata): void {
                     $query->where('phone', $biodata['phone']);
                     if (! empty($biodata['nik'])) {
-                        $query->orWhere('nik', $biodata['nik']);
+                        $query->orWhere('nik_hash', PilgrimRegistration::identityDigest($biodata['nik']));
                     }
                 })
                 ->exists();
