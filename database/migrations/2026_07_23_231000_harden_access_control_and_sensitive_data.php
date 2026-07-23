@@ -12,23 +12,25 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('audit_logs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('branch_id')->nullable()->constrained('branches')->nullOnDelete();
-            $table->foreignId('actor_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->string('action', 80)->index();
-            $table->string('subject_type')->nullable();
-            $table->unsignedBigInteger('subject_id')->nullable();
-            $table->json('before')->nullable();
-            $table->json('after')->nullable();
-            $table->json('metadata')->nullable();
-            $table->ipAddress('ip_address')->nullable();
-            $table->string('user_agent')->nullable();
-            $table->timestamps();
+        if (! Schema::hasTable('audit_logs')) {
+            Schema::create('audit_logs', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('branch_id')->nullable()->constrained('branches')->nullOnDelete();
+                $table->foreignId('actor_id')->nullable()->constrained('users')->nullOnDelete();
+                $table->string('action', 80)->index();
+                $table->string('subject_type')->nullable();
+                $table->unsignedBigInteger('subject_id')->nullable();
+                $table->json('before')->nullable();
+                $table->json('after')->nullable();
+                $table->json('metadata')->nullable();
+                $table->ipAddress('ip_address')->nullable();
+                $table->string('user_agent')->nullable();
+                $table->timestamps();
 
-            $table->index(['branch_id', 'action']);
-            $table->index(['subject_type', 'subject_id']);
-        });
+                $table->index(['branch_id', 'action']);
+                $table->index(['subject_type', 'subject_id']);
+            });
+        }
 
         Schema::table('pilgrims', function (Blueprint $table) {
             if (! Schema::hasColumn('pilgrims', 'nik_hash')) {
@@ -49,19 +51,31 @@ return new class extends Migration
         });
 
         Schema::table('pilgrims', function (Blueprint $table) {
-            $table->dropUnique('pilgrims_nik_unique');
-            $table->dropUnique('pilgrims_passport_number_unique');
+            if ($this->hasIndex('pilgrims', 'pilgrims_nik_unique')) {
+                $table->dropUnique('pilgrims_nik_unique');
+            }
+            if ($this->hasIndex('pilgrims', 'pilgrims_passport_number_unique')) {
+                $table->dropUnique('pilgrims_passport_number_unique');
+            }
             $table->text('nik')->nullable()->change();
             $table->text('passport_number')->nullable()->change();
-            $table->unique('nik_hash');
-            $table->unique('passport_number_hash');
+            if (! $this->hasIndex('pilgrims', 'pilgrims_nik_hash_unique')) {
+                $table->unique('nik_hash');
+            }
+            if (! $this->hasIndex('pilgrims', 'pilgrims_passport_number_hash_unique')) {
+                $table->unique('passport_number_hash');
+            }
         });
 
         Schema::table('pilgrim_registrations', function (Blueprint $table) {
             $table->text('nik')->nullable()->change();
             $table->text('passport_number')->nullable()->change();
-            $table->index('nik_hash');
-            $table->index('passport_number_hash');
+            if (! $this->hasIndex('pilgrim_registrations', 'pilgrim_registrations_nik_hash_index')) {
+                $table->index('nik_hash');
+            }
+            if (! $this->hasIndex('pilgrim_registrations', 'pilgrim_registrations_passport_number_hash_index')) {
+                $table->index('passport_number_hash');
+            }
         });
 
         $this->securePilgrimIdentities();
@@ -105,7 +119,7 @@ return new class extends Migration
                     $passport = $this->decryptIfNeeded($pilgrim->getRawOriginal('passport_number'));
 
                     DB::table('pilgrims')
-                        ->whereKey($pilgrim->id)
+                        ->where('id', $pilgrim->id)
                         ->update([
                             'nik' => filled($nik) ? Crypt::encryptString($nik) : null,
                             'nik_hash' => filled($nik) ? $this->digest($nik) : null,
@@ -126,7 +140,7 @@ return new class extends Migration
                     $passport = $this->decryptIfNeeded($registration->getRawOriginal('passport_number'));
 
                     DB::table('pilgrim_registrations')
-                        ->whereKey($registration->id)
+                        ->where('id', $registration->id)
                         ->update([
                             'nik' => filled($nik) ? Crypt::encryptString($nik) : null,
                             'nik_hash' => filled($nik) ? $this->digest($nik) : null,
@@ -153,5 +167,21 @@ return new class extends Migration
     private function digest(string $value): string
     {
         return hash_hmac('sha256', trim($value), (string) config('app.key'));
+    }
+
+    private function hasIndex(string $table, string $index): bool
+    {
+        if (DB::getDriverName() === 'sqlite') {
+            return collect(DB::select("PRAGMA index_list('{$table}')"))
+                ->contains(fn ($row) => $row->name === $index);
+        }
+
+        $database = DB::getDatabaseName();
+
+        return DB::table('information_schema.statistics')
+            ->where('table_schema', $database)
+            ->where('table_name', $table)
+            ->where('index_name', $index)
+            ->exists();
     }
 };
