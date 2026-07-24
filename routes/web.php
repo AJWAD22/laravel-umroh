@@ -57,6 +57,14 @@ Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->
             ->name('master-data.pilgrims.regenerate-pin');
         Route::post('/groups/{group}/reset-pins', [GroupMemberController::class, 'resetPins'])
             ->name('groups.reset-pins');
+        Route::post('/groups/{group}/generate-missing-pins', [GroupMemberController::class, 'generateMissingPins'])
+            ->name('groups.generate-missing-pins');
+        Route::post('/groups/{group}/pilgrims/{pilgrim}/reset-pin', [GroupMemberController::class, 'resetPilgrimPin'])
+            ->name('groups.pilgrims.reset-pin');
+        Route::post('/groups/{group}/pilgrims/{pilgrim}/revoke-devices', [GroupMemberController::class, 'revokePilgrimDevices'])
+            ->name('groups.pilgrims.revoke-devices');
+        Route::get('/groups/{group}/activation-list', [GroupMemberController::class, 'activationList'])
+            ->name('groups.activation-list');
     });
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/registrations', [RegistrationManagementController::class, 'index'])->name('registrations.index');
