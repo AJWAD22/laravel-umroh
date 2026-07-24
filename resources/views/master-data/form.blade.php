@@ -80,6 +80,7 @@
         ],
         'departures' => [...$commonBranch,
             ['code','Kode Jadwal','text'], ['program_name','Nama Paket','text'], ['description','Deskripsi Paket','textarea'],
+            ['facilities','Fasilitas Paket','textarea'], ['requirements','Persyaratan Paket','textarea'],
             ['departure_date','Tanggal Berangkat','date'],
             ['return_date','Tanggal Pulang','date'], ['departure_airport','Bandara Berangkat','text'],
             ['arrival_airport','Bandara Kedatangan','text'], ['airline','Maskapai','text'],

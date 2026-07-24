@@ -21,7 +21,7 @@ class RegistrationApprovalService
     ) {}
 
     /**
-     * @param  array{status: string, payment_status: string, group_id?: int|null}  $data
+     * @param  array{status: string, payment_status: string, group_id?: int|null, revision_notes?: string|null}  $data
      * @return array{registration: PilgrimRegistration, pilgrim: Pilgrim|null, pin: string|null}
      */
     public function update(User $actor, PilgrimRegistration $registration, array $data): array
@@ -40,8 +40,15 @@ class RegistrationApprovalService
             $pilgrim = $registration->user?->pilgrim;
             $before = $registration->getOriginal();
             $pin = null;
-            $isOperationallyApproved = $data['status'] === 'approved'
-                && $data['payment_status'] === 'verified';
+            $isOperationallyApproved = $data['status'] === 'in_group'
+                && in_array($data['payment_status'], ['paid', 'verified'], true);
+
+            $this->ensureStatusCanChange($registration, $data);
+
+            if (in_array($data['status'], ['approved', 'in_group'], true)) {
+                $this->ensureRegistrationIsComplete($registration);
+                $this->ensureDepartureQuotaIsAvailable($registration);
+            }
 
             if ($isOperationallyApproved) {
                 $group = $this->resolveGroup($registration, $pilgrim, $data['group_id'] ?? null);
@@ -69,14 +76,14 @@ class RegistrationApprovalService
                     'name' => $registration->full_name,
                 ])->save();
 
-                if ($pilgrim->activation_pin_generated_at === null) {
-                    $pin = $this->activations->generatePin($actor, $pilgrim);
-                }
             }
 
             $registration->forceFill([
                 'status' => $data['status'],
                 'payment_status' => $data['payment_status'],
+                'revision_notes' => $data['status'] === 'revision_requested'
+                    ? ($data['revision_notes'] ?? null)
+                    : null,
             ])->save();
 
             $this->audit->record(
@@ -98,6 +105,69 @@ class RegistrationApprovalService
                 'pin' => $pin,
             ];
         });
+    }
+
+    /**
+     * @param  array{status: string, payment_status: string, group_id?: int|null, revision_notes?: string|null}  $data
+     */
+    private function ensureStatusCanChange(PilgrimRegistration $registration, array $data): void
+    {
+        if ($registration->status === 'in_group' && $data['status'] !== 'in_group') {
+            throw ValidationException::withMessages([
+                'status' => ['Jamaah yang sudah masuk rombongan tidak bisa dikembalikan melalui perubahan status pendaftaran.'],
+            ]);
+        }
+
+        if ($data['status'] === 'in_group' && $registration->status !== 'approved') {
+            throw ValidationException::withMessages([
+                'status' => ['Setujui biodata terlebih dahulu sebelum memasukkan jamaah ke rombongan.'],
+            ]);
+        }
+
+        if ($data['status'] === 'revision_requested' && blank($data['revision_notes'] ?? null)) {
+            throw ValidationException::withMessages([
+                'revision_notes' => ['Catatan perbaikan wajib diisi saat meminta perbaikan data.'],
+            ]);
+        }
+    }
+
+    private function ensureRegistrationIsComplete(PilgrimRegistration $registration): void
+    {
+        foreach ([
+            'full_name' => 'Nama lengkap',
+            'nik' => 'NIK',
+            'gender' => 'Jenis kelamin',
+            'birth_date' => 'Tanggal lahir',
+            'address' => 'Alamat',
+            'emergency_contact_name' => 'Nama kontak darurat',
+            'emergency_contact_phone' => 'Nomor kontak darurat',
+        ] as $field => $label) {
+            if (blank($registration->{$field})) {
+                throw ValidationException::withMessages([
+                    'status' => ["{$label} harus dilengkapi sebelum pendaftaran disetujui."],
+                ]);
+            }
+        }
+    }
+
+    private function ensureDepartureQuotaIsAvailable(PilgrimRegistration $registration): void
+    {
+        $departure = $registration->departure;
+        if (! $departure?->quota) {
+            return;
+        }
+
+        $used = PilgrimRegistration::query()
+            ->where('departure_id', $departure->id)
+            ->whereKeyNot($registration->id)
+            ->whereIn('status', ['submitted', 'revision_requested', 'approved', 'in_group'])
+            ->count();
+
+        if ($used >= $departure->quota) {
+            throw ValidationException::withMessages([
+                'status' => ['Kuota paket sudah penuh.'],
+            ]);
+        }
     }
 
     private function resolveGroup(

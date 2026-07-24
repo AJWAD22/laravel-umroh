@@ -30,28 +30,27 @@ class MobileActivationService
             || (int) $actor->branch_id !== (int) $pilgrim->branch_id) {
             throw new AuthorizationException;
         }
+        if (blank($reason)) {
+            throw ValidationException::withMessages([
+                'reason' => ['Alasan pembuatan atau reset PIN wajib diisi.'],
+            ]);
+        }
 
         return DB::transaction(function () use ($actor, $pilgrim, $reason): string {
-            $user = $this->ensurePilgrimUser($pilgrim);
+            $pilgrim = Pilgrim::query()
+                ->with(['user', 'groupMemberships.group.departure'])
+                ->lockForUpdate()
+                ->findOrFail($pilgrim->id);
+            $this->ensurePinEligible($pilgrim);
+            $this->ensurePilgrimUser($pilgrim);
             $before = $pilgrim->only([
                 'activation_pin_hash',
                 'activation_pin_generated_at',
                 'activation_pin_used_at',
             ]);
 
-            // Mengganti PIN juga mencabut sesi login perangkat lama.
-            $user->tokens()->delete();
-            MobileDevice::query()
-                ->where('user_id', $user->id)
-                ->whereNull('revoked_at')
-                ->update(['revoked_at' => now()]);
-
-            // Hapus hanya snapshot lokasi aktif agar marker lama tidak tetap
-            // muncul di Live Map. Riwayat detail tetap tersimpan di tabel
-            // location_histories untuk kebutuhan laporan dan audit.
-            PilgrimLocation::query()
-                ->where('pilgrim_id', $pilgrim->id)
-                ->delete();
+            // Reset PIN tidak mencabut perangkat aktif. Perangkat dicabut lewat
+            // aksi terpisah agar operasional jamaah yang sudah aktif tidak terganggu.
             MobileActivationSession::query()
                 ->where('pilgrim_id', $pilgrim->id)
                 ->whereIn('status', ['created', 'awaiting_approval', 'approved'])
@@ -78,8 +77,8 @@ class MobileActivationService
                 ]),
                 [
                     'branch_id' => $pilgrim->branch_id,
-                    'reason' => $reason ?: 'Pembuatan atau reset PIN aktivasi.',
-                    'revoked_existing_devices' => true,
+                    'reason' => $reason,
+                    'revoked_existing_devices' => false,
                 ],
             );
 
@@ -95,6 +94,11 @@ class MobileActivationService
         if (! $actor->can('pilgrims.manage')
             || (int) $actor->branch_id !== (int) $group->branch_id) {
             throw new AuthorizationException;
+        }
+        if (blank($reason)) {
+            throw ValidationException::withMessages([
+                'reason' => ['Alasan reset PIN rombongan wajib diisi.'],
+            ]);
         }
 
         $pins = [];
@@ -119,7 +123,7 @@ class MobileActivationService
             ['reset_count' => count($pins)],
             [
                 'branch_id' => $group->branch_id,
-                'reason' => $reason ?: 'Reset PIN aktivasi rombongan.',
+                'reason' => $reason,
             ],
         );
 
@@ -129,6 +133,96 @@ class MobileActivationService
         ];
     }
 
+    /**
+     * @return array{count: int, pins: list<array{pilgrim_id: int, registration_number: string, name: string, pin: string}>}
+     */
+    public function generateMissingPinsForGroup(User $actor, Group $group, string $reason): array
+    {
+        if (! $actor->can('pilgrims.manage')
+            || (int) $actor->branch_id !== (int) $group->branch_id) {
+            throw new AuthorizationException;
+        }
+
+        $pins = [];
+        $group->pilgrims()
+            ->wherePivot('status', 'active')
+            ->whereNull('activation_pin_hash')
+            ->orderBy('full_name')
+            ->get()
+            ->each(function (Pilgrim $pilgrim) use ($actor, $reason, &$pins): void {
+                $pins[] = [
+                    'pilgrim_id' => $pilgrim->id,
+                    'registration_number' => $pilgrim->registration_number,
+                    'name' => $pilgrim->full_name,
+                    'pin' => $this->generatePin($actor, $pilgrim, $reason),
+                ];
+            });
+
+        $this->audit->record(
+            $actor,
+            'activation.group_missing_pins.generated',
+            $group,
+            [],
+            ['generated_count' => count($pins)],
+            [
+                'branch_id' => $group->branch_id,
+                'reason' => $reason,
+            ],
+        );
+
+        return ['count' => count($pins), 'pins' => $pins];
+    }
+
+    public function revokePilgrimDevices(User $actor, Pilgrim $pilgrim, string $reason): int
+    {
+        if (! $actor->can('pilgrims.manage')
+            || (int) $actor->branch_id !== (int) $pilgrim->branch_id) {
+            throw new AuthorizationException;
+        }
+        if (blank($reason)) {
+            throw ValidationException::withMessages([
+                'reason' => ['Alasan pencabutan perangkat wajib diisi.'],
+            ]);
+        }
+
+        return DB::transaction(function () use ($actor, $pilgrim, $reason): int {
+            $user = $pilgrim->user;
+            if (! $user) {
+                return 0;
+            }
+
+            $devices = MobileDevice::query()
+                ->where('user_id', $user->id)
+                ->whereNull('revoked_at')
+                ->get();
+
+            $devices->each(function (MobileDevice $device) use ($user): void {
+                $user->tokens()
+                    ->where('name', 'activation-'.$device->device_uuid)
+                    ->delete();
+                $device->forceFill(['revoked_at' => now()])->save();
+            });
+
+            PilgrimLocation::query()
+                ->where('pilgrim_id', $pilgrim->id)
+                ->delete();
+
+            $this->audit->record(
+                $actor,
+                'activation.devices.revoked',
+                $pilgrim,
+                ['active_devices' => $devices->count()],
+                ['revoked_devices' => $devices->count()],
+                [
+                    'branch_id' => $pilgrim->branch_id,
+                    'reason' => $reason,
+                ],
+            );
+
+            return $devices->count();
+        });
+    }
+
     public function claim(array $data): array
     {
         return DB::transaction(function () use ($data): array {
@@ -136,6 +230,7 @@ class MobileActivationService
             // Sistem mencari PIN yang masih aktif, belum dipakai, dan belum kedaluwarsa.
             $pilgrim = Pilgrim::query()
                 ->where('activation_pin_hash', $this->digest($data['numeric_code']))
+                ->where('registration_number', $data['registration_number'])
                 ->lockForUpdate()
                 ->first();
 
@@ -146,6 +241,7 @@ class MobileActivationService
             }
 
             $this->ensurePilgrimUser($pilgrim);
+            $this->ensurePinEligible($pilgrim);
 
             // Aktivasi langsung disetujui otomatis. Tour Leader tidak perlu
             // menekan approve, tetapi relasi rombongan tetap dipakai untuk audit.
@@ -314,6 +410,45 @@ class MobileActivationService
         $pilgrim->setRelation('user', $user);
 
         return $user;
+    }
+
+    private function ensurePinEligible(Pilgrim $pilgrim): void
+    {
+        if (! in_array($pilgrim->status, ['registered', 'active'], true)) {
+            throw ValidationException::withMessages([
+                'activation' => ['Jamaah belum aktif untuk aktivasi aplikasi.'],
+            ]);
+        }
+
+        $group = $this->groupAccess->activeGroupForPilgrim($pilgrim);
+        if (! $group) {
+            throw ValidationException::withMessages([
+                'activation' => ['Jamaah belum ditempatkan pada rombongan aktif.'],
+            ]);
+        }
+
+        $group->loadMissing('departure');
+        if (! $group->departure
+            || ! in_array($group->departure->status, ['scheduled', 'departed'], true)
+            || $group->departure->return_date?->endOfDay()->isPast()) {
+            throw ValidationException::withMessages([
+                'activation' => ['PIN hanya berlaku sampai perjalanan selesai.'],
+            ]);
+        }
+
+        $registration = \App\Models\PilgrimRegistration::query()
+            ->where('user_id', $pilgrim->user_id)
+            ->where('branch_id', $pilgrim->branch_id)
+            ->where('departure_id', $group->departure_id)
+            ->where('status', 'in_group')
+            ->whereIn('payment_status', ['paid', 'verified'])
+            ->first();
+
+        if (! $registration) {
+            throw ValidationException::withMessages([
+                'activation' => ['PIN hanya dapat dibuat untuk jamaah yang sudah lunas dan masuk rombongan.'],
+            ]);
+        }
     }
 
     private function uniqueNumericCode(): string

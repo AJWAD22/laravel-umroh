@@ -19,19 +19,21 @@ class MasterDataTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_super_admin_can_view_national_master_data_but_not_operational_checkpoints(): void
+    public function test_super_admin_only_manages_organization_foundation(): void
     {
         $superAdmin = $this->superAdmin();
 
-        foreach (['branches', 'branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs', 'groups', 'hotels', 'departures'] as $resource) {
+        foreach (['branches', 'branch-admins'] as $resource) {
             $this->actingAs($superAdmin)
                 ->get(route('master-data.index', $resource))
                 ->assertOk();
         }
 
-        $this->actingAs($superAdmin)
-            ->get(route('master-data.index', 'checkpoints'))
-            ->assertForbidden();
+        foreach (['pilgrims', 'tour-leaders', 'muthawwifs', 'groups', 'hotels', 'departures', 'checkpoints'] as $resource) {
+            $this->actingAs($superAdmin)
+                ->get(route('master-data.index', $resource))
+                ->assertForbidden();
+        }
     }
 
     public function test_super_admin_can_create_a_branch_admin_with_the_correct_role(): void

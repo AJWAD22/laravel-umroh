@@ -82,13 +82,9 @@ class MasterDataController extends Controller
     public function store(MasterDataRequest $request, string $resource): RedirectResponse
     {
         Gate::authorize('create', $this->masterData->definitionFor($resource)['model']);
-        $model = $this->masterData->save($resource, $request->validated(), $request->user());
-        $pin = $resource === 'pilgrims'
-            ? $this->activations->generatePin($request->user(), $model)
-            : null;
+        $this->masterData->save($resource, $request->validated(), $request->user());
 
         $message = match (true) {
-            $pin !== null => "Jamaah berhasil ditambahkan. PIN aktivasi: {$pin}",
             in_array($resource, ['tour-leaders', 'muthawwifs'], true) => "{$this->masterData->definitionFor($resource)['label']} dan akun login aplikasi berhasil dibuat.",
             default => "{$this->masterData->definitionFor($resource)['label']} berhasil ditambahkan.",
         };
@@ -155,9 +151,6 @@ class MasterDataController extends Controller
         $model = $this->masterData->find($resource, $record, $request->user());
         Gate::authorize('update', $model);
         $this->masterData->save($resource, $request->validated(), $request->user(), $model);
-        if ($resource === 'pilgrims' && $model->activation_pin_generated_at === null) {
-            $this->activations->generatePin($request->user(), $model);
-        }
 
         return redirect()->route('master-data.index', $resource)
             ->with('success', "{$this->masterData->definitionFor($resource)['label']} berhasil diperbarui.");

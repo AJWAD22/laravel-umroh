@@ -98,6 +98,30 @@ class AdminAccessTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_super_admin_cannot_open_branch_registration_operations(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $superAdmin = User::factory()->create(['branch_id' => null]);
+        $superAdmin->assignRole('super-admin');
+
+        $this->actingAs($superAdmin)
+            ->get(route('registrations.index'))
+            ->assertForbidden();
+    }
+
+    public function test_branch_admin_can_open_branch_registration_operations(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $branch = Branch::create(['code' => 'REG', 'name' => 'Cabang Registrasi', 'city' => 'Makassar']);
+        $admin = User::factory()->create(['branch_id' => $branch->id]);
+        $admin->assignRole('admin-cabang');
+
+        $this->actingAs($admin)
+            ->get(route('registrations.index'))
+            ->assertOk()
+            ->assertSee('Pendaftaran Jamaah');
+    }
+
     public function test_audit_log_visibility_is_scoped_by_role(): void
     {
         $this->seed(RolePermissionSeeder::class);

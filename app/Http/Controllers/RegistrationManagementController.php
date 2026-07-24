@@ -10,6 +10,7 @@ use App\Services\RegistrationApprovalService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -78,10 +79,16 @@ class RegistrationManagementController extends Controller
         abort_unless((int) $registration->branch_id === (int) $user->branch_id, 404);
 
         $data = $request->validate([
-            'status' => ['required', Rule::in(['submitted', 'contacted', 'approved', 'cancelled'])],
-            'payment_status' => ['required', Rule::in(['pending_branch_payment', 'verified', 'cancelled'])],
+            'status' => ['required', Rule::in(['draft', 'submitted', 'revision_requested', 'approved', 'in_group', 'rejected', 'cancelled'])],
+            'payment_status' => ['required', Rule::in(['unpaid', 'pending_branch_payment', 'down_payment', 'paid', 'verified', 'cancelled'])],
             'group_id' => ['nullable', 'integer'],
+            'revision_notes' => ['nullable', 'string', 'max:1500'],
         ]);
+        if ($data['status'] === 'in_group' && ! in_array($data['payment_status'], ['paid', 'verified'], true)) {
+            throw ValidationException::withMessages([
+                'payment_status' => ['Jamaah hanya bisa masuk rombongan setelah pembayaran lunas.'],
+            ]);
+        }
 
         $result = $this->approvals->update($user, $registration, $data);
         $message = 'Status registrasi jamaah berhasil diperbarui.';

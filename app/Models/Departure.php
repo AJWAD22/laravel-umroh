@@ -18,6 +18,8 @@ class Departure extends Model
         'code',
         'program_name',
         'description',
+        'facilities',
+        'requirements',
         'departure_date',
         'return_date',
         'departure_airport',
@@ -76,7 +78,7 @@ class Departure extends Model
 
         $used = array_key_exists('active_registrations_count', $this->attributes)
             ? (int) $this->attributes['active_registrations_count']
-            : $this->registrations()->whereNotIn('status', ['cancelled'])->count();
+            : $this->registrations()->whereIn('status', ['submitted', 'revision_requested', 'approved', 'in_group'])->count();
 
         return max(0, $this->quota - $used);
     }

@@ -12,8 +12,10 @@ use App\Models\GroupMember;
 use App\Models\MobileActivationSession;
 use App\Models\Muthawwif;
 use App\Models\Pilgrim;
+use App\Models\PilgrimRegistration;
 use App\Models\TourLeader;
 use App\Models\User;
+use App\Services\MobileActivationService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -407,6 +409,81 @@ class MobileApiTest extends TestCase
         ]);
     }
 
+    public function test_pilgrim_activates_device_with_registration_number_and_pin(): void
+    {
+        $context = $this->scenario();
+        $admin = User::factory()->create(['branch_id' => $context['branch']->id]);
+        $admin->assignRole('admin-cabang');
+        $pin = app(MobileActivationService::class)
+            ->generatePin($admin, $context['pilgrim'], 'PIN awal untuk jamaah lunas');
+
+        $claim = $this->postJson('/api/mobile/activation/claim', [
+            'registration_number' => $context['pilgrim']->registration_number,
+            'numeric_code' => $pin,
+            'device_uuid' => 'activation-device-001',
+            'device_name' => 'Android Jamaah',
+            'platform' => 'android',
+        ])->assertOk();
+
+        $this->postJson('/api/mobile/activation/status', [
+            'public_id' => $claim->json('data.public_id'),
+            'claim_secret' => $claim->json('data.claim_secret'),
+            'device_uuid' => 'activation-device-001',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'completed')
+            ->assertJsonPath('data.role', MobileRole::Pilgrim->value);
+    }
+
+    public function test_wrong_or_old_pin_is_rejected_after_reset(): void
+    {
+        $context = $this->scenario();
+        $admin = User::factory()->create(['branch_id' => $context['branch']->id]);
+        $admin->assignRole('admin-cabang');
+        $oldPin = app(MobileActivationService::class)
+            ->generatePin($admin, $context['pilgrim'], 'PIN awal untuk jamaah');
+        $newPin = app(MobileActivationService::class)
+            ->generatePin($admin, $context['pilgrim'], 'Reset PIN karena salah kirim');
+
+        $this->postJson('/api/mobile/activation/claim', [
+            'registration_number' => $context['pilgrim']->registration_number,
+            'numeric_code' => $oldPin,
+            'device_uuid' => 'activation-device-old',
+            'device_name' => 'Android Lama',
+            'platform' => 'android',
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('activation');
+
+        $this->postJson('/api/mobile/activation/claim', [
+            'registration_number' => $context['pilgrim']->registration_number,
+            'numeric_code' => $newPin,
+            'device_uuid' => 'activation-device-new',
+            'device_name' => 'Android Baru',
+            'platform' => 'android',
+        ])->assertOk();
+    }
+
+    public function test_activation_pin_is_rejected_after_journey_is_completed(): void
+    {
+        $context = $this->scenario();
+        $admin = User::factory()->create(['branch_id' => $context['branch']->id]);
+        $admin->assignRole('admin-cabang');
+        $pin = app(MobileActivationService::class)
+            ->generatePin($admin, $context['pilgrim'], 'PIN sebelum perjalanan ditutup');
+        $context['group']->departure()->update(['status' => 'completed']);
+
+        $this->postJson('/api/mobile/activation/claim', [
+            'registration_number' => $context['pilgrim']->registration_number,
+            'numeric_code' => $pin,
+            'device_uuid' => 'activation-device-completed',
+            'device_name' => 'Android Jamaah',
+            'platform' => 'android',
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('activation');
+    }
+
     private function login(User $user): string
     {
         $this->withoutToken();
@@ -480,8 +557,19 @@ class MobileApiTest extends TestCase
             'status' => 'active',
             'joined_at' => now(),
         ]);
+        PilgrimRegistration::create([
+            'user_id' => $pilgrimUser->id,
+            'branch_id' => $branch->id,
+            'departure_id' => $departure->id,
+            'full_name' => 'Jamaah Dalam Group',
+            'gender' => 'male',
+            'phone' => '628111111111',
+            'status' => 'in_group',
+            'payment_status' => 'paid',
+        ]);
 
         return compact(
+            'branch',
             'pilgrimUser',
             'leaderUser',
             'muthawwifUser',
@@ -489,6 +577,7 @@ class MobileApiTest extends TestCase
             'foreignPilgrim',
             'leader',
             'muthawwif',
+            'departure',
             'group',
         );
     }

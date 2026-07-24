@@ -14,6 +14,7 @@ class ClaimActivationRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'registration_number' => ['required', 'string', 'max:80'],
             'numeric_code' => ['required', 'digits:6'],
             'device_uuid' => ['required', 'string', 'max:120'],
             'device_name' => ['required', 'string', 'max:255'],

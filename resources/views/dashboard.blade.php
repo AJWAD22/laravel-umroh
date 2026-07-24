@@ -33,10 +33,10 @@
         <article class="surface-card p-5 sm:p-6"><div class="flex items-center justify-between"><div><p class="text-xs font-bold uppercase tracking-[.14em] text-blue-600">Pekerjaan Prioritas</p><h2 class="mt-1 text-xl font-extrabold">Perlu Ditindaklanjuti</h2></div><span class="travel-chip">Hari ini</span></div>
             <div class="mt-5 grid gap-3 sm:grid-cols-2">
                 @php $priorityItems = $isNational ? [
-                    ['label'=>'Pendaftaran baru','value'=>$priorities['registrations'],'help'=>'Rekap pendaftaran seluruh cabang','icon'=>'clipboard-list','route'=>route('registrations.index', ['status'=>'submitted']),'iconClass'=>'bg-blue-50 text-blue-600','hoverClass'=>'hover:border-blue-200 hover:bg-blue-50/50'],
-                    ['label'=>'Menunggu pembayaran','value'=>$priorities['payments'],'help'=>'Rekap verifikasi oleh cabang','icon'=>'wallet','route'=>route('registrations.index', ['payment_status'=>'pending_branch_payment']),'iconClass'=>'bg-amber-50 text-amber-600','hoverClass'=>'hover:border-amber-200 hover:bg-amber-50/50'],
-                    ['label'=>'Insiden aktif','value'=>$priorities['sos'],'help'=>'Angka agregat nasional','icon'=>'siren','route'=>route('reports.index','all'),'iconClass'=>'bg-red-50 text-red-600','hoverClass'=>'hover:border-red-200 hover:bg-red-50/50'],
-                    ['label'=>'Perjalanan aktif','value'=>$priorities['departures'],'help'=>'Jadwal seluruh cabang','icon'=>'plane','route'=>route('master-data.index', ['resource'=>'departures','status'=>'scheduled']),'iconClass'=>'bg-violet-50 text-violet-600','hoverClass'=>'hover:border-violet-200 hover:bg-violet-50/50'],
+                    ['label'=>'Cabang aktif','value'=>$priorities['branches'],'help'=>'Kelola struktur cabang travel','icon'=>'building-2','route'=>route('master-data.index', 'branches'),'iconClass'=>'bg-blue-50 text-blue-600','hoverClass'=>'hover:border-blue-200 hover:bg-blue-50/50'],
+                    ['label'=>'Admin cabang','value'=>$priorities['branchAdmins'],'help'=>'Pastikan setiap cabang punya pengelola','icon'=>'shield-check','route'=>route('master-data.index', 'branch-admins'),'iconClass'=>'bg-cyan-50 text-cyan-600','hoverClass'=>'hover:border-cyan-200 hover:bg-cyan-50/50'],
+                    ['label'=>'Laporan agregat','value'=>$priorities['departures'],'help'=>'Ringkasan nasional tanpa data operasional individu','icon'=>'book-open','route'=>route('reports.index','all'),'iconClass'=>'bg-violet-50 text-violet-600','hoverClass'=>'hover:border-violet-200 hover:bg-violet-50/50'],
+                    ['label'=>'Audit sistem','value'=>$priorities['auditLogs'],'help'=>'Jejak aktivitas sistem dan cabang','icon'=>'history','route'=>route('audit-logs.index'),'iconClass'=>'bg-amber-50 text-amber-600','hoverClass'=>'hover:border-amber-200 hover:bg-amber-50/50'],
                 ] : [
                     ['label'=>'Pendaftaran baru','value'=>$priorities['registrations'],'help'=>'Periksa kelengkapan biodata','icon'=>'clipboard-list','route'=>route('registrations.index', ['status'=>'submitted']),'iconClass'=>'bg-blue-50 text-blue-600','hoverClass'=>'hover:border-blue-200 hover:bg-blue-50/50'],
                     ['label'=>'Menunggu pembayaran','value'=>$priorities['payments'],'help'=>'Verifikasi pembayaran cabang','icon'=>'wallet','route'=>route('registrations.index', ['payment_status'=>'pending_branch_payment']),'iconClass'=>'bg-amber-50 text-amber-600','hoverClass'=>'hover:border-amber-200 hover:bg-amber-50/50'],
@@ -51,7 +51,7 @@
 
         <article class="surface-card p-5 sm:p-6"><p class="text-xs font-bold uppercase tracking-[.14em] text-teal-600">Akses Cepat</p><h2 class="mt-1 text-xl font-extrabold">Menu Utama</h2><div class="mt-5 grid grid-cols-2 gap-3">
             @php $quickActions = $isNational ? [
-                ['Pendaftaran', 'clipboard-list', route('registrations.index')], ['Data Cabang', 'building-2', route('master-data.index','branches')], ['Admin Cabang', 'shield-check', route('master-data.index','branch-admins')], ['Pengaturan', 'settings', route('settings.system.edit')],
+                ['Data Cabang', 'building-2', route('master-data.index','branches')], ['Admin Cabang', 'shield-check', route('master-data.index','branch-admins')], ['Profil Travel', 'settings', route('settings.system.edit')], ['Audit Sistem', 'history', route('audit-logs.index')],
             ] : [
                 ['Pendaftaran', 'clipboard-list', route('registrations.index')], ['Live Map', 'map', route('monitoring.map.index')], ['Jadwal', 'plane', route('master-data.index','departures')], ['Rombongan', 'users-round', route('master-data.index','groups')],
             ]; @endphp

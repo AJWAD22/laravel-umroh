@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\Branch;
 use App\Models\Departure;
 use App\Models\Group;
+use App\Models\AuditLog;
 use App\Models\Pilgrim;
 use App\Models\PilgrimLocation;
 use App\Models\PilgrimRegistration;
@@ -89,6 +90,8 @@ class DashboardService
     private function priorities(?int $branchId): array
     {
         return [
+            'branches' => Branch::query()->where('is_active', true)->count(),
+            'branchAdmins' => User::role(UserRole::BranchAdmin->value)->count(),
             'registrations' => PilgrimRegistration::query()
                 ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
                 ->where('status', 'submitted')->count(),
@@ -101,6 +104,9 @@ class DashboardService
             'departures' => Departure::query()
                 ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
                 ->whereIn('status', ['scheduled', 'departed'])->count(),
+            'auditLogs' => AuditLog::query()
+                ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
+                ->count(),
         ];
     }
 

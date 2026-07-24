@@ -26,14 +26,16 @@
             </a>
         </div>
 
-        <div>
-            <p x-show="!sidebarCollapsed" class="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600">Layanan Jamaah</p>
-            <a href="{{ route('registrations.index') }}" title="Pendaftaran Jamaah"
-               class="sidebar-link {{ request()->routeIs('registrations.*') ? 'sidebar-link-active' : '' }}">
-                <i data-lucide="clipboard-list" class="size-5 shrink-0"></i>
-                <span x-show="!sidebarCollapsed">Pendaftaran Jamaah</span>
-            </a>
-        </div>
+        @role('admin-cabang')
+            <div>
+                <p x-show="!sidebarCollapsed" class="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600">Layanan Jamaah</p>
+                <a href="{{ route('registrations.index') }}" title="Pendaftaran Jamaah"
+                   class="sidebar-link {{ request()->routeIs('registrations.*') ? 'sidebar-link-active' : '' }}">
+                    <i data-lucide="clipboard-list" class="size-5 shrink-0"></i>
+                    <span x-show="!sidebarCollapsed">Pendaftaran Jamaah</span>
+                </a>
+            </div>
+        @endrole
 
         @php
             $masterMenus = [

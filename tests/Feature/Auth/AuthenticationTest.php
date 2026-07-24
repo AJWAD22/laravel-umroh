@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Enums\UserRole;
+use App\Enums\MobileRole;
 use App\Models\Branch;
 use App\Models\PilgrimPortalAccount;
 use App\Models\User;
@@ -34,6 +35,37 @@ class AuthenticationTest extends TestCase
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_branch_admin_login_redirects_to_admin_dashboard(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $branch = Branch::create(['code' => 'BRC', 'name' => 'Cabang Login', 'city' => 'Makassar']);
+        $user = User::factory()->create(['branch_id' => $branch->id]);
+        $user->assignRole(UserRole::BranchAdmin->value);
+
+        $response = $this->post('/login', [
+            'identity' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticatedAs($user);
+        $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_mobile_staff_roles_do_not_use_the_web_login(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $user = User::factory()->create();
+        $user->assignRole(MobileRole::TourLeader->value);
+
+        $response = $this->post('/login', [
+            'identity' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertGuest();
+        $response->assertSessionHasErrors('identity');
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void

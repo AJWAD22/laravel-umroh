@@ -118,6 +118,8 @@ class MasterDataRequest extends FormRequest
                 'code' => ['exclude'],
                 'program_name' => ['required', 'string', 'max:255'],
                 'description' => ['nullable', 'string'],
+                'facilities' => ['nullable', 'string', 'max:3000'],
+                'requirements' => ['nullable', 'string', 'max:3000'],
                 'departure_date' => ['required', 'date'],
                 'return_date' => ['required', 'date', 'after:departure_date'],
                 'departure_airport' => ['nullable', 'string', 'max:100'],

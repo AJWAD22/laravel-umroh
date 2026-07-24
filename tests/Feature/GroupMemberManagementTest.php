@@ -3,12 +3,15 @@
 namespace Tests\Feature;
 
 use App\Enums\UserRole;
+use App\Enums\MobileRole;
 use App\Models\Branch;
 use App\Models\Departure;
 use App\Models\Group;
 use App\Models\GroupMember;
+use App\Models\MobileDevice;
 use App\Models\Muthawwif;
 use App\Models\Pilgrim;
+use App\Models\PilgrimRegistration;
 use App\Models\TourLeader;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -165,6 +168,94 @@ class GroupMemberManagementTest extends TestCase
         ]);
     }
 
+    public function test_reset_pin_does_not_revoke_active_device(): void
+    {
+        [$admin, $group, $pilgrim] = $this->scenario();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'pilgrim_id' => $pilgrim->id,
+            'status' => 'active',
+            'joined_at' => now(),
+        ]);
+        $device = MobileDevice::create([
+            'user_id' => $pilgrim->user_id,
+            'device_uuid' => 'active-device-001',
+            'device_name' => 'HP Jamaah',
+            'platform' => 'android',
+            'activated_at' => now(),
+            'last_used_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('groups.pilgrims.reset-pin', [$group, $pilgrim]), [
+                'reason' => 'Jamaah membutuhkan PIN cadangan',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('reset_pins', fn (array $pins) => count($pins) === 1);
+
+        $this->assertNull($device->fresh()->revoked_at);
+    }
+
+    public function test_branch_admin_can_revoke_pilgrim_devices_with_reason(): void
+    {
+        [$admin, $group, $pilgrim] = $this->scenario();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'pilgrim_id' => $pilgrim->id,
+            'status' => 'active',
+            'joined_at' => now(),
+        ]);
+        $token = $pilgrim->user->createToken('activation-lost-device-001', [MobileRole::Pilgrim->ability()]);
+        MobileDevice::create([
+            'user_id' => $pilgrim->user_id,
+            'device_uuid' => 'lost-device-001',
+            'device_name' => 'HP Hilang',
+            'platform' => 'android',
+            'activated_at' => now(),
+            'last_used_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('groups.pilgrims.revoke-devices', [$group, $pilgrim]), [
+                'reason' => 'HP jamaah hilang di perjalanan',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('mobile_devices', [
+            'user_id' => $pilgrim->user_id,
+            'device_uuid' => 'lost-device-001',
+        ]);
+        $this->assertNotNull(MobileDevice::where('device_uuid', 'lost-device-001')->firstOrFail()->revoked_at);
+        $this->withToken($token->plainTextToken)
+            ->getJson(route('api.mobile.profile'))
+            ->assertUnauthorized();
+        $this->assertDatabaseHas('audit_logs', [
+            'actor_id' => $admin->id,
+            'action' => 'activation.devices.revoked',
+        ]);
+    }
+
+    public function test_unpaid_pilgrim_cannot_receive_activation_pin(): void
+    {
+        [$admin, $group, $pilgrim] = $this->scenario(paymentStatus: 'down_payment');
+        GroupMember::create([
+            'group_id' => $group->id,
+            'pilgrim_id' => $pilgrim->id,
+            'status' => 'active',
+            'joined_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('groups.pilgrims.reset-pin', [$group, $pilgrim]), [
+                'reason' => 'Mencoba membuat PIN sebelum lunas',
+            ])
+            ->assertSessionHasErrors('activation');
+
+        $this->assertNull($pilgrim->fresh()->activation_pin_hash);
+    }
+
     public function test_reset_activation_pins_requires_a_reason(): void
     {
         [$admin, $group] = $this->scenario();
@@ -177,7 +268,7 @@ class GroupMemberManagementTest extends TestCase
     /**
      * @return array{User, Group, Pilgrim}
      */
-    private function scenario(): array
+    private function scenario(string $paymentStatus = 'paid'): array
     {
         $this->seed(RolePermissionSeeder::class);
         $branch = Branch::create(['code' => 'BJM', 'name' => 'Banjarmasin', 'city' => 'Banjarmasin']);
@@ -191,12 +282,25 @@ class GroupMemberManagementTest extends TestCase
             'name' => 'Group Banjarmasin',
             'capacity' => 10,
         ]);
+        $pilgrimUser = User::factory()->create(['branch_id' => $branch->id]);
+        $pilgrimUser->assignRole(MobileRole::Pilgrim->value);
         $pilgrim = Pilgrim::create([
             'branch_id' => $branch->id,
+            'user_id' => $pilgrimUser->id,
             'registration_number' => 'JMH-BJM-001',
             'full_name' => 'Jamaah Banjarmasin',
             'gender' => 'male',
             'status' => 'active',
+        ]);
+        PilgrimRegistration::create([
+            'user_id' => $pilgrimUser->id,
+            'branch_id' => $branch->id,
+            'departure_id' => $departure->id,
+            'full_name' => 'Jamaah Banjarmasin',
+            'gender' => 'male',
+            'phone' => '628111111111',
+            'status' => 'in_group',
+            'payment_status' => $paymentStatus,
         ]);
 
         return [$admin, $group, $pilgrim];

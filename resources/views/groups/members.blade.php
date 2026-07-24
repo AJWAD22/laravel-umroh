@@ -80,6 +80,98 @@
         </div>
     </section>
 
+    <section class="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="border-b border-slate-200 p-5 dark:border-slate-800">
+            <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                <div>
+                    <h2 class="font-semibold">Aktivasi Aplikasi Jamaah</h2>
+                    <p class="mt-1 text-sm text-slate-500">PIN baru hanya tampil setelah dibuat atau direset. PIN lama tidak dapat dilihat kembali.</p>
+                </div>
+                <div class="grid gap-2 sm:grid-cols-3">
+                    <form method="POST" action="{{ route('groups.generate-missing-pins', $group) }}" class="grid gap-2">
+                        @csrf
+                        <input name="reason" class="control-field min-h-10 text-xs" placeholder="Alasan buat PIN" required>
+                        <button class="button-secondary min-h-10 text-xs">Buat PIN yang Belum Tersedia</button>
+                    </form>
+                    <form method="POST" action="{{ route('groups.reset-pins', $group) }}" class="grid gap-2">
+                        @csrf
+                        <input name="reason" class="control-field min-h-10 text-xs" placeholder="Alasan reset rombongan" required>
+                        <button class="button-secondary min-h-10 text-xs">Reset PIN Rombongan</button>
+                    </form>
+                    <a href="{{ route('groups.activation-list', $group) }}" class="button-secondary min-h-10 text-xs">Unduh Daftar Aktivasi</a>
+                </div>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[980px] text-left text-sm">
+                <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-800/50">
+                    <tr>
+                        <th class="px-5 py-3">Jamaah</th>
+                        <th class="px-5 py-3">Pembayaran</th>
+                        <th class="px-5 py-3">PIN</th>
+                        <th class="px-5 py-3">Perangkat</th>
+                        <th class="px-5 py-3">Terakhir aktif</th>
+                        <th class="px-5 py-3">Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @forelse ($members as $member)
+                        @php
+                            $pilgrim = $member->pilgrim;
+                            $activeDevice = $pilgrim->user?->mobileDevices
+                                ?->whereNull('revoked_at')
+                                ->sortByDesc('last_used_at')
+                                ->first();
+                            $paymentStatus = \App\Models\PilgrimRegistration::query()
+                                ->where('user_id', $pilgrim->user_id)
+                                ->where('departure_id', $group->departure_id)
+                                ->where('status', 'in_group')
+                                ->value('payment_status');
+                            $paymentLabel = in_array($paymentStatus, ['paid', 'verified'], true) ? 'Lunas' : ($paymentStatus === 'down_payment' ? 'DP' : 'Belum lunas');
+                        @endphp
+                        <tr class="align-top">
+                            <td class="px-5 py-4">
+                                <p class="font-semibold">{{ $pilgrim->full_name }}</p>
+                                <p class="mt-1 text-xs text-slate-500">{{ $pilgrim->registration_number }}</p>
+                            </td>
+                            <td class="px-5 py-4">{{ $paymentLabel }}</td>
+                            <td class="px-5 py-4">
+                                @if ($pilgrim->activation_pin_generated_at)
+                                    <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">Sudah dibuat</span>
+                                    <p class="mt-1 text-xs text-slate-500">{{ $pilgrim->activation_pin_generated_at->translatedFormat('d M Y H:i') }}</p>
+                                @else
+                                    <span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">Belum dibuat</span>
+                                @endif
+                            </td>
+                            <td class="px-5 py-4">{{ $activeDevice ? 'Aktif' : 'Belum aktif' }}</td>
+                            <td class="px-5 py-4">{{ $activeDevice?->last_used_at?->diffForHumans() ?: '-' }}</td>
+                            <td class="px-5 py-4">
+                                <div class="grid min-w-56 gap-2">
+                                    <form method="POST" action="{{ route('groups.pilgrims.reset-pin', [$group, $pilgrim]) }}" class="grid gap-2">
+                                        @csrf
+                                        <input name="reason" class="control-field min-h-10 text-xs" placeholder="{{ $pilgrim->activation_pin_generated_at ? 'Alasan reset PIN' : 'Alasan buat PIN' }}" required>
+                                        <button class="button-primary min-h-10 py-2 text-xs">{{ $pilgrim->activation_pin_generated_at ? 'Reset PIN' : 'Buat PIN' }}</button>
+                                    </form>
+                                    @if ($activeDevice)
+                                        <form method="POST" action="{{ route('groups.pilgrims.revoke-devices', [$group, $pilgrim]) }}" class="grid gap-2"
+                                              data-confirm-title="Cabut Perangkat"
+                                              data-confirm="Perangkat aktif jamaah akan keluar dari aplikasi. Lanjutkan?">
+                                            @csrf
+                                            <input name="reason" class="control-field min-h-10 text-xs" placeholder="Alasan cabut perangkat" required>
+                                            <button class="button-secondary min-h-10 py-2 text-xs text-red-700">Cabut Perangkat</button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="6"><x-empty-state icon="key-round" title="Belum ada anggota aktif" description="Tambahkan jamaah ke rombongan untuk membuat PIN aktivasi." /></td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </section>
+
     <div class="grid gap-6 xl:grid-cols-2">
         <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div class="border-b border-slate-200 p-5 dark:border-slate-800">

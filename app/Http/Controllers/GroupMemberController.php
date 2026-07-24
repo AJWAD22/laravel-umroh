@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class GroupMemberController extends Controller
 {
@@ -32,7 +33,7 @@ class GroupMemberController extends Controller
         $group->load(['branch', 'departure.hotels', 'tourLeader', 'muthawwif']);
 
         $members = $group->members()
-            ->with('pilgrim')
+            ->with(['pilgrim.user.mobileDevices' => fn ($query) => $query->latest('last_used_at')])
             ->where('status', 'active')
             ->when($request->filled('member_search'), fn (Builder $query) => $query->whereHas(
                 'pilgrim',
@@ -153,6 +154,79 @@ class GroupMemberController extends Controller
             ->with('reset_pins', $result['pins']);
     }
 
+    public function generateMissingPins(Request $request, Group $group): RedirectResponse
+    {
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'min:8', 'max:255'],
+        ]);
+
+        $this->authorizeGroup($request, $group);
+        $result = $this->activations->generateMissingPinsForGroup($request->user(), $group, $data['reason']);
+
+        return back()
+            ->with('success', "{$result['count']} PIN aktivasi jamaah berhasil dibuat.")
+            ->with('reset_pins', $result['pins']);
+    }
+
+    public function resetPilgrimPin(Request $request, Group $group, Pilgrim $pilgrim): RedirectResponse
+    {
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'min:8', 'max:255'],
+        ]);
+
+        $this->authorizeGroup($request, $group);
+        $this->authorizeGroupPilgrim($group, $pilgrim);
+        $pin = $this->activations->generatePin($request->user(), $pilgrim, $data['reason']);
+
+        return back()
+            ->with('success', "PIN aktivasi {$pilgrim->full_name} berhasil dibuat.")
+            ->with('reset_pins', [[
+                'pilgrim_id' => $pilgrim->id,
+                'registration_number' => $pilgrim->registration_number,
+                'name' => $pilgrim->full_name,
+                'pin' => $pin,
+            ]]);
+    }
+
+    public function revokePilgrimDevices(Request $request, Group $group, Pilgrim $pilgrim): RedirectResponse
+    {
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'min:8', 'max:255'],
+        ]);
+
+        $this->authorizeGroup($request, $group);
+        $this->authorizeGroupPilgrim($group, $pilgrim);
+        $count = $this->activations->revokePilgrimDevices($request->user(), $pilgrim, $data['reason']);
+
+        return back()->with('success', "{$count} perangkat {$pilgrim->full_name} berhasil dicabut.");
+    }
+
+    public function activationList(Request $request, Group $group): StreamedResponse
+    {
+        $this->authorizeGroup($request, $group);
+        $group->load(['pilgrims.user.mobileDevices']);
+        $fileName = str($group->code ?: $group->name)->slug('-').'-aktivasi.csv';
+
+        return response()->streamDownload(function () use ($group): void {
+            $output = fopen('php://output', 'w');
+            fputcsv($output, ['Jamaah', 'No Registrasi', 'PIN', 'Perangkat', 'Terakhir Aktif']);
+            foreach ($group->pilgrims()->wherePivot('status', 'active')->with('user.mobileDevices')->orderBy('full_name')->get() as $pilgrim) {
+                $activeDevice = $pilgrim->user?->mobileDevices
+                    ->whereNull('revoked_at')
+                    ->sortByDesc('last_used_at')
+                    ->first();
+                fputcsv($output, [
+                    $pilgrim->full_name,
+                    $pilgrim->registration_number,
+                    $pilgrim->activation_pin_generated_at ? 'Sudah dibuat' : 'Belum dibuat',
+                    $activeDevice ? 'Aktif' : 'Belum aktif',
+                    $activeDevice?->last_used_at?->toDateTimeString() ?: '',
+                ]);
+            }
+            fclose($output);
+        }, $fileName, ['Content-Type' => 'text/csv']);
+    }
+
     private function authorizeGroup(Request $request, Group $group): void
     {
         Gate::authorize('update', $group);
@@ -160,5 +234,14 @@ class GroupMemberController extends Controller
         if (! $request->user()->hasRole(UserRole::SuperAdmin->value)) {
             abort_unless($group->branch_id === $request->user()->branch_id, 404);
         }
+    }
+
+    private function authorizeGroupPilgrim(Group $group, Pilgrim $pilgrim): void
+    {
+        abort_unless((int) $pilgrim->branch_id === (int) $group->branch_id, 404);
+        abort_unless($group->members()
+            ->where('pilgrim_id', $pilgrim->id)
+            ->where('status', 'active')
+            ->exists(), 404);
     }
 }

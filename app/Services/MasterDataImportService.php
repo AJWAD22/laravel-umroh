@@ -107,14 +107,7 @@ class MasterDataImportService
                         $record->restore();
                     }
 
-                    $model = $this->masterData->save('pilgrims', $data, $actor, $record);
-
-                    // PIN aktivasi dibuat otomatis hanya untuk Jamaah baru
-                    // atau Jamaah lama yang belum pernah punya PIN.
-                    if ($this->shouldGeneratePin($model, $wasExisting)) {
-                        $this->activations->generatePin($actor, $model);
-                        $result['pins']++;
-                    }
+                    $this->masterData->save('pilgrims', $data, $actor, $record);
 
                     $result[$wasExisting ? 'updated' : 'created']++;
                 } catch (ValidationException $exception) {
@@ -221,13 +214,6 @@ class MasterDataImportService
         return Group::where('branch_id', $branch->id)
             ->where(fn ($query) => $query->where('code', $value)->orWhere('name', $value))
             ->firstOr(fn () => throw new \RuntimeException("Rombongan '{$value}' tidak ditemukan di cabang {$branch->name}."));
-    }
-
-    private function shouldGeneratePin(Model $model, bool $wasExisting): bool
-    {
-        return $model instanceof Pilgrim
-            && (! $wasExisting || $model->activation_pin_generated_at === null)
-            && $model->activation_pin_used_at === null;
     }
 
     private function required(array $row, string $key, string $label): string

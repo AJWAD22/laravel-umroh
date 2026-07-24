@@ -2,7 +2,7 @@
 
 @php
     $value = match ($column) {
-        'activation_pin' => $record->activationPin(),
+        'activation_pin' => null,
         'active_group' => $record->groupMemberships?->firstWhere('status', 'active')?->group?->name,
         default => data_get($record, $column),
     };
@@ -34,10 +34,8 @@
         </span>
     @endif
 @elseif ($column === 'activation_pin')
-    @if ($canManage && $value)
-        <span class="font-mono text-sm font-bold tracking-[0.18em] text-blue-700 dark:text-blue-300">
-            {{ substr($value, 0, 3) }} {{ substr($value, 3) }}
-        </span>
+    @if ($record->activation_pin_generated_at && ! $record->activation_pin_used_at)
+        <x-status-badge value="pending" label="Sudah dibuat" />
     @elseif ($record->activation_pin_used_at)
         <x-status-badge value="completed" label="Sudah digunakan" />
     @else
