@@ -22,8 +22,21 @@ class PilgrimPortalController extends Controller
     private const SELECTED_PACKAGE = 'pilgrim_portal_selected_package';
     private const QUOTA_BLOCKING_STATUSES = ['submitted', 'revision_requested', 'approved', 'in_group'];
 
-    public function register(): View
+    public function register(Request $request): View
     {
+        if ($request->filled('paket')) {
+            $packageId = Departure::query()
+                ->whereKey($request->integer('paket'))
+                ->where('is_public', true)
+                ->where('status', 'scheduled')
+                ->whereDate('departure_date', '>=', today())
+                ->value('id');
+
+            if ($packageId) {
+                $request->session()->put('pilgrim_portal_public_package', $packageId);
+            }
+        }
+
         return view('portal.auth.register');
     }
 
@@ -71,6 +84,12 @@ class PilgrimPortalController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
+
+        $packageId = $request->session()->pull('pilgrim_portal_public_package');
+        if ($packageId && Departure::query()->whereKey($packageId)->exists()) {
+            return redirect()->route('portal.packages.show', $packageId)
+                ->with('success', 'Akun berhasil dibuat. Silakan periksa detail paket lalu pilih jika sudah sesuai.');
+        }
 
         return redirect()->route('portal.packages.index')
             ->with('success', 'Akun berhasil dibuat. Silakan pilih paket perjalanan yang sesuai.');

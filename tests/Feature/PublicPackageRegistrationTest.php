@@ -47,6 +47,45 @@ class PublicPackageRegistrationTest extends TestCase
         $this->assertDatabaseCount('departure_itineraries', 20);
     }
 
+    public function test_public_package_detail_can_be_seen_before_creating_account(): void
+    {
+        $this->seed(PublicPackageDemoSeeder::class);
+        $departure = Departure::query()->where('is_public', true)->firstOrFail();
+
+        $this->get(route('packages.show', $departure))
+            ->assertOk()
+            ->assertSee($departure->program_name)
+            ->assertSee('Daftar untuk Paket Ini')
+            ->assertSee('Buat akun untuk memilih paket ini.');
+    }
+
+    public function test_selected_public_package_is_preserved_after_account_registration(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $branch = Branch::create(['code' => 'PKG', 'name' => 'Cabang Paket', 'city' => 'Makassar']);
+        $departure = Departure::create([
+            'branch_id' => $branch->id,
+            'code' => 'PKG-DEP-001',
+            'program_name' => 'Umroh Pilihan Publik',
+            'departure_date' => today()->addMonth(),
+            'return_date' => today()->addMonth()->addDays(9),
+            'status' => 'scheduled',
+            'is_public' => true,
+        ]);
+
+        $this->get(route('portal.register', ['paket' => $departure->id]))
+            ->assertOk();
+
+        $this->post(route('portal.register.store'), [
+            'name' => 'Jamaah Paket',
+            'phone' => '081234567891',
+            'email' => 'jamaah.paket@example.com',
+            'password' => 'password-rahasia',
+            'password_confirmation' => 'password-rahasia',
+            'terms' => '1',
+        ])->assertRedirect(route('portal.packages.show', $departure));
+    }
+
     public function test_jamaah_creates_account_selects_package_then_submits_biodata(): void
     {
         $this->seed(RolePermissionSeeder::class);

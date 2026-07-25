@@ -197,12 +197,13 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
   }
 
   Future<void> _openCreateForm(BuildContext context) async {
+    final provider = context.read<CheckpointProvider>();
     final created = await Navigator.push<bool>(
       context,
       MaterialPageRoute(builder: (_) => const MeetingPointFormScreen()),
     );
     if (created == true && mounted) {
-      await context.read<CheckpointProvider>().load();
+      await provider.load();
     }
   }
 }

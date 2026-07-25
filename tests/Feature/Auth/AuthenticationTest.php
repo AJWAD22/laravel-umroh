@@ -53,6 +53,23 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 
+    public function test_admin_login_ignores_jamaah_intended_url(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $branch = Branch::create(['code' => 'INT', 'name' => 'Cabang Intended', 'city' => 'Makassar']);
+        $user = User::factory()->create(['branch_id' => $branch->id]);
+        $user->assignRole(UserRole::BranchAdmin->value);
+
+        $this->withSession(['url.intended' => url('/jamaah/paket/10')])
+            ->post('/login', [
+                'identity' => $user->email,
+                'password' => 'password',
+            ])
+            ->assertRedirect(route('dashboard'));
+
+        $this->assertAuthenticatedAs($user);
+    }
+
     public function test_mobile_staff_roles_do_not_use_the_web_login(): void
     {
         $this->seed(RolePermissionSeeder::class);

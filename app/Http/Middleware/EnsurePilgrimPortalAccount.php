@@ -20,6 +20,11 @@ class EnsurePilgrimPortalAccount
             return $next($request);
         }
 
+        if ($request->user()?->canAccessAdminPanel()) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Link tersebut khusus portal jamaah. Anda sudah diarahkan ke dashboard sesuai role akun.');
+        }
+
         abort(403, 'Akun ini tidak memiliki akses ke portal jamaah.');
     }
 }

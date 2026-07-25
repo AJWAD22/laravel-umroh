@@ -6,7 +6,6 @@ use App\Models\Branch;
 use App\Models\Departure;
 use App\Services\SystemSettingService;
 use Illuminate\Contracts\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class LandingPageController extends Controller
 {
@@ -37,11 +36,16 @@ class LandingPageController extends Controller
         ]);
     }
 
-    public function show(Departure $departure): RedirectResponse
+    public function show(Departure $departure): View
     {
         abort_unless($departure->is_public && $departure->status === 'scheduled', 404);
 
-        return redirect()->route('portal.packages.show', $departure);
+        $departure->load(['branch', 'hotels', 'itineraries']);
+
+        return view('public.package-show', [
+            'package' => $departure,
+            'travel' => $this->travelProfile(),
+        ]);
     }
 
     /** @return array<string, mixed> */
