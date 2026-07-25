@@ -7,6 +7,7 @@ use App\Events\AdminNotificationCreated;
 use App\Models\Branch;
 use App\Models\LocationHistory;
 use App\Models\Pilgrim;
+use App\Models\SosReport;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -74,6 +75,36 @@ class ReportExportTest extends TestCase
         }
     }
 
+    public function test_super_admin_reports_are_aggregate_without_individual_tracking_or_sos_details(): void
+    {
+        [$superAdmin] = $this->scenario();
+
+        $this->actingAs($superAdmin)
+            ->get(route('reports.index', [
+                'type' => 'tracking',
+                'date_from' => today()->startOfMonth()->toDateString(),
+                'date_to' => today()->toDateString(),
+            ]))
+            ->assertOk()
+            ->assertSee('Laporan Tracking Agregat')
+            ->assertSee('Cabang Laporan A')
+            ->assertDontSee('Jamaah Laporan A')
+            ->assertDontSee('21.4224')
+            ->assertDontSee('RPT-JMH-A');
+
+        $this->actingAs($superAdmin)
+            ->get(route('reports.index', [
+                'type' => 'sos',
+                'date_from' => today()->startOfMonth()->toDateString(),
+                'date_to' => today()->toDateString(),
+            ]))
+            ->assertOk()
+            ->assertSee('Laporan SOS Agregat')
+            ->assertDontSee('Butuh bantuan')
+            ->assertDontSee('Jamaah Laporan A')
+            ->assertDontSee('21.4224');
+    }
+
     /**
      * @return array{User, User, Branch}
      */
@@ -93,6 +124,15 @@ class ReportExportTest extends TestCase
         $pilgrimB = $this->pilgrim($branchB, 'RPT-JMH-B', 'Jamaah Rahasia B');
         $this->tracking($pilgrimA, 21.4224, 39.8262);
         $this->tracking($pilgrimB, 24.4672, 39.6111);
+        SosReport::create([
+            'branch_id' => $branchA->id,
+            'pilgrim_id' => $pilgrimA->id,
+            'latitude' => 21.4224,
+            'longitude' => 39.8262,
+            'message' => 'Butuh bantuan',
+            'status' => 'new',
+            'reported_at' => today()->setTime(9, 0),
+        ]);
 
         return [$superAdmin, $branchAdmin, $branchB];
     }

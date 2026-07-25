@@ -19,7 +19,11 @@ class ReportController extends Controller
 
     public function index(ReportRequest $request, string $type): View
     {
-        $dataset = $this->reports->generate($type, $request->validated());
+        $dataset = $this->reports->generate(
+            $type,
+            $request->validated(),
+            $request->user()->hasRole(UserRole::SuperAdmin->value),
+        );
 
         return view('reports.index', [
             ...$dataset,
@@ -34,7 +38,11 @@ class ReportController extends Controller
 
     public function download(ReportRequest $request, string $type, string $format): Response|BinaryFileResponse
     {
-        $dataset = $this->reports->generate($type, $request->validated());
+        $dataset = $this->reports->generate(
+            $type,
+            $request->validated(),
+            $request->user()->hasRole(UserRole::SuperAdmin->value),
+        );
         $filename = "{$type}-{$request->validated('date_from')}-{$request->validated('date_to')}";
 
         if ($format === 'xlsx') {

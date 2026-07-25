@@ -13,6 +13,7 @@ use App\Models\MobileActivationSession;
 use App\Models\Muthawwif;
 use App\Models\Pilgrim;
 use App\Models\PilgrimRegistration;
+use App\Models\SosReport;
 use App\Models\TourLeader;
 use App\Models\User;
 use App\Services\MobileActivationService;
@@ -210,6 +211,35 @@ class MobileApiTest extends TestCase
             ->assertForbidden();
 
         $this->assertDatabaseMissing('checkpoints', ['name' => 'Tidak Boleh Dibuat']);
+    }
+
+    public function test_muthawwif_can_view_but_not_acknowledge_or_resolve_sos(): void
+    {
+        $context = $this->scenario();
+        $report = SosReport::create([
+            'branch_id' => $context['branch']->id,
+            'pilgrim_id' => $context['pilgrim']->id,
+            'group_id' => $context['group']->id,
+            'latitude' => 21.422487,
+            'longitude' => 39.826206,
+            'message' => 'Butuh bantuan petugas.',
+            'status' => 'new',
+            'reported_at' => now(),
+        ]);
+
+        $muthawwifToken = $this->login($context['muthawwifUser']);
+        $this->withToken($muthawwifToken)
+            ->getJson('/api/mobile/sos-reports')
+            ->assertOk()
+            ->assertJsonFragment(['message' => 'Butuh bantuan petugas.']);
+
+        $this->withToken($muthawwifToken)
+            ->postJson("/api/mobile/sos-reports/{$report->id}/acknowledge")
+            ->assertForbidden();
+
+        $this->withToken($muthawwifToken)
+            ->postJson("/api/mobile/sos-reports/{$report->id}/resolve")
+            ->assertForbidden();
     }
 
     public function test_checkpoint_created_by_branch_admin_is_visible_to_assigned_pilgrim(): void

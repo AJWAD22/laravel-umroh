@@ -175,6 +175,7 @@ class StaffGroupController extends Controller
     {
         // Acknowledge berarti petugas sudah melihat SOS dan mulai menangani.
         // Pada tahap ini jamaah juga bisa diberi notifikasi bahwa bantuan diproses.
+        $this->authorizeTourLeaderAction($request);
         $this->authorizeSos($request, $sosReport);
         $shouldNotifyPilgrim = $sosReport->status === 'new';
 
@@ -197,6 +198,7 @@ class StaffGroupController extends Controller
     {
         // Resolve berarti kasus SOS selesai. Jika tidak ada SOS aktif lain,
         // status monitoring jamaah dikembalikan menjadi normal.
+        $this->authorizeTourLeaderAction($request);
         $this->authorizeSos($request, $sosReport);
         $data = $request->validate([
             'resolution_notes' => ['nullable', 'string', 'max:500'],
@@ -270,6 +272,15 @@ class StaffGroupController extends Controller
             $this->access->groupIdsForStaff($request->user(), $role)->contains($sosReport->group_id),
             403,
             'Laporan SOS tidak dapat diakses.'
+        );
+    }
+
+    private function authorizeTourLeaderAction(Request $request): void
+    {
+        abort_unless(
+            $request->user()->hasRole(MobileRole::TourLeader->value),
+            403,
+            'Hanya Tour Leader yang dapat menindaklanjuti SOS.',
         );
     }
 

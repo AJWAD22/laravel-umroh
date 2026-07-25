@@ -7,7 +7,7 @@
         <form method="POST" action="{{ route('groups.reset-pins', $record) }}"
               class="flex items-center gap-1"
               data-confirm-title="Reset PIN Rombongan"
-              data-confirm="Semua PIN jamaah aktif di rombongan ini akan dibuat ulang dan perangkat lama dicabut. Lanjutkan?">
+              data-confirm="Semua PIN jamaah aktif di rombongan ini akan dibuat ulang. Perangkat yang sudah aktif tidak dicabut. Lanjutkan?">
             @csrf
             <input name="reason" required minlength="8" maxlength="255"
                    placeholder="Alasan reset"

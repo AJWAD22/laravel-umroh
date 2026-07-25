@@ -20,7 +20,13 @@
             <div>
                 <nav class="mb-2 text-sm text-slate-500">Laporan / {{ $reportLabels[$type] }}</nav>
                 <h1 class="text-2xl font-bold">{{ $title }}</h1>
-                <p class="mt-1 text-sm text-slate-500">Preview menampilkan maksimal 100 baris; file export memuat seluruh hasil filter.</p>
+                <p class="mt-1 text-sm text-slate-500">
+                    @role('super-admin')
+                        Super Admin melihat laporan agregat tanpa detail lokasi atau identitas operasional individu.
+                    @else
+                        Preview menampilkan maksimal 100 baris; file export memuat seluruh hasil filter.
+                    @endrole
+                </p>
             </div>
             <div class="flex gap-2">
                 <a href="{{ route('reports.download', ['type' => $type, 'format' => 'pdf', ...$downloadQuery]) }}" class="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700">Export PDF</a>
