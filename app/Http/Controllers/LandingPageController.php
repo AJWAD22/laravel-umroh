@@ -57,12 +57,27 @@ class LandingPageController extends Controller
             'about' => $this->settings->get('company_about', ''),
             'email' => $this->settings->get('support_email', ''),
             'phone' => $this->settings->get('support_phone', ''),
-            'whatsapp' => $this->settings->get('company_whatsapp', ''),
+            'whatsapp' => $this->whatsappNumber(),
             'address' => $this->settings->get('company_address', ''),
             'license' => $this->settings->get('company_license', ''),
             'website' => $this->settings->get('company_website', ''),
             'office_hours' => $this->settings->get('office_hours', ''),
         ];
+    }
+
+    private function whatsappNumber(): string
+    {
+        $number = preg_replace(
+            '/\D+/',
+            '',
+            (string) $this->settings->get('company_whatsapp', ''),
+        ) ?: '085947566363';
+
+        if (str_starts_with($number, '0')) {
+            return '62'.substr($number, 1);
+        }
+
+        return str_starts_with($number, '8') ? '62'.$number : $number;
     }
 
     /** @return array<string, mixed> */

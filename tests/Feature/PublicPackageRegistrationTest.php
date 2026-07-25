@@ -59,6 +59,30 @@ class PublicPackageRegistrationTest extends TestCase
             ->assertSee('Buat akun untuk memilih paket ini.');
     }
 
+    public function test_landing_whatsapp_uses_configured_number_in_international_format(): void
+    {
+        $this->seed(SystemSettingSeeder::class);
+        SystemSetting::query()
+            ->where('key', 'company_whatsapp')
+            ->update(['value' => '085947566363']);
+
+        $this->get(route('landing'))
+            ->assertOk()
+            ->assertSee('https://wa.me/6285947566363', false);
+    }
+
+    public function test_landing_uses_owner_whatsapp_when_setting_is_empty(): void
+    {
+        $this->seed(SystemSettingSeeder::class);
+        SystemSetting::query()
+            ->where('key', 'company_whatsapp')
+            ->update(['value' => '']);
+
+        $this->get(route('landing'))
+            ->assertOk()
+            ->assertSee('https://wa.me/6285947566363', false);
+    }
+
     public function test_selected_public_package_is_preserved_after_account_registration(): void
     {
         $this->seed(RolePermissionSeeder::class);
