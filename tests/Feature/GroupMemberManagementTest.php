@@ -230,7 +230,7 @@ class GroupMemberManagementTest extends TestCase
         $this->assertNotNull(MobileDevice::where('device_uuid', 'lost-device-001')->firstOrFail()->revoked_at);
         $this->withToken($token->plainTextToken)
             ->getJson(route('api.mobile.profile'))
-            ->assertUnauthorized();
+            ->assertForbidden();
         $this->assertDatabaseHas('audit_logs', [
             'actor_id' => $admin->id,
             'action' => 'activation.devices.revoked',
@@ -314,6 +314,7 @@ class GroupMemberManagementTest extends TestCase
             'program_name' => "Program {$branch->name}",
             'departure_date' => today()->addMonth(),
             'return_date' => today()->addMonth()->addDays(10),
+            'status' => 'scheduled',
         ]);
     }
 }
