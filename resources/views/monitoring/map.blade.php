@@ -40,6 +40,21 @@
         @endforeach
     </section>
 
+    <section class="mb-5 grid gap-3 lg:grid-cols-4">
+        @foreach ([
+            ['1', 'Pilih paket', 'Gunakan filter Paket Perjalanan agar titik tujuan dan rombongan sesuai jadwal.'],
+            ['2', 'Pilih rombongan', 'Jika rombongan dipilih, titik paket dan titik khusus rombongan ikut tampil.'],
+            ['3', 'Pastikan aktivasi', 'Lokasi jamaah muncul setelah PIN dipakai dan aplikasi mengirim GPS.'],
+            ['4', 'Tindak lanjuti', 'GPS terlambat dan SOS menjadi prioritas pemeriksaan petugas.'],
+        ] as $guide)
+            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <span class="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-extrabold text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">Langkah {{ $guide[0] }}</span>
+                <h2 class="mt-3 text-sm font-extrabold text-slate-950 dark:text-white">{{ $guide[1] }}</h2>
+                <p class="mt-1 text-xs leading-5 text-slate-500">{{ $guide[2] }}</p>
+            </article>
+        @endforeach
+    </section>
+
     <section class="surface-card overflow-hidden">
         <div class="border-b border-slate-200 p-4 dark:border-slate-800">
             <div class="mb-3 flex items-center justify-between gap-3">
@@ -108,7 +123,7 @@
             <div class="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3 dark:border-slate-800">
                 <div class="flex flex-wrap gap-4 text-xs font-semibold text-slate-600 dark:text-slate-300">
                     <label class="inline-flex cursor-pointer items-center gap-2"><input id="monitoring-show-staff" type="checkbox" checked class="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"> Petugas</label>
-                    <label class="inline-flex cursor-pointer items-center gap-2"><input id="monitoring-show-checkpoints" type="checkbox" checked class="rounded border-slate-300 text-amber-600 focus:ring-amber-500"> Titik tujuan</label>
+                    <label class="inline-flex cursor-pointer items-center gap-2"><input id="monitoring-show-checkpoints" type="checkbox" checked class="rounded border-slate-300 text-amber-600 focus:ring-amber-500"> Titik tujuan & geofence</label>
                 </div>
                 <button id="monitoring-reload" type="button" class="button-primary min-h-9 px-4 py-2 text-xs"><i data-lucide="rotate-ccw" class="size-4"></i> Perbarui Sekarang</button>
             </div>
@@ -134,6 +149,16 @@
                             <li class="flex gap-2"><i data-lucide="circle-check" class="mt-0.5 size-3.5 shrink-0 text-emerald-600"></i> Filter paket atau rombongan sesuai data jamaah.</li>
                         </ul>
                     </div>
+                    <div class="mt-4 grid gap-2">
+                        <a href="{{ route('master-data.index', 'groups') }}" class="button-secondary min-h-10 justify-center text-xs">
+                            <i data-lucide="key-round" class="size-4"></i>
+                            Cek Rombongan & PIN
+                        </a>
+                        <a href="{{ route('master-data.index', 'checkpoints') }}" class="button-secondary min-h-10 justify-center text-xs">
+                            <i data-lucide="map-pinned" class="size-4"></i>
+                            Cek Titik Tujuan
+                        </a>
+                    </div>
                 </div>
             </aside>
 
@@ -142,7 +167,7 @@
                 <div id="monitoring-loading" class="pointer-events-none absolute inset-0 z-[500] hidden place-items-center bg-white/50 backdrop-blur-sm"><x-loading-state label="Memuat data operasional..." class="rounded-2xl bg-white px-5 py-3 shadow-lg dark:bg-slate-900" /></div>
                 <aside id="monitoring-detail" class="absolute inset-y-4 right-4 z-[600] hidden w-[calc(100%-2rem)] max-w-sm overflow-y-auto rounded-2xl border border-slate-200 bg-white/95 shadow-2xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95"><div id="monitoring-detail-content"></div></aside>
                 <div class="absolute bottom-4 left-4 z-[500] hidden rounded-2xl bg-white/95 p-3 text-[11px] font-semibold shadow-lg backdrop-blur sm:block dark:bg-slate-900/95">
-                    <div class="grid grid-cols-2 gap-x-4 gap-y-2"><span><i class="mr-1 inline-block size-2.5 rounded-full bg-emerald-500"></i> GPS aktif</span><span><i class="mr-1 inline-block size-2.5 rounded-full bg-slate-500"></i> GPS terlambat</span><span><i class="mr-1 inline-block size-2.5 rounded-full bg-red-500"></i> SOS</span><span><i class="mr-1 inline-block size-2.5 rounded-full bg-cyan-500"></i> Petugas</span><span><i class="mr-1 inline-block size-2.5 rounded bg-amber-500"></i> Titik tujuan</span></div>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-2"><span><i class="mr-1 inline-block size-2.5 rounded-full bg-emerald-500"></i> GPS aktif</span><span><i class="mr-1 inline-block size-2.5 rounded-full bg-slate-500"></i> GPS terlambat</span><span><i class="mr-1 inline-block size-2.5 rounded-full bg-red-500"></i> SOS</span><span><i class="mr-1 inline-block size-2.5 rounded-full bg-cyan-500"></i> Petugas</span><span><i class="mr-1 inline-block size-2.5 rounded bg-amber-500"></i> Titik tujuan</span><span><i class="mr-1 inline-block size-2.5 rounded border border-amber-400"></i> Radius geofence</span></div>
                 </div>
             </div>
         </div>
