@@ -169,7 +169,24 @@ class MasterDataTest extends TestCase
             ->assertSee('3. Jadwal harian')
             ->assertSee('4. Publikasi')
             ->assertSee('Jika daftar kosong, buat data hotel terlebih dahulu')
-            ->assertSee('Nomor hari tidak boleh melebihi durasi paket');
+            ->assertSee('Nomor hari tidak boleh melebihi durasi paket')
+            ->assertSee('Nama ini tampil di landing page, portal jamaah, pendaftaran, dan rombongan')
+            ->assertSee('Kuota dipakai untuk menghitung sisa kursi di landing page dan portal jamaah')
+            ->assertSee('Gunakan Draft untuk persiapan, Terjadwal agar paket siap dipilih');
+    }
+
+    public function test_hotel_form_guides_location_and_package_usage(): void
+    {
+        [$admin] = $this->branchAdmin('HTF');
+
+        $this->actingAs($admin)
+            ->get(route('master-data.create', 'hotels'))
+            ->assertOk()
+            ->assertSee('Pilih lokasi hotel dari peta')
+            ->assertSee('1. Nama &amp; kota', false)
+            ->assertSee('Nama hotel akan tampil pada paket, portal jamaah, dan detail rombongan')
+            ->assertSee('Radius aman awal untuk area hotel')
+            ->assertSee('data-location-picker', false);
     }
 
     public function test_branch_admin_creates_tour_leader_with_a_mobile_login_account(): void

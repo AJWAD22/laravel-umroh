@@ -43,6 +43,43 @@
         ['title' => 'Khusus Rombongan', 'description' => 'Pilih rombongan untuk titik kumpul khusus satu rombongan.'],
         ['title' => 'Geofence', 'description' => 'Kategori Titik Kumpul dan Hotel dipakai sebagai radius aman tracking.'],
     ];
+    $hotelGuide = [
+        ['title' => '1. Nama & kota', 'description' => 'Pisahkan hotel Makkah dan Madinah agar paket mudah dibaca jamaah.'],
+        ['title' => '2. Alamat', 'description' => 'Isi alamat singkat yang mudah dikenali petugas dan jamaah.'],
+        ['title' => '3. Lokasi peta', 'description' => 'Pilih titik dari peta agar koordinat tidak perlu dibuat manual.'],
+    ];
+    $fieldHelp = [
+        'departures' => [
+            'program_name' => 'Nama ini tampil di landing page, portal jamaah, pendaftaran, dan rombongan.',
+            'description' => 'Gunakan bahasa singkat yang menjelaskan kelas paket, durasi, dan keunggulan utama.',
+            'facilities' => 'Tulis satu fasilitas per baris, misalnya visa umroh, hotel, transportasi, manasik, dan pendamping.',
+            'requirements' => 'Tulis satu persyaratan per baris, misalnya paspor, KTP, KK, buku nikah, dan vaksin jika diperlukan.',
+            'departure_date' => 'Tanggal ini menjadi acuan paket tampil sebagai keberangkatan aktif.',
+            'return_date' => 'Durasi paket dihitung otomatis dari tanggal berangkat sampai tanggal pulang.',
+            'departure_airport' => 'Contoh: Jakarta CGK, Surabaya SUB, Makassar UPG, atau Banjarmasin BDJ.',
+            'arrival_airport' => 'Contoh: Jeddah JED atau Madinah MED.',
+            'airline' => 'Nama maskapai tampil di landing page dan detail paket.',
+            'flight_number' => 'Isi jika nomor penerbangan sudah diketahui. Bisa dikosongkan saat paket masih draft.',
+            'price' => 'Harga ini tampil sebagai harga paket. Kosongkan jika harga masih harus menghubungi cabang.',
+            'quota' => 'Kuota dipakai untuk menghitung sisa kursi di landing page dan portal jamaah.',
+            'is_public' => 'Aktifkan hanya jika paket sudah layak dilihat calon jamaah.',
+            'status' => 'Gunakan Draft untuk persiapan, Terjadwal agar paket siap dipilih, dan Selesai setelah perjalanan ditutup.',
+        ],
+        'hotels' => [
+            'name' => 'Nama hotel akan tampil pada paket, portal jamaah, dan detail rombongan.',
+            'city' => 'Pilih kota hotel agar sistem bisa membedakan hotel Makkah dan Madinah.',
+            'address' => 'Alamat membantu petugas memastikan titik peta sesuai lokasi sebenarnya.',
+            'geofence_radius_meters' => 'Radius aman awal untuk area hotel. Umumnya 100-300 meter, sesuaikan kondisi sekitar.',
+        ],
+        'checkpoints' => [
+            'name' => 'Gunakan nama yang mudah dipahami jamaah, misalnya Lobi Hotel, Gate 79, atau Titik Kumpul Bus.',
+            'city' => 'Kota membantu mobile dan monitoring mengelompokkan titik tujuan.',
+            'address' => 'Alamat boleh singkat; koordinat utama tetap dipilih dari peta.',
+            'geofence_radius_meters' => 'Radius dipakai untuk membaca apakah jamaah berada di sekitar titik kumpul atau tujuan.',
+            'description' => 'Isi petunjuk praktis, misalnya bertemu di lobi 15 menit sebelum jadwal berangkat.',
+            'is_active' => 'Nonaktifkan titik yang sudah tidak dipakai agar tidak muncul di mobile.',
+        ],
+    ];
     $fields = match ($resource) {
         'branches' => [
             ['code','Kode Cabang','text'], ['name','Nama Cabang','text'], ['city','Kota','text'], ['province','Provinsi','text'],
@@ -181,6 +218,14 @@
                     </div>
                 </div>
             </section>
+            <section class="mb-7 grid gap-3 md:grid-cols-3">
+                @foreach ($hotelGuide as $guide)
+                    <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                        <h2 class="text-sm font-extrabold text-slate-950 dark:text-white">{{ $guide['title'] }}</h2>
+                        <p class="mt-2 text-xs leading-5 text-slate-500">{{ $guide['description'] }}</p>
+                    </article>
+                @endforeach
+            </section>
         @elseif ($resource === 'checkpoints')
             <section class="mb-7 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-sm leading-6 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
                 <div class="flex gap-3">
@@ -291,6 +336,9 @@
                                @if ($type === 'number') step="any" @endif
                                @if ($type === 'password') autocomplete="new-password" @endif
                                class="control-field w-full">
+                    @endif
+                    @if (filled($fieldHelp[$resource][$name] ?? null))
+                        <span class="mt-1.5 block text-xs leading-5 text-slate-500">{{ $fieldHelp[$resource][$name] }}</span>
                     @endif
                     @error($name)<span class="mt-1 block text-xs text-red-600">{{ $message }}</span>@enderror
                 </label>
