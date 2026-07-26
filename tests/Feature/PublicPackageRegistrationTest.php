@@ -173,6 +173,9 @@ class PublicPackageRegistrationTest extends TestCase
             'status' => 'submitted',
             'payment_status' => 'unpaid',
         ]);
+        $this->assertDatabaseMissing('pilgrims', [
+            'user_id' => $user->id,
+        ]);
         $registration = PilgrimRegistration::query()->where('user_id', $user->id)->firstOrFail();
         $this->assertNotSame('6371010101010001', $registration->getRawOriginal('nik'));
         $this->assertSame('6371010101010001', $registration->nik);
@@ -329,6 +332,10 @@ class PublicPackageRegistrationTest extends TestCase
             ])
             ->assertRedirect()
             ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseMissing('pilgrims', [
+            'user_id' => $portalUser->id,
+        ]);
 
         $this->actingAs($admin)
             ->patch(route('registrations.update', $registration->fresh()), [

@@ -61,7 +61,7 @@
                 </label>
 
                 <label class="grid gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 2xl:col-span-3">
-                    Jadwal Perjalanan
+                    Paket Perjalanan
                     <select id="monitoring-departure" class="control-field">
                         <option value="">Semua perjalanan aktif</option>
                         @foreach ($departures as $departure)

@@ -26,6 +26,16 @@
         ];
     @endphp
 
+    <section class="mb-5 rounded-2xl border border-teal-200 bg-teal-50 p-5 text-sm leading-6 text-teal-950 dark:border-teal-900 dark:bg-teal-950/30 dark:text-teal-100">
+        <div class="flex items-start gap-3">
+            <i data-lucide="clipboard-list" class="mt-0.5 size-5 shrink-0 text-teal-700 dark:text-teal-300"></i>
+            <div>
+                <p class="font-bold">Pendaftaran Jamaah adalah area calon jamaah.</p>
+                <p class="mt-1">Pilihan paket dari portal jamaah masuk ke halaman ini sebagai proses pendaftaran. Data baru menjadi Data Master Jamaah setelah Admin Cabang menyetujui biodata, mencatat pembayaran lunas, dan memasukkan jamaah ke rombongan.</p>
+            </div>
+        </div>
+    </section>
+
     <section class="surface-card overflow-hidden">
         <form method="GET" class="grid gap-3 border-b border-slate-200 p-5 dark:border-slate-800 md:grid-cols-5">
             <input name="search" value="{{ request('search') }}" placeholder="Nama atau telepon" class="control-field w-full">

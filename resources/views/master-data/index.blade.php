@@ -68,6 +68,18 @@
         </div>
     </x-slot:header>
 
+    @if ($resource === 'departures')
+        <section class="mb-5 rounded-2xl border border-blue-200 bg-blue-50 p-5 text-sm leading-6 text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
+            <div class="flex items-start gap-3">
+                <i data-lucide="plane" class="mt-0.5 size-5 shrink-0 text-blue-700 dark:text-blue-300"></i>
+                <div>
+                    <p class="font-bold">Paket Perjalanan dikelola oleh Admin Cabang.</p>
+                    <p class="mt-1">Isi paket meliputi tanggal berangkat-pulang, hotel, pesawat, harga, kuota, fasilitas, persyaratan, dan jadwal harian. Super Admin dapat memantau seluruh paket, sedangkan input dan perubahan operasional dilakukan oleh cabang.</p>
+                </div>
+            </div>
+        </section>
+    @endif
+
     @if ($resource === 'groups' && session('reset_pins'))
         <section class="mb-5 rounded-2xl border border-violet-200 bg-violet-50 p-5 dark:border-violet-900 dark:bg-violet-950/30">
             <div class="flex items-start gap-3">

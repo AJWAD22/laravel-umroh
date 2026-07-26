@@ -67,7 +67,7 @@
             ['geofence_radius_meters','Radius Geofence (meter)','number'],
         ],
         'checkpoints' => [...$commonBranch,
-            ['departure_id','Khusus Jadwal Perjalanan','select',$options['departures']],
+            ['departure_id','Khusus Paket Perjalanan','select',$options['departures']],
             ['group_id','Khusus Rombongan','select',$options['groups']],
             ['name','Nama Tujuan','text'],
             ['category','Kategori','select',[
@@ -92,7 +92,7 @@
             ['status','Status','select',['draft'=>'Draft','scheduled'=>'Terjadwal','departed'=>'Berangkat','completed'=>'Selesai','cancelled'=>'Batal']],
         ],
         'groups' => [...$commonBranch,
-            ['departure_id','Jadwal Perjalanan','select',$options['departures']],
+            ['departure_id','Paket Perjalanan','select',$options['departures']],
             ['tour_leader_id','Tour Leader','select',$options['tourLeaders']],
             ['muthawwif_id','Muthawwif','select',$options['muthawwifs']],
             ['code','Kode Rombongan','text'], ['name','Nama Rombongan','text'],

@@ -103,6 +103,18 @@ class MasterDataTest extends TestCase
             ->assertSee('name="longitude"', false);
     }
 
+    public function test_branch_admin_manages_package_departures_from_supporting_data(): void
+    {
+        [$admin] = $this->branchAdmin('PKT');
+
+        $this->actingAs($admin)
+            ->get(route('master-data.index', 'departures'))
+            ->assertOk()
+            ->assertSee('Paket Perjalanan')
+            ->assertSee('Paket Perjalanan dikelola oleh Admin Cabang')
+            ->assertSee('Tambah Paket Perjalanan');
+    }
+
     public function test_branch_admin_creates_tour_leader_with_a_mobile_login_account(): void
     {
         [$admin, $branch] = $this->branchAdmin('BJM');

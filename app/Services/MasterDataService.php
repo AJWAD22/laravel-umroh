@@ -66,13 +66,13 @@ class MasterDataService
                 ['name' => 'Nama Hotel', 'branch.name' => 'Cabang', 'city' => 'Kota', 'geofence_radius_meters' => 'Radius (m)'],
                 ['name', 'address'], ['name', 'city', 'geofence_radius_meters'], ['branch']),
             'checkpoints' => $this->definition(Checkpoint::class, 'Tujuan & Titik Penting', 'checkpoints.manage',
-                ['name' => 'Nama Tujuan', 'category' => 'Kategori', 'city' => 'Kota', 'branch.name' => 'Cabang', 'departure.program_name' => 'Jadwal Perjalanan', 'group.name' => 'Rombongan', 'is_active' => 'Aktif'],
+                ['name' => 'Nama Tujuan', 'category' => 'Kategori', 'city' => 'Kota', 'branch.name' => 'Cabang', 'departure.program_name' => 'Paket Perjalanan', 'group.name' => 'Rombongan', 'is_active' => 'Aktif'],
                 ['name', 'address', 'description'], ['name', 'category', 'city', 'is_active'], ['branch', 'departure', 'group']),
-            'departures' => $this->definition(Departure::class, 'Jadwal Perjalanan', 'departures.manage',
+            'departures' => $this->definition(Departure::class, 'Paket Perjalanan', 'departures.manage',
                 ['code' => 'Kode', 'program_name' => 'Nama Paket', 'branch.name' => 'Cabang', 'duration_days' => 'Durasi', 'airline' => 'Pesawat', 'departure_date' => 'Tanggal Berangkat', 'status' => 'Status'],
                 ['code', 'program_name', 'departure_airport', 'airline', 'flight_number'], ['code', 'program_name', 'departure_date', 'status'], ['branch', 'hotels', 'itineraries']),
             'groups' => $this->definition(Group::class, 'Rombongan', 'groups.manage',
-                ['code' => 'Kode', 'name' => 'Nama Rombongan', 'branch.name' => 'Cabang', 'departure.program_name' => 'Jadwal Perjalanan', 'is_active' => 'Aktif'],
+                ['code' => 'Kode', 'name' => 'Nama Rombongan', 'branch.name' => 'Cabang', 'departure.program_name' => 'Paket Perjalanan', 'is_active' => 'Aktif'],
                 ['code', 'name'], ['code', 'name', 'is_active'], ['branch', 'departure']),
         ];
     }
