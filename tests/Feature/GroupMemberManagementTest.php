@@ -168,6 +168,38 @@ class GroupMemberManagementTest extends TestCase
         ]);
     }
 
+    public function test_group_member_page_shows_activation_operational_summary(): void
+    {
+        [$admin, $group, $pilgrim] = $this->scenario();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'pilgrim_id' => $pilgrim->id,
+            'status' => 'active',
+            'joined_at' => now(),
+        ]);
+        $pilgrim->forceFill([
+            'activation_pin_hash' => hash('sha256', '123456'),
+            'activation_pin_generated_at' => now(),
+        ])->save();
+        MobileDevice::create([
+            'user_id' => $pilgrim->user_id,
+            'device_uuid' => 'summary-device-001',
+            'device_name' => 'HP Jamaah',
+            'platform' => 'android',
+            'activated_at' => now(),
+            'last_used_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('groups.members.index', $group))
+            ->assertOk()
+            ->assertSee('Pembayaran Lunas')
+            ->assertSee('PIN Dibuat')
+            ->assertSee('Aplikasi Aktif')
+            ->assertSee('Alur sampai tracking muncul')
+            ->assertSee('Reset PIN tidak mencabut perangkat yang sudah aktif');
+    }
+
     public function test_reset_pin_does_not_revoke_active_device(): void
     {
         [$admin, $group, $pilgrim] = $this->scenario();

@@ -3,7 +3,7 @@
     <x-slot:header>
         <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <nav class="mb-2 text-sm text-slate-500">Data Master / Rombongan / Pembagian Jamaah</nav>
+                <nav class="mb-2 text-sm text-slate-500">Data Master / Rombongan / Aktivasi Jamaah</nav>
                 <h1 class="text-2xl font-bold">{{ $group->name }}</h1>
                 <p class="mt-1 text-sm text-slate-500">{{ $group->branch->name }}</p>
             </div>
@@ -39,16 +39,31 @@
 
     <section class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         @foreach ([
-            ['label' => 'Anggota Aktif', 'value' => $group->members()->where('status', 'active')->count()],
-            ['label' => 'Kapasitas', 'value' => $group->capacity ?: 'Tanpa batas'],
-            ['label' => 'Tour Leader', 'value' => $group->tourLeader?->full_name ?: 'Belum ditentukan'],
-            ['label' => 'Muthawwif', 'value' => $group->muthawwif?->full_name ?: 'Belum ditentukan'],
+            ['label' => 'Anggota Aktif', 'value' => $activationStats['members'], 'help' => 'Jamaah dalam rombongan'],
+            ['label' => 'Pembayaran Lunas', 'value' => $activationStats['paid'], 'help' => 'Syarat membuat PIN'],
+            ['label' => 'PIN Dibuat', 'value' => $activationStats['pins'], 'help' => 'Siap dibagikan ke jamaah'],
+            ['label' => 'Aplikasi Aktif', 'value' => $activationStats['devices'], 'help' => 'Perangkat sudah aktivasi'],
         ] as $summary)
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <p class="text-sm text-slate-500">{{ $summary['label'] }}</p>
-                <p class="mt-2 truncate text-lg font-bold">{{ $summary['value'] }}</p>
+                <p class="mt-2 truncate text-2xl font-extrabold">{{ is_numeric($summary['value']) ? number_format($summary['value']) : $summary['value'] }}</p>
+                <p class="mt-1 text-xs text-slate-500">{{ $summary['help'] }}</p>
             </div>
         @endforeach
+    </section>
+
+    <section class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 text-sm leading-6 text-emerald-950 shadow-sm dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-100">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <p class="font-bold">Alur sampai tracking muncul</p>
+                <p class="mt-1">Jamaah lunas dan masuk rombongan, Admin Cabang membuat PIN, jamaah aktivasi aplikasi, lalu GPS tampil di Live Map.</p>
+            </div>
+            <div class="grid gap-2 text-xs font-bold sm:grid-cols-5">
+                @foreach (['Lunas', 'Masuk Rombongan', 'Buat PIN', 'Aktivasi Aplikasi', 'Tracking'] as $step)
+                    <span class="rounded-full bg-white px-3 py-2 text-center text-emerald-800 shadow-sm dark:bg-slate-900 dark:text-emerald-200">{{ $step }}</span>
+                @endforeach
+            </div>
+        </div>
     </section>
 
     <section class="mb-6 rounded-2xl border border-blue-100 bg-blue-50/70 p-5 shadow-sm dark:border-blue-900/60 dark:bg-blue-950/20">
@@ -77,6 +92,13 @@
                     @endif
                 </span>
             </div>
+            <div class="rounded-2xl bg-white px-4 py-3 text-sm shadow-sm dark:bg-slate-900">
+                <span class="block text-xs font-semibold uppercase tracking-wide text-slate-400">Petugas</span>
+                <span class="mt-1 block font-semibold text-slate-800 dark:text-slate-100">
+                    TL: {{ $group->tourLeader?->full_name ?: 'Belum ditentukan' }}<br>
+                    Muthawwif: {{ $group->muthawwif?->full_name ?: 'Belum ditentukan' }}
+                </span>
+            </div>
         </div>
     </section>
 
@@ -85,7 +107,7 @@
             <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div>
                     <h2 class="font-semibold">Aktivasi Aplikasi Jamaah</h2>
-                    <p class="mt-1 text-sm text-slate-500">PIN baru hanya tampil setelah dibuat atau direset. PIN lama tidak dapat dilihat kembali.</p>
+                    <p class="mt-1 text-sm text-slate-500">PIN baru hanya tampil setelah dibuat atau direset. Reset PIN tidak mencabut perangkat yang sudah aktif.</p>
                 </div>
                 <div class="grid gap-2 sm:grid-cols-3">
                     <form method="POST" action="{{ route('groups.generate-missing-pins', $group) }}" class="grid gap-2">
@@ -122,19 +144,20 @@
                                 ?->whereNull('revoked_at')
                                 ->sortByDesc('last_used_at')
                                 ->first();
-                            $paymentStatus = \App\Models\PilgrimRegistration::query()
-                                ->where('user_id', $pilgrim->user_id)
-                                ->where('departure_id', $group->departure_id)
-                                ->where('status', 'in_group')
-                                ->value('payment_status');
+                            $paymentStatus = $memberPaymentStatuses[$pilgrim->user_id] ?? null;
                             $paymentLabel = in_array($paymentStatus, ['paid', 'verified'], true) ? 'Lunas' : ($paymentStatus === 'down_payment' ? 'DP' : 'Belum lunas');
+                            $paymentTone = in_array($paymentStatus, ['paid', 'verified'], true)
+                                ? 'bg-emerald-50 text-emerald-700'
+                                : ($paymentStatus === 'down_payment' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600');
                         @endphp
                         <tr class="align-top">
                             <td class="px-5 py-4">
                                 <p class="font-semibold">{{ $pilgrim->full_name }}</p>
                                 <p class="mt-1 text-xs text-slate-500">{{ $pilgrim->registration_number }}</p>
                             </td>
-                            <td class="px-5 py-4">{{ $paymentLabel }}</td>
+                            <td class="px-5 py-4">
+                                <span class="rounded-full px-2.5 py-1 text-xs font-bold {{ $paymentTone }}">{{ $paymentLabel }}</span>
+                            </td>
                             <td class="px-5 py-4">
                                 @if ($pilgrim->activation_pin_generated_at)
                                     <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">Sudah dibuat</span>
@@ -143,7 +166,13 @@
                                     <span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">Belum dibuat</span>
                                 @endif
                             </td>
-                            <td class="px-5 py-4">{{ $activeDevice ? 'Aktif' : 'Belum aktif' }}</td>
+                            <td class="px-5 py-4">
+                                @if ($activeDevice)
+                                    <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">Aktif</span>
+                                @else
+                                    <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">Belum aktif</span>
+                                @endif
+                            </td>
                             <td class="px-5 py-4">{{ $activeDevice?->last_used_at?->diffForHumans() ?: '-' }}</td>
                             <td class="px-5 py-4">
                                 <div class="grid min-w-56 gap-2">

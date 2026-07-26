@@ -7,8 +7,10 @@ use App\Http\Requests\AssignGroupMembersRequest;
 use App\Http\Requests\AssignGroupStaffRequest;
 use App\Models\Group;
 use App\Models\GroupMember;
+use App\Models\MobileDevice;
 use App\Models\Muthawwif;
 use App\Models\Pilgrim;
+use App\Models\PilgrimRegistration;
 use App\Models\TourLeader;
 use App\Services\MobileActivationService;
 use App\Services\AuditLogService;
@@ -45,6 +47,43 @@ class GroupMemberController extends Controller
             ->paginate(10, ['*'], 'members_page')
             ->withQueryString();
 
+        $activePilgrimIds = GroupMember::query()
+            ->where('group_id', $group->id)
+            ->where('status', 'active')
+            ->pluck('pilgrim_id');
+
+        $activeUserIds = Pilgrim::query()
+            ->whereIn('id', $activePilgrimIds)
+            ->whereNotNull('user_id')
+            ->pluck('user_id');
+
+        $activationStats = [
+            'members' => $activePilgrimIds->count(),
+            'paid' => PilgrimRegistration::query()
+                ->where('departure_id', $group->departure_id)
+                ->where('status', 'in_group')
+                ->whereIn('payment_status', ['paid', 'verified'])
+                ->whereIn('user_id', $activeUserIds)
+                ->count(),
+            'pins' => Pilgrim::query()
+                ->whereIn('id', $activePilgrimIds)
+                ->whereNotNull('activation_pin_hash')
+                ->count(),
+            'devices' => MobileDevice::query()
+                ->whereIn('user_id', $activeUserIds)
+                ->whereNull('revoked_at')
+                ->distinct('user_id')
+                ->count('user_id'),
+        ];
+
+        $memberPaymentStatuses = PilgrimRegistration::query()
+            ->where('departure_id', $group->departure_id)
+            ->whereIn('user_id', $members->getCollection()
+                ->pluck('pilgrim.user_id')
+                ->filter()
+                ->all())
+            ->pluck('payment_status', 'user_id');
+
         $availablePilgrims = Pilgrim::query()
             ->where('branch_id', $group->branch_id)
             ->whereIn('status', ['registered', 'active'])
@@ -76,6 +115,8 @@ class GroupMemberController extends Controller
             'availablePilgrims',
             'tourLeaders',
             'muthawwifs',
+            'activationStats',
+            'memberPaymentStatuses',
         ));
     }
 

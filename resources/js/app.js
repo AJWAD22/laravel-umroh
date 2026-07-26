@@ -8,7 +8,7 @@ import {
     CalendarDays, CalendarRange, CheckCircle2, CircleAlert, CircleCheck, ClipboardList, Clock, createIcons, Database, FileCheck2, HeartHandshake, History, Hotel, Inbox, KeyRound, LayoutDashboard,
     Eye, EyeOff, ListFilter, LockKeyhole, LogOut, Mail, Map, MapPin, MapPinned, Menu, Moon,
     PanelLeftClose, PanelLeftOpen, Pencil, Plane, Plus, RotateCcw, Save, Search, Settings,
-    ShieldCheck, Siren, Sun, Trash2, TriangleAlert, UserRound, Wallet,
+    ShieldCheck, Siren, Sun, Trash2, TriangleAlert, UserRound, UserRoundCog, Wallet,
     UserRoundCheck, Users, UsersRound, X,
 } from 'lucide';
 
@@ -22,7 +22,7 @@ createIcons({
         ChevronRight, CircleAlert, CircleCheck, ClipboardList, Clock, Database, Eye, EyeOff, FileCheck2, HeartHandshake, History, Hotel, Inbox, KeyRound,
         LayoutDashboard, ListFilter, LockKeyhole, LogOut, Mail, Map, MapPin, MapPinned, Menu, Moon,
         PanelLeftClose, PanelLeftOpen, Pencil, Plane, Plus, RotateCcw,
-        Save, Search, Settings, ShieldCheck, Siren, Sun, Trash2, TriangleAlert, UserRound,
+        Save, Search, Settings, ShieldCheck, Siren, Sun, Trash2, TriangleAlert, UserRound, UserRoundCog,
         UserRoundCheck, Users, UsersRound, Wallet, X,
     },
 });
