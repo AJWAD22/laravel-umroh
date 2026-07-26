@@ -115,7 +115,10 @@ class MasterDataTest extends TestCase
         $this->actingAs($admin)
             ->get(route('master-data.index', 'checkpoints'))
             ->assertOk()
+            ->assertSee('Dipakai Untuk')
+            ->assertSee('Langkah Berikutnya')
             ->assertSeeText('Titik Tujuan & Kumpul dipakai oleh aplikasi dan monitoring')
+            ->assertSee('Titik tujuan dan titik kumpul dikirim ke mobile')
             ->assertSee('Umum Cabang')
             ->assertSee('Khusus Paket')
             ->assertSee('Khusus Rombongan')
@@ -131,7 +134,26 @@ class MasterDataTest extends TestCase
             ->assertOk()
             ->assertSee('Paket Perjalanan')
             ->assertSee('Paket Perjalanan dikelola oleh Admin Cabang')
+            ->assertSee('Paket Perjalanan adalah sumber data landing page')
+            ->assertSee('Paket dapat dipublikasikan setelah tanggal')
             ->assertSee('Tambah Paket Perjalanan');
+    }
+
+    public function test_master_data_empty_states_explain_operational_next_steps(): void
+    {
+        [$admin] = $this->branchAdmin('EMP');
+
+        $this->actingAs($admin)
+            ->get(route('master-data.index', 'hotels'))
+            ->assertOk()
+            ->assertSee('Hotel dipilih saat membuat paket perjalanan')
+            ->assertSee('Buat minimal satu hotel Makkah dan satu hotel Madinah');
+
+        $this->actingAs($admin)
+            ->get(route('master-data.index', 'groups'))
+            ->assertOk()
+            ->assertSee('Rombongan mengikat paket, jamaah, Tour Leader, Muthawwif, PIN aktivasi, dan tracking perjalanan')
+            ->assertSee('Buat rombongan setelah paket dipublikasikan');
     }
 
     public function test_package_departure_form_guides_branch_admin_through_operational_input(): void

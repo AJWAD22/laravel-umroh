@@ -20,6 +20,54 @@
             $resource === 'branches' => 'Organisasi',
             default => 'Data',
         };
+        $resourceGuides = [
+            'branches' => [
+                'purpose' => 'Cabang menentukan ruang kerja Admin Cabang, paket, jamaah, petugas, dan laporan.',
+                'next' => 'Setelah cabang dibuat, buat Akun Admin Cabang untuk mengelola operasional cabang tersebut.',
+                'empty' => 'Buat cabang pertama agar Admin Cabang, paket perjalanan, dan pendaftaran jamaah bisa digunakan.',
+            ],
+            'branch-admins' => [
+                'purpose' => 'Akun ini dipakai pengelola cabang untuk input paket, verifikasi pendaftaran, pembayaran, rombongan, PIN, dan monitoring.',
+                'next' => 'Pastikan setiap cabang aktif memiliki minimal satu Admin Cabang.',
+                'empty' => 'Buat akun Admin Cabang setelah data cabang tersedia.',
+            ],
+            'pilgrims' => [
+                'purpose' => 'Data jamaah operasional berasal dari pendaftaran yang disetujui atau input cabang.',
+                'next' => 'Jamaah yang sudah lunas dan masuk rombongan dapat dibuatkan PIN aktivasi aplikasi.',
+                'empty' => 'Jamaah akan muncul setelah pendaftaran disetujui atau setelah Admin Cabang menambahkan data jamaah.',
+            ],
+            'tour-leaders' => [
+                'purpose' => 'Tour Leader memakai aplikasi mobile untuk melihat rombongan, tracking, dan merespons SOS.',
+                'next' => 'Setelah akun dibuat, tempatkan Tour Leader ke rombongan.',
+                'empty' => 'Buat Tour Leader sebelum membentuk rombongan perjalanan.',
+            ],
+            'muthawwifs' => [
+                'purpose' => 'Muthawwif membantu pendampingan ibadah dan melihat data rombongan dari aplikasi mobile.',
+                'next' => 'Setelah akun dibuat, tempatkan Muthawwif ke rombongan.',
+                'empty' => 'Buat Muthawwif sebelum keberangkatan agar data petugas rombongan lengkap.',
+            ],
+            'hotels' => [
+                'purpose' => 'Hotel dipilih saat membuat paket perjalanan dan tampil di landing page, portal jamaah, serta detail rombongan.',
+                'next' => 'Input hotel Makkah dan Madinah terlebih dahulu, lalu pilih hotel tersebut di Paket Perjalanan.',
+                'empty' => 'Buat minimal satu hotel Makkah dan satu hotel Madinah sebelum membuat paket lengkap.',
+            ],
+            'checkpoints' => [
+                'purpose' => 'Titik tujuan dan titik kumpul dikirim ke mobile, muncul di Live Map, dan menjadi acuan geofence.',
+                'next' => 'Gunakan peta untuk memilih koordinat, lalu tentukan apakah titik berlaku umum, khusus paket, atau khusus rombongan.',
+                'empty' => 'Buat titik kumpul dan tujuan perjalanan agar jamaah dan petugas bisa melihat lokasi di aplikasi.',
+            ],
+            'departures' => [
+                'purpose' => 'Paket Perjalanan adalah sumber data landing page, pilihan jamaah, jadwal, hotel, pesawat, harga, dan kuota.',
+                'next' => 'Paket dapat dipublikasikan setelah tanggal, hotel, pesawat, fasilitas, persyaratan, dan jadwal harian lengkap.',
+                'empty' => 'Buat Paket Perjalanan agar calon jamaah bisa melihat dan memilih paket dari landing page.',
+            ],
+            'groups' => [
+                'purpose' => 'Rombongan mengikat paket, jamaah, Tour Leader, Muthawwif, PIN aktivasi, dan tracking perjalanan.',
+                'next' => 'Masukkan jamaah yang sudah memenuhi syarat pembayaran, lalu generate PIN aktivasi.',
+                'empty' => 'Buat rombongan setelah paket dipublikasikan dan jamaah mulai disetujui.',
+            ],
+        ];
+        $guide = $resourceGuides[$resource] ?? null;
     @endphp
 
     <x-slot:title>{{ $definition['label'] }}</x-slot:title>
@@ -67,6 +115,24 @@
             @endif
         </div>
     </x-slot:header>
+
+    @if ($guide)
+        <section class="mb-5 grid gap-3 lg:grid-cols-3">
+            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <p class="text-xs font-bold uppercase tracking-wide text-blue-600">Dipakai Untuk</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{{ $guide['purpose'] }}</p>
+            </article>
+            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <p class="text-xs font-bold uppercase tracking-wide text-teal-600">Langkah Berikutnya</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{{ $guide['next'] }}</p>
+            </article>
+            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Jumlah Data</p>
+                <p class="mt-2 text-2xl font-extrabold text-slate-950 dark:text-white">{{ number_format($records->total()) }}</p>
+                <p class="mt-1 text-xs text-slate-500">{{ $hasFilters ? 'Sesuai filter aktif' : 'Total dalam akses Anda' }}</p>
+            </article>
+        </section>
+    @endif
 
     @if ($resource === 'departures')
         <section class="mb-5 rounded-2xl border border-blue-200 bg-blue-50 p-5 text-sm leading-6 text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
@@ -240,7 +306,7 @@
                         <tr>
                             <td colspan="{{ count($definition['columns']) + ($canManage ? 1 : 0) }}">
                                 <x-empty-state icon="database" title="Belum ada {{ str($definition['label'])->lower() }}"
-                                               description="{{ $hasFilters ? 'Coba ubah atau hapus filter pencarian.' : 'Data baru yang ditambahkan akan tampil di sini.' }}" />
+                                               description="{{ $hasFilters ? 'Coba ubah atau hapus filter pencarian.' : ($guide['empty'] ?? 'Data baru yang ditambahkan akan tampil di sini.') }}" />
                             </td>
                         </tr>
                     @endforelse
@@ -288,7 +354,7 @@
                 </article>
             @empty
                 <x-empty-state icon="database" title="Belum ada {{ str($definition['label'])->lower() }}"
-                               description="{{ $hasFilters ? 'Coba ubah atau hapus filter pencarian.' : 'Data baru yang ditambahkan akan tampil di sini.' }}" />
+                               description="{{ $hasFilters ? 'Coba ubah atau hapus filter pencarian.' : ($guide['empty'] ?? 'Data baru yang ditambahkan akan tampil di sini.') }}" />
             @endforelse
         </div>
 
