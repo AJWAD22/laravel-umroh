@@ -388,6 +388,96 @@ class PublicPackageRegistrationTest extends TestCase
         ]);
     }
 
+    public function test_branch_admin_can_use_operational_action_buttons_for_registration_flow(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $branch = Branch::create(['code' => 'ACT', 'name' => 'Cabang Aksi', 'city' => 'Banjarmasin']);
+        $departure = Departure::create([
+            'branch_id' => $branch->id,
+            'code' => 'ACT-DEP-001',
+            'program_name' => 'Paket Aksi',
+            'departure_date' => today()->addMonth(),
+            'return_date' => today()->addMonth()->addDays(9),
+            'status' => 'scheduled',
+        ]);
+        $group = Group::create([
+            'branch_id' => $branch->id,
+            'departure_id' => $departure->id,
+            'code' => 'ACT-GRP-001',
+            'name' => 'Rombongan Aksi',
+            'capacity' => 45,
+        ]);
+        $portalUser = User::factory()->create(['branch_id' => null, 'name' => 'Jamaah Aksi']);
+        \App\Models\PilgrimPortalAccount::create([
+            'user_id' => $portalUser->id,
+            'phone' => '6281234500011',
+        ]);
+        $portalUser->assignRole('jamaah');
+        $registration = PilgrimRegistration::create([
+            'user_id' => $portalUser->id,
+            'branch_id' => $branch->id,
+            'departure_id' => $departure->id,
+            'full_name' => 'Jamaah Aksi',
+            'nik' => '6371010101010111',
+            'gender' => 'male',
+            'phone' => '6281234500011',
+            'birth_date' => '1990-01-01',
+            'address' => 'Banjarmasin',
+            'emergency_contact_name' => 'Keluarga Aksi',
+            'emergency_contact_phone' => '081200000111',
+            'status' => 'submitted',
+            'payment_status' => 'unpaid',
+        ]);
+        $admin = User::factory()->create(['branch_id' => $branch->id]);
+        $admin->assignRole(UserRole::BranchAdmin->value);
+
+        $this->actingAs($admin)
+            ->get(route('registrations.index'))
+            ->assertOk()
+            ->assertSee('Setujui Biodata')
+            ->assertSee('Minta Perbaikan');
+
+        $this->actingAs($admin)
+            ->patch(route('registrations.update', $registration), [
+                'action' => 'approve_biodata',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+        $registration->refresh();
+        $this->assertSame('approved', $registration->status);
+        $this->assertSame('pending_branch_payment', $registration->payment_status);
+
+        $this->actingAs($admin)
+            ->patch(route('registrations.update', $registration), [
+                'action' => 'record_paid',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+        $registration->refresh();
+        $this->assertSame('approved', $registration->status);
+        $this->assertSame('paid', $registration->payment_status);
+
+        $this->actingAs($admin)
+            ->patch(route('registrations.update', $registration), [
+                'action' => 'move_to_group',
+                'group_id' => $group->id,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('pilgrim_registrations', [
+            'id' => $registration->id,
+            'status' => 'in_group',
+            'payment_status' => 'paid',
+        ]);
+        $pilgrim = Pilgrim::query()->where('user_id', $portalUser->id)->firstOrFail();
+        $this->assertDatabaseHas('group_members', [
+            'group_id' => $group->id,
+            'pilgrim_id' => $pilgrim->id,
+            'status' => 'active',
+        ]);
+    }
+
     public function test_complete_branch_package_registration_revision_payment_and_group_flow(): void
     {
         Storage::fake('public');

@@ -17,7 +17,7 @@
             'cancelled' => 'Dibatalkan',
         ];
         $paymentOptions = [
-            'unpaid' => 'Belum Pembayaran',
+            'unpaid' => 'Belum Bayar',
             'pending_branch_payment' => 'Menunggu Pembayaran',
             'down_payment' => 'DP',
             'paid' => 'Lunas',
@@ -130,36 +130,98 @@
                             </td>
                             <td class="px-5 py-4">
                                 @if ($canManage)
-                                    <form method="POST" action="{{ route('registrations.update', $registration) }}" class="grid min-w-60 gap-2">
+                                    <form method="POST" action="{{ route('registrations.update', $registration) }}" class="grid min-w-72 gap-3">
                                         @csrf @method('PATCH')
-                                        <select name="status" class="control-field text-xs">
-                                            @foreach ($statusOptions as $value => $label)
-                                                <option value="{{ $value }}" @selected($registration->status === $value)>{{ $label }}</option>
-                                            @endforeach
-                                        </select>
-                                        <select name="payment_status" class="control-field text-xs">
-                                            @foreach ($paymentOptions as $value => $label)
-                                                <option value="{{ $value }}" @selected($registration->payment_status === $value)>{{ $label }}</option>
-                                            @endforeach
-                                        </select>
                                         @php
                                             $matchingGroups = $groups->where('departure_id', $registration->departure_id);
                                             $activeMembership = $registration->user?->pilgrim?->groupMemberships
                                                 ?->firstWhere('status', 'active');
+                                            $statusTone = match ($registration->status) {
+                                                'submitted' => 'bg-blue-50 text-blue-700 ring-blue-200',
+                                                'revision_requested' => 'bg-amber-50 text-amber-700 ring-amber-200',
+                                                'approved' => 'bg-cyan-50 text-cyan-700 ring-cyan-200',
+                                                'in_group' => 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+                                                'rejected', 'cancelled' => 'bg-red-50 text-red-700 ring-red-200',
+                                                default => 'bg-slate-50 text-slate-700 ring-slate-200',
+                                            };
+                                            $paymentTone = match ($registration->payment_status) {
+                                                'paid', 'verified' => 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+                                                'down_payment' => 'bg-amber-50 text-amber-700 ring-amber-200',
+                                                'pending_branch_payment' => 'bg-cyan-50 text-cyan-700 ring-cyan-200',
+                                                'cancelled' => 'bg-red-50 text-red-700 ring-red-200',
+                                                default => 'bg-slate-50 text-slate-700 ring-slate-200',
+                                            };
                                         @endphp
-                                        <select name="group_id" class="control-field text-xs">
-                                            <option value="">Pilih rombongan saat status Masuk Rombongan</option>
-                                            @foreach ($matchingGroups as $group)
-                                                <option value="{{ $group->id }}" @selected((int) $activeMembership?->group_id === (int) $group->id)>
-                                                    {{ $group->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        <textarea name="revision_notes" rows="2" class="control-field text-xs" placeholder="Catatan perbaikan untuk jamaah">{{ $registration->revision_notes }}</textarea>
+
+                                        <div class="flex flex-wrap gap-2">
+                                            <span class="rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 {{ $statusTone }}">{{ $statusOptions[$registration->status] ?? ucfirst($registration->status) }}</span>
+                                            <span class="rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 {{ $paymentTone }}">{{ $paymentOptions[$registration->payment_status] ?? str($registration->payment_status)->replace('_', ' ')->title() }}</span>
+                                        </div>
+
+                                        @if (in_array($registration->status, ['submitted', 'revision_requested'], true))
+                                            <textarea name="revision_notes" rows="2" class="control-field text-xs" placeholder="Catatan perbaikan untuk jamaah">{{ $registration->revision_notes }}</textarea>
+                                            <div class="grid gap-2">
+                                                <button name="action" value="approve_biodata" class="button-primary min-h-9 justify-center py-2 text-xs">
+                                                    <i data-lucide="circle-check" class="size-4"></i>
+                                                    Setujui Biodata
+                                                </button>
+                                                <button name="action" value="request_revision" class="button-secondary min-h-9 justify-center border-amber-200 py-2 text-xs text-amber-700 hover:bg-amber-50">
+                                                    <i data-lucide="circle-alert" class="size-4"></i>
+                                                    Minta Perbaikan
+                                                </button>
+                                            </div>
+                                        @elseif ($registration->status === 'approved')
+                                            <p class="rounded-xl bg-cyan-50 p-3 text-xs leading-5 text-cyan-800">Biodata sudah disetujui. Catat pembayaran di bawah, lalu masukkan jamaah ke rombongan setelah lunas.</p>
+                                            <div class="grid gap-2 sm:grid-cols-2">
+                                                <button name="action" value="record_down_payment" class="button-secondary min-h-9 justify-center py-2 text-xs">
+                                                    <i data-lucide="wallet" class="size-4"></i>
+                                                    Catat DP
+                                                </button>
+                                                <button name="action" value="record_paid" class="button-primary min-h-9 justify-center py-2 text-xs">
+                                                    <i data-lucide="circle-check" class="size-4"></i>
+                                                    Catat Lunas
+                                                </button>
+                                            </div>
+                                            <select name="group_id" class="control-field text-xs">
+                                                <option value="">Pilih rombongan setelah pembayaran lunas</option>
+                                                @foreach ($matchingGroups as $group)
+                                                    <option value="{{ $group->id }}" @selected((int) $activeMembership?->group_id === (int) $group->id)>
+                                                        {{ $group->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <button name="action" value="move_to_group" class="button-primary min-h-9 justify-center py-2 text-xs">
+                                                <i data-lucide="users-round" class="size-4"></i>
+                                                Masukkan ke Rombongan
+                                            </button>
+                                        @elseif ($registration->status === 'in_group')
+                                            <div class="rounded-xl bg-emerald-50 p-3 text-xs leading-5 text-emerald-800">
+                                                Jamaah sudah resmi masuk rombongan{{ $activeMembership?->group?->name ? ' '.$activeMembership->group->name : '' }}. Lanjutkan ke pengelolaan PIN aktivasi di menu Rombongan.
+                                            </div>
+                                        @else
+                                            <p class="rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-600">Pendaftaran berada pada status akhir atau belum siap diproses. Gunakan pengaturan lanjutan jika perlu perubahan manual.</p>
+                                        @endif
+
                                         @if ($matchingGroups->isEmpty())
                                             <p class="text-[11px] leading-4 text-amber-600">Buat rombongan untuk paket ini sebelum memasukkan jamaah.</p>
                                         @endif
-                                        <button class="button-primary min-h-9 py-2 text-xs">Simpan Status</button>
+
+                                        <details class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs dark:border-slate-800 dark:bg-slate-900">
+                                            <summary class="cursor-pointer font-bold text-slate-600">Pengaturan lanjutan</summary>
+                                            <div class="mt-3 grid gap-2">
+                                                <select name="status" class="control-field text-xs">
+                                                    @foreach ($statusOptions as $value => $label)
+                                                        <option value="{{ $value }}" @selected($registration->status === $value)>{{ $label }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <select name="payment_status" class="control-field text-xs">
+                                                    @foreach ($paymentOptions as $value => $label)
+                                                        <option value="{{ $value }}" @selected($registration->payment_status === $value)>{{ $label }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <button class="button-secondary min-h-9 justify-center py-2 text-xs">Simpan Manual</button>
+                                            </div>
+                                        </details>
                                     </form>
                                 @else
                                     <div class="grid gap-2">

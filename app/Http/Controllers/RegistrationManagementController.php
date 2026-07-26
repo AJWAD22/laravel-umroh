@@ -79,11 +79,15 @@ class RegistrationManagementController extends Controller
         abort_unless((int) $registration->branch_id === (int) $user->branch_id, 404);
 
         $data = $request->validate([
-            'status' => ['required', Rule::in(['draft', 'submitted', 'revision_requested', 'approved', 'in_group', 'rejected', 'cancelled'])],
-            'payment_status' => ['required', Rule::in(['unpaid', 'pending_branch_payment', 'down_payment', 'paid', 'verified', 'cancelled'])],
+            'action' => ['nullable', Rule::in(['request_revision', 'approve_biodata', 'record_down_payment', 'record_paid', 'move_to_group'])],
+            'status' => ['required_without:action', Rule::in(['draft', 'submitted', 'revision_requested', 'approved', 'in_group', 'rejected', 'cancelled'])],
+            'payment_status' => ['required_without:action', Rule::in(['unpaid', 'pending_branch_payment', 'down_payment', 'paid', 'verified', 'cancelled'])],
             'group_id' => ['nullable', 'integer'],
             'revision_notes' => ['nullable', 'string', 'max:1500'],
         ]);
+
+        $data = $this->normalizeActionData($registration, $data);
+
         if ($data['status'] === 'in_group' && ! in_array($data['payment_status'], ['paid', 'verified'], true)) {
             throw ValidationException::withMessages([
                 'payment_status' => ['Jamaah hanya bisa masuk rombongan setelah pembayaran lunas.'],
@@ -100,5 +104,55 @@ class RegistrationManagementController extends Controller
         }
 
         return back()->with('success', $message);
+    }
+
+    /**
+     * @param  array{action?: string|null, status?: string|null, payment_status?: string|null, group_id?: int|null, revision_notes?: string|null}  $data
+     * @return array{status: string, payment_status: string, group_id?: int|null, revision_notes?: string|null}
+     */
+    private function normalizeActionData(PilgrimRegistration $registration, array $data): array
+    {
+        $action = $data['action'] ?? null;
+        if (! $action) {
+            return [
+                'status' => $data['status'],
+                'payment_status' => $data['payment_status'],
+                'group_id' => $data['group_id'] ?? null,
+                'revision_notes' => $data['revision_notes'] ?? null,
+            ];
+        }
+
+        return match ($action) {
+            'request_revision' => [
+                'status' => 'revision_requested',
+                'payment_status' => $registration->payment_status ?: 'unpaid',
+                'group_id' => null,
+                'revision_notes' => $data['revision_notes'] ?? null,
+            ],
+            'approve_biodata' => [
+                'status' => 'approved',
+                'payment_status' => 'pending_branch_payment',
+                'group_id' => null,
+                'revision_notes' => null,
+            ],
+            'record_down_payment' => [
+                'status' => 'approved',
+                'payment_status' => 'down_payment',
+                'group_id' => null,
+                'revision_notes' => null,
+            ],
+            'record_paid' => [
+                'status' => 'approved',
+                'payment_status' => 'paid',
+                'group_id' => null,
+                'revision_notes' => null,
+            ],
+            'move_to_group' => [
+                'status' => 'in_group',
+                'payment_status' => 'paid',
+                'group_id' => $data['group_id'] ?? null,
+                'revision_notes' => null,
+            ],
+        };
     }
 }
