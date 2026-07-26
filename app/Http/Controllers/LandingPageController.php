@@ -70,7 +70,7 @@ class LandingPageController extends Controller
         $number = preg_replace(
             '/\D+/',
             '',
-            (string) $this->settings->get('company_whatsapp', ''),
+            (string) $this->settings->get('support_phone', ''),
         ) ?: '085947566363';
 
         if (str_starts_with($number, '0')) {

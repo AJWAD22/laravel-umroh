@@ -14,7 +14,9 @@ class SystemSettingService
     /** Mengelompokkan pengaturan untuk tampilan menu Pengaturan Sistem. */
     public function grouped(): Collection
     {
-        return $this->all()->groupBy('group');
+        return $this->all()
+            ->reject(fn (SystemSetting $setting): bool => $setting->key === 'company_whatsapp')
+            ->groupBy('group');
     }
 
     public function get(string $key, mixed $default = null): mixed

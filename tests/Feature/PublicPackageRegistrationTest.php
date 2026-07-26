@@ -63,7 +63,7 @@ class PublicPackageRegistrationTest extends TestCase
     {
         $this->seed(SystemSettingSeeder::class);
         SystemSetting::query()
-            ->where('key', 'company_whatsapp')
+            ->where('key', 'support_phone')
             ->update(['value' => '085947566363']);
 
         $this->get(route('landing'))
@@ -75,7 +75,7 @@ class PublicPackageRegistrationTest extends TestCase
     {
         $this->seed(SystemSettingSeeder::class);
         SystemSetting::query()
-            ->where('key', 'company_whatsapp')
+            ->where('key', 'support_phone')
             ->update(['value' => '']);
 
         $this->get(route('landing'))

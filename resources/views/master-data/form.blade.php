@@ -33,7 +33,7 @@
     $fields = match ($resource) {
         'branches' => [
             ['code','Kode Cabang','text'], ['name','Nama Cabang','text'], ['city','Kota','text'], ['province','Provinsi','text'],
-            ['phone','Telepon','text'], ['email','Email','email'], ['address','Alamat','textarea'], ['is_active','Status','boolean'],
+            ['phone','WhatsApp Cabang','text'], ['email','Email','email'], ['address','Alamat','textarea'], ['is_active','Status','boolean'],
         ],
         'branch-admins' => [...$commonBranch,
             ['name','Nama Lengkap','text'], ['email','Email','email'], ['phone_number','Telepon','text'],

@@ -109,6 +109,35 @@ class AdminAccessTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_super_admin_can_view_operational_master_data_without_managing_it(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $branch = Branch::create(['code' => 'VIEW', 'name' => 'Cabang Pantau', 'city' => 'Makassar']);
+        Pilgrim::create([
+            'branch_id' => $branch->id,
+            'registration_number' => 'VIEW-JMH-001',
+            'full_name' => 'Jamaah Terpantau',
+            'gender' => 'female',
+            'status' => 'active',
+        ]);
+        $superAdmin = User::factory()->create(['branch_id' => null]);
+        $superAdmin->assignRole('super-admin');
+
+        $this->actingAs($superAdmin)
+            ->get(route('master-data.index', 'pilgrims'))
+            ->assertOk()
+            ->assertSee('Jamaah Terpantau')
+            ->assertDontSee('Tambah Jamaah');
+
+        $this->actingAs($superAdmin)
+            ->get(route('master-data.create', 'pilgrims'))
+            ->assertForbidden();
+
+        $this->actingAs($superAdmin)
+            ->get(route('master-data.edit', ['resource' => 'pilgrims', 'record' => Pilgrim::firstOrFail()->id]))
+            ->assertForbidden();
+    }
+
     public function test_branch_admin_can_open_branch_registration_operations(): void
     {
         $this->seed(RolePermissionSeeder::class);

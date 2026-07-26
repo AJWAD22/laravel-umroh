@@ -70,6 +70,7 @@ class MasterDataController extends Controller
     public function create(Request $request, string $resource): View
     {
         $definition = $this->authorizeResource($request, $resource);
+        Gate::authorize('create', $definition['model']);
 
         return view('master-data.form', [
             'resource' => $resource,

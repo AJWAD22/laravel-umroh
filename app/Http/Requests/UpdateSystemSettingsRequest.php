@@ -21,7 +21,6 @@ class UpdateSystemSettingsRequest extends FormRequest
             'company_tagline' => ['required', 'string', 'max:200'],
             'company_about' => ['required', 'string', 'max:1500'],
             'company_address' => ['nullable', 'string', 'max:1000'],
-            'company_whatsapp' => ['nullable', 'string', 'max:30'],
             'company_license' => ['nullable', 'string', 'max:100'],
             'company_website' => ['nullable', 'url', 'max:255'],
             'office_hours' => ['nullable', 'string', 'max:150'],

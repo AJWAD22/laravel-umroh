@@ -19,7 +19,7 @@ class MasterDataTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_super_admin_only_manages_organization_foundation(): void
+    public function test_super_admin_manages_foundation_and_views_operational_data_only(): void
     {
         $superAdmin = $this->superAdmin();
 
@@ -32,6 +32,10 @@ class MasterDataTest extends TestCase
         foreach (['pilgrims', 'tour-leaders', 'muthawwifs', 'groups', 'hotels', 'departures', 'checkpoints'] as $resource) {
             $this->actingAs($superAdmin)
                 ->get(route('master-data.index', $resource))
+                ->assertOk();
+
+            $this->actingAs($superAdmin)
+                ->get(route('master-data.create', $resource))
                 ->assertForbidden();
         }
     }
