@@ -62,14 +62,14 @@ class SosReportController extends Controller
         $this->authorizeBranch($request, $sosReport);
 
         $data = $request->validate([
-            'resolution_notes' => ['nullable', 'string', 'max:500'],
+            'resolution_notes' => ['required', 'string', 'max:500'],
         ]);
         $shouldNotifyPilgrim = $sosReport->status !== 'resolved';
 
         $sosReport->forceFill([
             'status' => 'resolved',
             'resolved_at' => now(),
-            'resolution_notes' => $data['resolution_notes'] ?? 'Ditandai aman oleh admin.',
+            'resolution_notes' => $data['resolution_notes'],
         ])->save();
 
         if (! SosReport::query()->where('pilgrim_id', $sosReport->pilgrim_id)->whereKeyNot($sosReport->id)->active()->exists()) {
