@@ -67,9 +67,9 @@ class DemoMasterDataSeeder extends Seeder
         foreach ($this->deleted as $table => $count) {
             $this->command?->line("Dihapus {$table}: {$count}");
         }
-        $this->command?->line('Data baru: 3 Tour Leader, 3 Muthawwif, 3 Rombongan, 30 Jamaah.');
+        $this->command?->line('Data baru: 1 Tour Leader, 1 Muthawwif, 2 Rombongan, 30 Jamaah.');
         $this->command?->line('Tujuan umum: Masjidil Haram/Ka’bah, Masjid Nabawi, Bandara Jeddah, Miqat Tan’im, Jabal Rahmah.');
-        $this->command?->line('Akun Admin Cabang demo: admin.banjarmasin@mantauumroh.id, admin.banjarbaru@mantauumroh.id, admin.martapura@mantauumroh.id');
+        $this->command?->line('Akun Admin Cabang demo: adminbjm@mantauumrah.id');
         $this->command?->line('Password semua Tour Leader dan Muthawwif: password123');
         $this->command?->line('Password semua Akun Admin Cabang demo: password123');
     }
@@ -188,24 +188,6 @@ class DemoMasterDataSeeder extends Seeder
                 'city' => 'Banjarmasin',
                 'province' => 'Kalimantan Selatan',
             ],
-            'Banjarbaru' => [
-                'code' => 'BJB',
-                'name' => 'Cabang Banjarbaru',
-                'phone' => '0511-6701002',
-                'email' => 'banjarbaru@mantauumroh.id',
-                'address' => 'Jl. Panglima Batur, Banjarbaru',
-                'city' => 'Banjarbaru',
-                'province' => 'Kalimantan Selatan',
-            ],
-            'Martapura' => [
-                'code' => 'MTP',
-                'name' => 'Cabang Martapura',
-                'phone' => '0511-6701003',
-                'email' => 'martapura@mantauumroh.id',
-                'address' => 'Jl. Sekumpul Raya, Martapura',
-                'city' => 'Martapura',
-                'province' => 'Kalimantan Selatan',
-            ],
         ])->mapWithKeys(function (array $data, string $city): array {
             $branch = Branch::withTrashed()
                 ->where(fn ($query) => $query
@@ -231,9 +213,7 @@ class DemoMasterDataSeeder extends Seeder
     private function ensureBranchAdmins(Collection $branches): void
     {
         collect([
-            'Banjarmasin' => ['name' => 'Admin Cabang Banjarmasin', 'email' => 'admin.banjarmasin@mantauumroh.id', 'phone' => '08115001001'],
-            'Banjarbaru' => ['name' => 'Admin Cabang Banjarbaru', 'email' => 'admin.banjarbaru@mantauumroh.id', 'phone' => '08115001002'],
-            'Martapura' => ['name' => 'Admin Cabang Martapura', 'email' => 'admin.martapura@mantauumroh.id', 'phone' => '08115001003'],
+            'Banjarmasin' => ['name' => 'Admin Cabang Banjarmasin', 'email' => 'adminbjm@mantauumrah.id', 'phone' => '08115001001'],
         ])->each(function (array $data, string $city) use ($branches): void {
             $user = User::query()->updateOrCreate(
                 ['email' => $data['email']],
@@ -344,9 +324,7 @@ class DemoMasterDataSeeder extends Seeder
     private function seedTourLeaders(Collection $branches): Collection
     {
         return collect([
-            'Muhammad Arif' => ['email' => 'arif@mantauumroh.id', 'phone' => '081298761001', 'branch' => 'Banjarmasin', 'number' => 'TL-250001'],
-            'Agus Salim' => ['email' => 'agus@mantauumroh.id', 'phone' => '081298761002', 'branch' => 'Banjarbaru', 'number' => 'TL-250002'],
-            'Fajar Hidayat' => ['email' => 'fajar@mantauumroh.id', 'phone' => '081298761003', 'branch' => 'Martapura', 'number' => 'TL-250003'],
+            'Padil Banjarmasin' => ['email' => 'padilbjm@mantauumrah.id', 'phone' => '081298761001', 'branch' => 'Banjarmasin', 'number' => 'TL-250001'],
         ])->mapWithKeys(function (array $data, string $name) use ($branches): array {
             $branch = $branches[$data['branch']];
             $user = $this->staffUser($branch, $name, $data['email'], $data['phone'], MobileRole::TourLeader);
@@ -372,9 +350,7 @@ class DemoMasterDataSeeder extends Seeder
     private function seedMuthawwifs(Collection $branches): Collection
     {
         return collect([
-            'Ust. Abdullah' => ['email' => 'abdullah@mantauumroh.id', 'phone' => '081355660001', 'branch' => 'Banjarmasin', 'number' => 'MTF-250001', 'languages' => 'Bahasa Indonesia dan Arab / Makkah dan Masjidil Haram'],
-            'Ust. Hasan Basri' => ['email' => 'hasan@mantauumroh.id', 'phone' => '081355660002', 'branch' => 'Banjarbaru', 'number' => 'MTF-250002', 'languages' => 'Bahasa Indonesia dan Arab / Madinah dan Masjid Nabawi'],
-            'Ust. Syamsuddin' => ['email' => 'syamsuddin@mantauumroh.id', 'phone' => '081355660003', 'branch' => 'Martapura', 'number' => 'MTF-250003', 'languages' => 'Bahasa Indonesia dan Arab / Miqat, Jeddah, dan Ziarah'],
+            'Hafis Banjarmasin' => ['email' => 'hafisbjm@mantauumrah.id', 'phone' => '081355660001', 'branch' => 'Banjarmasin', 'number' => 'MTF-250001', 'languages' => 'Bahasa Indonesia dan Arab / Makkah, Madinah, dan Ziarah'],
         ])->mapWithKeys(function (array $data, string $name) use ($branches): array {
             $branch = $branches[$data['branch']];
             $user = $this->staffUser($branch, $name, $data['email'], $data['phone'], MobileRole::Muthawwif);
@@ -414,25 +390,14 @@ class DemoMasterDataSeeder extends Seeder
             ],
             'Al Hijrah 02' => [
                 'code' => 'DEP-RH-002',
-                'branch' => 'Banjarbaru',
+                'branch' => 'Banjarmasin',
                 'program' => 'Umroh Hemat Al Hijrah Februari 2027',
-                'description' => 'Paket umroh hemat 13 hari dengan fasilitas inti, hotel nyaman, manasik, dan pendamping perjalanan untuk jamaah Banjarbaru.',
+                'description' => 'Paket umroh hemat 13 hari dengan fasilitas inti, hotel nyaman, manasik, dan pendamping perjalanan untuk jamaah Banjarmasin.',
                 'departure' => '2027-02-10',
                 'return' => '2027-02-22',
                 'airline' => 'Lion Air',
                 'flight' => 'JT-108',
                 'price' => 28_900_000,
-            ],
-            'Al Hijrah 03' => [
-                'code' => 'DEP-RH-003',
-                'branch' => 'Martapura',
-                'program' => 'Umroh Premium Al Hijrah Maret 2027',
-                'description' => 'Paket umroh premium 13 hari dengan hotel pilihan, jadwal ziarah lengkap, dan pendamping ibadah selama di Makkah serta Madinah.',
-                'departure' => '2027-03-10',
-                'return' => '2027-03-22',
-                'airline' => 'Saudia Airlines',
-                'flight' => 'SV-819',
-                'price' => 39_900_000,
             ],
         ])->mapWithKeys(function (array $data, string $groupName) use ($branches): array {
             $departure = Departure::query()->updateOrCreate(
