@@ -59,6 +59,7 @@ class DemoMasterDataSeeder extends Seeder
             $leaders = $this->seedTourLeaders($branches);
             $muthawwifs = $this->seedMuthawwifs($branches);
             $groups = $this->seedGroups($branches, $departures, $leaders, $muthawwifs);
+            $this->ensureGroupCheckpoints($branches, $departures, $groups);
             $this->seedPilgrims($branches, $groups);
         });
 
@@ -400,22 +401,98 @@ class DemoMasterDataSeeder extends Seeder
     private function ensureDepartures(Collection $branches): Collection
     {
         return collect([
-            'Al Hijrah 01' => ['code' => 'DEP-RH-001', 'branch' => 'Banjarmasin', 'program' => 'Umrah Al Hijrah Januari 2027', 'departure' => '2027-01-10', 'return' => '2027-01-22'],
-            'Al Hijrah 02' => ['code' => 'DEP-RH-002', 'branch' => 'Banjarbaru', 'program' => 'Umrah Al Hijrah Februari 2027', 'departure' => '2027-02-10', 'return' => '2027-02-22'],
-            'Al Hijrah 03' => ['code' => 'DEP-RH-003', 'branch' => 'Martapura', 'program' => 'Umrah Al Hijrah Maret 2027', 'departure' => '2027-03-10', 'return' => '2027-03-22'],
-        ])->mapWithKeys(fn (array $data, string $groupName): array => [$groupName => Departure::query()->updateOrCreate(
-            ['code' => $data['code']],
-            [
-                'branch_id' => $branches[$data['branch']]->id,
-                'program_name' => $data['program'],
-                'departure_date' => $data['departure'],
-                'return_date' => $data['return'],
-                'departure_airport' => 'BDJ',
-                'arrival_airport' => 'JED',
-                'quota' => 45,
-                'status' => 'scheduled',
+            'Al Hijrah 01' => [
+                'code' => 'DEP-RH-001',
+                'branch' => 'Banjarmasin',
+                'program' => 'Umroh Reguler Al Hijrah Januari 2027',
+                'description' => 'Paket umroh 13 hari dengan hotel dekat Masjidil Haram dan Masjid Nabawi, pendamping berpengalaman, serta monitoring jamaah selama perjalanan.',
+                'departure' => '2027-01-10',
+                'return' => '2027-01-22',
+                'airline' => 'Garuda Indonesia',
+                'flight' => 'GA-980',
+                'price' => 32_500_000,
             ],
-        )]);
+            'Al Hijrah 02' => [
+                'code' => 'DEP-RH-002',
+                'branch' => 'Banjarbaru',
+                'program' => 'Umroh Hemat Al Hijrah Februari 2027',
+                'description' => 'Paket umroh hemat 13 hari dengan fasilitas inti, hotel nyaman, manasik, dan pendamping perjalanan untuk jamaah Banjarbaru.',
+                'departure' => '2027-02-10',
+                'return' => '2027-02-22',
+                'airline' => 'Lion Air',
+                'flight' => 'JT-108',
+                'price' => 28_900_000,
+            ],
+            'Al Hijrah 03' => [
+                'code' => 'DEP-RH-003',
+                'branch' => 'Martapura',
+                'program' => 'Umroh Premium Al Hijrah Maret 2027',
+                'description' => 'Paket umroh premium 13 hari dengan hotel pilihan, jadwal ziarah lengkap, dan pendamping ibadah selama di Makkah serta Madinah.',
+                'departure' => '2027-03-10',
+                'return' => '2027-03-22',
+                'airline' => 'Saudia Airlines',
+                'flight' => 'SV-819',
+                'price' => 39_900_000,
+            ],
+        ])->mapWithKeys(function (array $data, string $groupName) use ($branches): array {
+            $departure = Departure::query()->updateOrCreate(
+                ['code' => $data['code']],
+                [
+                    'branch_id' => $branches[$data['branch']]->id,
+                    'program_name' => $data['program'],
+                    'description' => $data['description'],
+                    'facilities' => "Visa umroh\nManasik sebelum keberangkatan\nHotel Makkah dan Madinah sesuai paket\nTransportasi bus AC\nPendamping Tour Leader dan Muthawwif\nAkses informasi jadwal dan rombongan melalui aplikasi",
+                    'requirements' => "KTP dan Kartu Keluarga\nPaspor aktif minimal 7 bulan\nPas foto sesuai ketentuan\nBuku nikah untuk pasangan suami istri\nPembayaran melalui kantor cabang",
+                    'departure_date' => $data['departure'],
+                    'return_date' => $data['return'],
+                    'departure_airport' => 'Banjarmasin BDJ',
+                    'arrival_airport' => 'Jeddah JED',
+                    'airline' => $data['airline'],
+                    'flight_number' => $data['flight'],
+                    'price' => $data['price'],
+                    'quota' => 45,
+                    'is_public' => true,
+                    'status' => 'scheduled',
+                ],
+            );
+
+            $this->syncItinerary($departure);
+
+            return [$groupName => $departure];
+        });
+    }
+
+    private function syncItinerary(Departure $departure): void
+    {
+        $departure->itineraries()->delete();
+
+        foreach ($this->itineraryRows() as [$day, $title, $city, $description]) {
+            $departure->itineraries()->create([
+                'day_number' => $day,
+                'title' => $title,
+                'city' => $city,
+                'description' => $description,
+            ]);
+        }
+    }
+
+    private function itineraryRows(): array
+    {
+        return [
+            [1, 'Keberangkatan dari Banjarmasin', 'Banjarmasin', 'Jamaah berkumpul di bandara, briefing rombongan, dan penerbangan menuju Jeddah.'],
+            [2, 'Tiba di Jeddah dan menuju Makkah', 'Jeddah', 'Proses imigrasi, perjalanan bus menuju Makkah, check-in hotel, dan istirahat.'],
+            [3, 'Pelaksanaan umroh pertama', 'Makkah', 'Thawaf, sai, tahallul, dan pendampingan ibadah oleh Muthawwif.'],
+            [4, 'Ibadah mandiri di Masjidil Haram', 'Makkah', 'Shalat berjamaah, tilawah, dan pengarahan titik kumpul hotel.'],
+            [5, 'Ziarah sekitar Makkah', 'Makkah', 'Ziarah Jabal Tsur, Jabal Rahmah, Arafah, Muzdalifah, Mina, dan Miqat Tanim.'],
+            [6, 'Program ibadah dan manasik lanjutan', 'Makkah', 'Kajian singkat, evaluasi rombongan, dan ibadah mandiri.'],
+            [7, 'Persiapan keberangkatan ke Madinah', 'Makkah', 'Thawaf wada sesuai arahan pembimbing dan persiapan check-out hotel.'],
+            [8, 'Perjalanan Makkah ke Madinah', 'Madinah', 'Perjalanan bus menuju Madinah, check-in hotel, dan orientasi area Masjid Nabawi.'],
+            [9, 'Ibadah di Masjid Nabawi', 'Madinah', 'Shalat berjamaah, kunjungan Raudhah sesuai jadwal, dan pengarahan titik kumpul.'],
+            [10, 'Ziarah Madinah', 'Madinah', 'Ziarah Masjid Quba, Jabal Uhud, Masjid Qiblatain, dan Kebun Kurma.'],
+            [11, 'Ibadah mandiri dan belanja oleh-oleh', 'Madinah', 'Jamaah mengikuti jadwal ibadah dan waktu belanja sesuai arahan petugas.'],
+            [12, 'Persiapan kepulangan', 'Madinah', 'Check-out hotel, perjalanan ke bandara, dan proses kepulangan ke Indonesia.'],
+            [13, 'Tiba di Indonesia', 'Banjarmasin', 'Jamaah tiba di Indonesia dan proses penjemputan keluarga.'],
+        ];
     }
 
     /**
@@ -491,6 +568,70 @@ class DemoMasterDataSeeder extends Seeder
                 'is_active' => true,
             ],
         )]);
+    }
+
+    /**
+     * @param Collection<string, Branch> $branches
+     * @param Collection<string, Departure> $departures
+     * @param Collection<string, Group> $groups
+     */
+    private function ensureGroupCheckpoints(Collection $branches, Collection $departures, Collection $groups): void
+    {
+        $rows = [
+            'Al Hijrah 01' => [
+                ['Lobi Al Safwah Tower', 'hotel', 'makkah', 'Titik kumpul jamaah sebelum menuju Masjidil Haram.', 21.4206000, 39.8249000, 180],
+                ['Pintu 79 Masjidil Haram', 'titik_kumpul', 'makkah', 'Titik kumpul setelah thawaf dan sai.', 21.4219000, 39.8257000, 120],
+                ['Lobi Dallah Taibah Madinah', 'hotel', 'madinah', 'Titik kumpul keberangkatan ziarah Madinah.', 24.4707000, 39.6119000, 180],
+            ],
+            'Al Hijrah 02' => [
+                ['Lobi Anjum Hotel Makkah', 'hotel', 'makkah', 'Titik kumpul rombongan sebelum ibadah bersama.', 21.4238000, 39.8226000, 180],
+                ['Area Bus Jabal Omar', 'titik_kumpul', 'makkah', 'Titik kumpul naik bus ziarah Makkah.', 21.4243000, 39.8219000, 150],
+                ['Lobi Pullman Zamzam Madinah', 'hotel', 'madinah', 'Titik kumpul jamaah saat agenda Masjid Nabawi.', 24.4669000, 39.6123000, 180],
+            ],
+            'Al Hijrah 03' => [
+                ['Lobi Swissotel Makkah', 'hotel', 'makkah', 'Titik kumpul jamaah premium sebelum kegiatan harian.', 21.4197000, 39.8255000, 180],
+                ['Pelataran Abraj Al Bait', 'titik_kumpul', 'makkah', 'Titik kumpul setelah ibadah mandiri di Masjidil Haram.', 21.4199000, 39.8260000, 130],
+                ['Lobi Madinah Hilton', 'hotel', 'madinah', 'Titik kumpul sebelum ziarah Madinah.', 24.4694000, 39.6111000, 180],
+            ],
+        ];
+
+        foreach ($rows as $groupName => $checkpoints) {
+            $group = $groups[$groupName];
+            $departure = $departures[$groupName];
+            $branch = $branches[$group->branch->city] ?? $group->branch;
+
+            foreach ($checkpoints as [$name, $category, $city, $description, $latitude, $longitude, $radius]) {
+                $checkpoint = Checkpoint::withTrashed()
+                    ->where('branch_id', $branch->id)
+                    ->where('group_id', $group->id)
+                    ->where('name', $name)
+                    ->first();
+
+                $payload = [
+                    'branch_id' => $branch->id,
+                    'departure_id' => $departure->id,
+                    'group_id' => $group->id,
+                    'name' => $name,
+                    'category' => $category,
+                    'city' => $city,
+                    'address' => $description,
+                    'latitude' => $latitude,
+                    'longitude' => $longitude,
+                    'geofence_radius_meters' => $radius,
+                    'description' => $description,
+                    'is_active' => true,
+                ];
+
+                if ($checkpoint) {
+                    $checkpoint->restore();
+                    $checkpoint->fill($payload)->save();
+
+                    continue;
+                }
+
+                Checkpoint::query()->create($payload);
+            }
+        }
     }
 
     /**
