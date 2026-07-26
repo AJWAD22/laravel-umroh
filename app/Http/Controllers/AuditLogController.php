@@ -4,12 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
 use App\Models\AuditLog;
+use App\Services\AuditLogService;
+use App\Services\SystemSettingService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class AuditLogController extends Controller
 {
+    public function __construct(
+        private readonly SystemSettingService $settings,
+        private readonly AuditLogService $audit,
+    ) {}
+
     public function __invoke(Request $request): View
     {
         $user = $request->user();
@@ -35,6 +44,31 @@ class AuditLogController extends Controller
         return view('audit-logs.index', [
             'logs' => $logs,
             'canFilterBranches' => $user->hasRole(UserRole::SuperAdmin->value),
+            'retentionDays' => (int) $this->settings->get('audit_log_retention_days', 365),
+            'canPurgeExpired' => $user->can('system-settings.manage'),
         ]);
+    }
+
+    public function purgeExpired(Request $request): RedirectResponse
+    {
+        Gate::authorize('system-settings.manage');
+
+        $retentionDays = max(30, (int) $this->settings->get('audit_log_retention_days', 365));
+        $cutoff = now()->subDays($retentionDays);
+        $deleted = AuditLog::query()
+            ->where('created_at', '<', $cutoff)
+            ->delete();
+
+        $this->audit->record(
+            $request->user(),
+            'audit.retention.purged',
+            metadata: [
+                'retention_days' => $retentionDays,
+                'cutoff' => $cutoff->toDateTimeString(),
+                'deleted_count' => $deleted,
+            ],
+        );
+
+        return back()->with('success', "Audit log kedaluwarsa berhasil dibersihkan: {$deleted} data.");
     }
 }

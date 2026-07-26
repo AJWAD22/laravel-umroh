@@ -2,9 +2,9 @@
     <x-slot:title>Profil</x-slot:title>
     <x-slot:header>
         <div>
-            <nav class="mb-2 text-sm text-slate-500">Pengaturan / Profil</nav>
+            <nav class="mb-2 text-sm text-slate-500">Akun / Profil Saya</nav>
             <h1 class="text-2xl font-bold">Profil Saya</h1>
-            <p class="mt-1 text-sm text-slate-500">Perbarui identitas dan informasi kontak akun.</p>
+            <p class="mt-1 text-sm text-slate-500">Perbarui identitas akun dan keamanan password dalam satu halaman.</p>
         </div>
     </x-slot:header>
 
@@ -23,18 +23,40 @@
             </div>
         </aside>
 
-        <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="space-y-5">
-                @csrf @method('PATCH')
-                <div class="grid gap-5 md:grid-cols-2">
-                    <label><span class="mb-1.5 block text-sm font-medium">Nama Lengkap</span><input name="name" value="{{ old('name', $user->name) }}" required class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">@error('name')<span class="mt-1 block text-xs text-red-600">{{ $message }}</span>@enderror</label>
-                    <label><span class="mb-1.5 block text-sm font-medium">Email</span><input type="email" name="email" value="{{ old('email', $user->email) }}" required class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">@error('email')<span class="mt-1 block text-xs text-red-600">{{ $message }}</span>@enderror</label>
-                    <label><span class="mb-1.5 block text-sm font-medium">Nomor Telepon</span><input name="phone_number" value="{{ old('phone_number', $user->phone_number) }}" class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">@error('phone_number')<span class="mt-1 block text-xs text-red-600">{{ $message }}</span>@enderror</label>
-                    <label><span class="mb-1.5 block text-sm font-medium">Cabang</span><input value="{{ $user->branch?->name ?? 'Nasional' }}" disabled class="w-full rounded-xl border-slate-200 bg-slate-100 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800"></label>
-                    <label class="md:col-span-2"><span class="mb-1.5 block text-sm font-medium">Foto Profil</span><input type="file" name="photo" accept="image/jpeg,image/png,image/webp" class="w-full rounded-xl border border-slate-300 p-2 text-sm dark:border-slate-700 dark:bg-slate-950"><span class="mt-1 block text-xs text-slate-500">JPG, PNG, atau WebP. Maksimal 2 MB.</span>@error('photo')<span class="mt-1 block text-xs text-red-600">{{ $message }}</span>@enderror</label>
+        <div class="space-y-6">
+            <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div class="mb-5">
+                    <h2 class="font-bold text-slate-950 dark:text-white">Informasi Akun</h2>
+                    <p class="mt-1 text-sm text-slate-500">Data ini dipakai sebagai identitas pengguna di panel sistem.</p>
                 </div>
-                <div class="flex justify-end border-t border-slate-100 pt-5 dark:border-slate-800"><button class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Simpan Profil</button></div>
-            </form>
-        </section>
+                <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="space-y-5">
+                    @csrf @method('PATCH')
+                    <div class="grid gap-5 md:grid-cols-2">
+                        <label><span class="mb-1.5 block text-sm font-medium">Nama Lengkap</span><input name="name" value="{{ old('name', $user->name) }}" required class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">@error('name')<span class="mt-1 block text-xs text-red-600">{{ $message }}</span>@enderror</label>
+                        <label><span class="mb-1.5 block text-sm font-medium">Email</span><input type="email" name="email" value="{{ old('email', $user->email) }}" required class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">@error('email')<span class="mt-1 block text-xs text-red-600">{{ $message }}</span>@enderror</label>
+                        <label><span class="mb-1.5 block text-sm font-medium">Nomor Telepon</span><input name="phone_number" value="{{ old('phone_number', $user->phone_number) }}" class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">@error('phone_number')<span class="mt-1 block text-xs text-red-600">{{ $message }}</span>@enderror</label>
+                        <label><span class="mb-1.5 block text-sm font-medium">Cabang</span><input value="{{ $user->branch?->name ?? 'Nasional' }}" disabled class="w-full rounded-xl border-slate-200 bg-slate-100 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800"></label>
+                        <label class="md:col-span-2"><span class="mb-1.5 block text-sm font-medium">Foto Profil</span><input type="file" name="photo" accept="image/jpeg,image/png,image/webp" class="w-full rounded-xl border border-slate-300 p-2 text-sm dark:border-slate-700 dark:bg-slate-950"><span class="mt-1 block text-xs text-slate-500">JPG, PNG, atau WebP. Maksimal 2 MB.</span>@error('photo')<span class="mt-1 block text-xs text-red-600">{{ $message }}</span>@enderror</label>
+                    </div>
+                    <div class="flex justify-end border-t border-slate-100 pt-5 dark:border-slate-800"><button class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Simpan Profil</button></div>
+                </form>
+            </section>
+
+            <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div class="mb-5">
+                    <h2 class="font-bold text-slate-950 dark:text-white">Keamanan Password</h2>
+                    <p class="mt-1 text-sm text-slate-500">Gunakan password kuat dan berbeda dari layanan lain.</p>
+                </div>
+                <form method="POST" action="{{ route('password.update') }}" class="space-y-5">
+                    @csrf @method('PUT')
+                    <label class="block"><span class="mb-1.5 block text-sm font-medium">Password Saat Ini</span><input type="password" name="current_password" autocomplete="current-password" class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">@error('current_password', 'updatePassword')<span class="mt-1 block text-xs text-red-600">{{ $message }}</span>@enderror</label>
+                    <div class="grid gap-5 md:grid-cols-2">
+                        <label class="block"><span class="mb-1.5 block text-sm font-medium">Password Baru</span><input type="password" name="password" autocomplete="new-password" class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">@error('password', 'updatePassword')<span class="mt-1 block text-xs text-red-600">{{ $message }}</span>@enderror</label>
+                        <label class="block"><span class="mb-1.5 block text-sm font-medium">Konfirmasi Password Baru</span><input type="password" name="password_confirmation" autocomplete="new-password" class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950"></label>
+                    </div>
+                    <div class="flex justify-end border-t border-slate-100 pt-5 dark:border-slate-800"><button class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Perbarui Password</button></div>
+                </form>
+            </section>
+        </div>
     </div>
 </x-app-layout>

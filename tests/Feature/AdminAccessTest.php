@@ -183,4 +183,52 @@ class AdminAccessTest extends TestCase
             ->assertSee('groups.members.assigned')
             ->assertDontSee('activation.group_pins.reset');
     }
+
+    public function test_super_admin_can_purge_only_expired_audit_logs_by_retention_policy(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $superAdmin = User::factory()->create();
+        $superAdmin->assignRole('super-admin');
+        $branch = Branch::create(['code' => 'RET', 'name' => 'Cabang Retensi', 'city' => 'Makassar']);
+
+        $expiredLog = AuditLog::create([
+            'branch_id' => $branch->id,
+            'actor_id' => $superAdmin->id,
+            'action' => 'expired.action',
+        ]);
+        $expiredLog->forceFill([
+            'created_at' => now()->subDays(400),
+            'updated_at' => now()->subDays(400),
+        ])->save();
+
+        $recentLog = AuditLog::create([
+            'branch_id' => $branch->id,
+            'actor_id' => $superAdmin->id,
+            'action' => 'recent.action',
+        ]);
+        $recentLog->forceFill([
+            'created_at' => now()->subDays(10),
+            'updated_at' => now()->subDays(10),
+        ])->save();
+
+        $this->actingAs($superAdmin)
+            ->post(route('audit-logs.purge-expired'))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('audit_logs', ['action' => 'expired.action']);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'recent.action']);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'audit.retention.purged']);
+    }
+
+    public function test_branch_admin_cannot_purge_audit_logs(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $branch = Branch::create(['code' => 'RET-B', 'name' => 'Cabang Retensi B', 'city' => 'Makassar']);
+        $admin = User::factory()->create(['branch_id' => $branch->id]);
+        $admin->assignRole('admin-cabang');
+
+        $this->actingAs($admin)
+            ->post(route('audit-logs.purge-expired'))
+            ->assertForbidden();
+    }
 }

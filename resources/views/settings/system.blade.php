@@ -11,8 +11,16 @@
     <form method="POST" action="{{ route('settings.system.update') }}" class="space-y-6">
         @csrf @method('PUT')
         @foreach ($settings as $group => $items)
+            @php
+                $groupLabel = [
+                    'general' => 'General',
+                    'monitoring' => 'Monitoring',
+                    'travel_profile' => 'Travel Profile',
+                    'audit_security' => 'Audit & Keamanan',
+                ][$group] ?? str($group)->headline();
+            @endphp
             <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <h2 class="text-lg font-bold">{{ str($group)->headline() }}</h2>
+                <h2 class="text-lg font-bold">{{ $groupLabel }}</h2>
                 <div class="mt-5 grid gap-5 md:grid-cols-2">
                     @foreach ($items as $setting)
                         <label class="block">

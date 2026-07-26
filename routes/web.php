@@ -41,6 +41,7 @@ Route::prefix('jamaah')->middleware('pilgrim.portal')->name('portal.')->group(fu
 Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/audit-logs', AuditLogController::class)->name('audit-logs.index');
+    Route::post('/audit-logs/purge-expired', [AuditLogController::class, 'purgeExpired'])->name('audit-logs.purge-expired');
 
     // Monitoring operasional hanya menjadi tanggung jawab Admin Cabang.
     // Super Admin menerima ringkasan nasional dari dashboard dan laporan,
@@ -102,7 +103,7 @@ Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::get('/settings/password', [ProfileController::class, 'password'])->name('settings.password');
+    Route::redirect('/settings/password', '/profile')->name('settings.password');
     Route::get('/settings/system', [SystemSettingController::class, 'edit'])->name('settings.system.edit');
     Route::put('/settings/system', [SystemSettingController::class, 'update'])->name('settings.system.update');
 });

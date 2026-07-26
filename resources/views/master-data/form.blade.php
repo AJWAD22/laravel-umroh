@@ -30,6 +30,7 @@
         $resource === 'branches' => 'Organisasi',
         default => 'Data',
     };
+    $hasLocationPicker = in_array($resource, ['hotels', 'checkpoints'], true);
     $fields = match ($resource) {
         'branches' => [
             ['code','Kode Cabang','text'], ['name','Nama Cabang','text'], ['city','Kota','text'], ['province','Provinsi','text'],
@@ -150,6 +151,7 @@
                     $isAutomaticCode = $automaticCodeHelp !== null
                         && in_array($name, ['registration_number', 'employee_number', 'code'], true);
                 @endphp
+                @continue($hasLocationPicker && in_array($name, ['latitude', 'longitude'], true))
                 <label class="{{ $type === 'textarea' ? 'md:col-span-2' : '' }}">
                     <span class="mb-1.5 flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                         {{ $label }}
@@ -207,6 +209,76 @@
                 </label>
             @endforeach
         </div>
+
+        @if ($hasLocationPicker)
+            @php
+                $latitudeValue = $value('latitude');
+                $longitudeValue = $value('longitude');
+                $pickerCity = $value('city', 'makkah');
+            @endphp
+            <section class="mt-7 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                     data-location-picker
+                     data-lat="{{ $latitudeValue }}"
+                     data-lng="{{ $longitudeValue }}"
+                     data-city="{{ $pickerCity }}">
+                <input type="hidden" name="latitude" value="{{ $latitudeValue }}" data-location-lat>
+                <input type="hidden" name="longitude" value="{{ $longitudeValue }}" data-location-lng>
+
+                <div class="border-b border-slate-200 p-5 dark:border-slate-800">
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                            <h2 class="flex items-center gap-2 text-lg font-bold text-slate-950 dark:text-white">
+                                <i data-lucide="map-pinned" class="size-5 text-blue-600"></i>
+                                Pilih Lokasi dari Peta
+                            </h2>
+                            <p class="mt-1 max-w-2xl text-sm leading-6 text-slate-500">Klik titik pada peta atau cari nama tempat. Latitude dan longitude akan terisi otomatis dari pilihan peta.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" class="button-secondary min-h-10 px-3 text-xs" data-location-preset="makkah">Pusat Makkah</button>
+                            <button type="button" class="button-secondary min-h-10 px-3 text-xs" data-location-preset="madinah">Pusat Madinah</button>
+                            <button type="button" class="button-secondary min-h-10 px-3 text-xs" data-location-preset="jeddah">Pusat Jeddah</button>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
+                        <label class="relative">
+                            <span class="sr-only">Cari lokasi</span>
+                            <i data-lucide="search" class="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
+                            <input type="search" data-location-search class="control-field w-full pl-10" placeholder="Cari hotel, masjid, bandara, atau alamat">
+                        </label>
+                        <button type="button" class="button-primary justify-center" data-location-search-button>
+                            <i data-lucide="search" class="size-4"></i>
+                            Cari Lokasi
+                        </button>
+                        <button type="button" class="button-secondary justify-center" data-location-current>
+                            <i data-lucide="map" class="size-4"></i>
+                            Lokasi Saya
+                        </button>
+                    </div>
+                    <p class="mt-2 text-xs text-slate-500" data-location-message>Pilih titik pada peta untuk mengisi koordinat.</p>
+                </div>
+
+                <div class="grid lg:grid-cols-[minmax(0,1fr)_280px]">
+                    <div data-location-map class="h-[420px] min-h-[320px] bg-slate-100 dark:bg-slate-950"></div>
+                    <aside class="border-t border-slate-200 p-5 dark:border-slate-800 lg:border-l lg:border-t-0">
+                        <h3 class="text-sm font-bold text-slate-950 dark:text-white">Koordinat Terpilih</h3>
+                        <div class="mt-4 space-y-3">
+                            <label class="block">
+                                <span class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">Latitude</span>
+                                <input readonly data-location-lat-display value="{{ $latitudeValue }}" class="control-field w-full bg-slate-50 font-mono text-sm dark:bg-slate-800">
+                            </label>
+                            <label class="block">
+                                <span class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">Longitude</span>
+                                <input readonly data-location-lng-display value="{{ $longitudeValue }}" class="control-field w-full bg-slate-50 font-mono text-sm dark:bg-slate-800">
+                            </label>
+                        </div>
+                        @error('latitude')<span class="mt-3 block text-xs text-red-600">{{ $message }}</span>@enderror
+                        @error('longitude')<span class="mt-1 block text-xs text-red-600">{{ $message }}</span>@enderror
+                        <p class="mt-4 rounded-xl bg-blue-50 p-3 text-xs leading-5 text-blue-800 dark:bg-blue-950/40 dark:text-blue-200">Koordinat ini dipakai untuk titik tujuan di aplikasi jamaah, radius geofence, dan marker pada Live Map.</p>
+                    </aside>
+                </div>
+            </section>
+        @endif
         </div>
 
         <div class="flex flex-col-reverse gap-3 border-t border-slate-100 bg-slate-50/60 px-5 py-4 dark:border-slate-800 dark:bg-slate-900/70 sm:flex-row sm:justify-end sm:px-7">

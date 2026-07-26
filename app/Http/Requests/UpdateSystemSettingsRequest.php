@@ -27,6 +27,7 @@ class UpdateSystemSettingsRequest extends FormRequest
             'gps_offline_threshold_minutes' => ['required', 'integer', 'min:1', 'max:1440'],
             'monitoring_refresh_seconds' => ['required', 'integer', 'min:5', 'max:3600'],
             'default_geofence_radius_meters' => ['required', 'integer', 'min:10', 'max:50000'],
+            'audit_log_retention_days' => ['required', 'integer', 'min:30', 'max:3650'],
         ];
     }
 }

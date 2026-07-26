@@ -46,7 +46,7 @@
                 <div><h2 class="font-extrabold">Filter Operasional</h2><p class="text-xs text-slate-500">Pilih perjalanan agar peta tidak terlalu ramai.</p></div>
                 <button id="monitoring-reset" type="button" class="button-secondary min-h-9 px-3 py-2 text-xs"><i data-lucide="rotate-ccw" class="size-4"></i> Reset</button>
             </div>
-            <div id="monitoring-filters" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+            <div id="monitoring-filters" class="grid gap-3 md:grid-cols-2 2xl:grid-cols-12">
                 <label class="grid gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300">
                     Cabang
                     @if ($canFilterBranches)
@@ -60,7 +60,7 @@
                     @endif
                 </label>
 
-                <label class="grid gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300">
+                <label class="grid gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 2xl:col-span-3">
                     Jadwal Perjalanan
                     <select id="monitoring-departure" class="control-field">
                         <option value="">Semua perjalanan aktif</option>
@@ -70,7 +70,7 @@
                     </select>
                 </label>
 
-                <label class="grid gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300">
+                <label class="grid gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 2xl:col-span-2">
                     Rombongan
                     <select id="monitoring-group" class="control-field">
                         <option value="">Semua rombongan</option>
@@ -80,7 +80,7 @@
                     </select>
                 </label>
 
-                <label class="grid gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300">
+                <label class="grid gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 2xl:col-span-2">
                     Kondisi Jamaah
                     <select id="monitoring-status" class="control-field">
                         <option value="">Semua kondisi</option>
@@ -90,12 +90,12 @@
                     </select>
                 </label>
 
-                <label class="grid gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300">
+                <label class="grid gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 2xl:col-span-2">
                     Cari Jamaah
                     <span class="relative"><i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i><input id="monitoring-search" type="search" class="control-field w-full pl-9" placeholder="Nama/no. registrasi"></span>
                 </label>
 
-                <label class="grid gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300">
+                <label class="grid gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 2xl:col-span-2">
                     Interval Data
                     <select id="monitoring-refresh" class="control-field">
                         <option value="5000">Setiap 5 detik</option>
@@ -114,18 +114,18 @@
             </div>
         </div>
 
-        <div class="grid xl:grid-cols-[350px_minmax(0,1fr)]">
-            <aside class="order-2 border-t border-slate-200 bg-slate-50/60 dark:border-slate-800 dark:bg-slate-950/30 xl:order-1 xl:border-r xl:border-t-0" aria-label="Daftar jamaah terpantau">
+        <div class="grid 2xl:grid-cols-[minmax(0,1fr)_360px]">
+            <aside class="order-2 border-t border-slate-200 bg-slate-50/60 dark:border-slate-800 dark:bg-slate-950/30 2xl:order-2 2xl:border-l 2xl:border-t-0" aria-label="Daftar jamaah terpantau">
                 <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
                     <div><h3 class="text-sm font-extrabold">Daftar Jamaah</h3><p id="monitoring-list-caption" class="text-xs text-slate-500">Menunggu data lokasi</p></div>
                     <span id="monitoring-connection" class="rounded-full bg-slate-200 px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:bg-slate-800">Menghubungkan</span>
                 </div>
-                <div id="monitoring-list" class="max-h-[430px] overflow-y-auto xl:max-h-[680px]"></div>
+                <div id="monitoring-list" class="max-h-[360px] overflow-y-auto 2xl:max-h-[720px]"></div>
                 <div id="monitoring-empty" class="hidden p-8 text-center"><span class="mx-auto grid size-12 place-items-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800"><i data-lucide="users" class="size-5"></i></span><p class="mt-3 text-sm font-bold">Belum ada lokasi</p><p class="mt-1 text-xs leading-5 text-slate-500">Coba ubah filter atau pastikan aplikasi jamaah mengirim GPS.</p></div>
             </aside>
 
-            <div class="relative order-1 min-w-0 xl:order-2">
-                <div id="monitoring-map" data-endpoint="{{ route('monitoring.map.data') }}" class="h-[520px] w-full bg-slate-100 xl:h-[680px]" aria-label="Peta monitoring jamaah dan petugas"></div>
+            <div class="relative order-1 min-w-0 2xl:order-1">
+                <div id="monitoring-map" data-endpoint="{{ route('monitoring.map.data') }}" class="h-[560px] w-full bg-slate-100 lg:h-[650px] 2xl:h-[720px]" aria-label="Peta monitoring jamaah dan petugas"></div>
                 <div id="monitoring-loading" class="pointer-events-none absolute inset-0 z-[500] hidden place-items-center bg-white/50 backdrop-blur-sm"><x-loading-state label="Memuat data operasional..." class="rounded-2xl bg-white px-5 py-3 shadow-lg dark:bg-slate-900" /></div>
                 <aside id="monitoring-detail" class="absolute inset-y-4 right-4 z-[600] hidden w-[calc(100%-2rem)] max-w-sm overflow-y-auto rounded-2xl border border-slate-200 bg-white/95 shadow-2xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95"><div id="monitoring-detail-content"></div></aside>
                 <div class="absolute bottom-4 left-4 z-[500] hidden rounded-2xl bg-white/95 p-3 text-[11px] font-semibold shadow-lg backdrop-blur sm:block dark:bg-slate-900/95">

@@ -32,6 +32,7 @@ class SystemSettingsTest extends TestCase
                 'gps_offline_threshold_minutes' => 15,
                 'monitoring_refresh_seconds' => 20,
                 'default_geofence_radius_meters' => 500,
+                'audit_log_retention_days' => 730,
             ])
             ->assertSessionHasNoErrors()
             ->assertSessionHas('success');
@@ -41,6 +42,10 @@ class SystemSettingsTest extends TestCase
         $this->assertDatabaseHas('system_settings', [
             'key' => 'default_geofence_radius_meters',
             'value' => '500',
+        ]);
+        $this->assertDatabaseHas('system_settings', [
+            'key' => 'audit_log_retention_days',
+            'value' => '730',
         ]);
     }
 
@@ -74,8 +79,12 @@ class SystemSettingsTest extends TestCase
 
         $this->actingAs($superAdmin)
             ->get(route('settings.password'))
+            ->assertRedirect(route('profile.edit'));
+
+        $this->actingAs($superAdmin)
+            ->get(route('profile.edit'))
             ->assertOk()
-            ->assertSee('Ganti Password');
+            ->assertSee('Keamanan Password');
     }
 
     /**

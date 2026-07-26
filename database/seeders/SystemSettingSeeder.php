@@ -30,6 +30,7 @@ class SystemSettingSeeder extends Seeder
             ['key' => 'gps_offline_threshold_minutes', 'value' => '10', 'type' => 'integer', 'group' => 'monitoring', 'label' => 'Batas GPS Offline (menit)', 'description' => 'Perangkat dianggap offline setelah tidak mengirim lokasi selama durasi ini.'],
             ['key' => 'monitoring_refresh_seconds', 'value' => '30', 'type' => 'integer', 'group' => 'monitoring', 'label' => 'Refresh Monitoring (detik)', 'description' => 'Interval refresh standar dashboard monitoring.'],
             ['key' => 'default_geofence_radius_meters', 'value' => '250', 'type' => 'integer', 'group' => 'monitoring', 'label' => 'Radius Geofence Default (meter)', 'description' => 'Radius awal ketika membuat area aman.'],
+            ['key' => 'audit_log_retention_days', 'value' => '365', 'type' => 'integer', 'group' => 'audit_security', 'label' => 'Masa Simpan Audit Log (hari)', 'description' => 'Log lebih lama dari durasi ini dapat dibersihkan oleh Super Admin. Default 365 hari.'],
         ];
     }
 }

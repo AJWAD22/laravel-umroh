@@ -136,28 +136,19 @@
             </div>
         </div>
 
-        @canany(['audit.global.view', 'audit.branch.view'])
-            <div>
-                <a href="{{ route('audit-logs.index') }}" title="Audit Log"
-                   class="sidebar-link {{ request()->routeIs('audit-logs.*') ? 'sidebar-link-active' : '' }}">
-                    <i data-lucide="history" class="size-5 shrink-0"></i>
-                    <span x-show="!sidebarCollapsed">Audit Log</span>
-                </a>
-            </div>
-        @endcanany
-
-        <div x-data="{ open: {{ request()->routeIs('profile.*', 'settings.*') ? 'true' : 'false' }} }">
+        <div x-data="{ open: {{ request()->routeIs('settings.*', 'audit-logs.*') ? 'true' : 'false' }} }">
             <button @click="open = !open" class="sidebar-link w-full">
                 <i data-lucide="settings" class="size-5 shrink-0"></i>
                 <span x-show="!sidebarCollapsed" class="flex-1 text-left">Pengaturan</span>
                 <i x-show="!sidebarCollapsed" data-lucide="chevron-down" class="size-4 transition" :class="{ 'rotate-180': open }"></i>
             </button>
             <div x-cloak x-show="open && !sidebarCollapsed" x-transition class="ml-5 mt-1 space-y-0.5 border-l border-slate-800 pl-5">
-                <a href="{{ route('profile.edit') }}" class="sidebar-submenu-link {{ request()->routeIs('profile.*') ? 'sidebar-submenu-link-active' : '' }}">Profil</a>
-                <a href="{{ route('settings.password') }}" class="sidebar-submenu-link {{ request()->routeIs('settings.password') ? 'sidebar-submenu-link-active' : '' }}">Password</a>
                 @can('system-settings.manage')
                     <a href="{{ route('settings.system.edit') }}" class="sidebar-submenu-link {{ request()->routeIs('settings.system.*') ? 'sidebar-submenu-link-active' : '' }}">Sistem</a>
                 @endcan
+                @canany(['audit.global.view', 'audit.branch.view'])
+                    <a href="{{ route('audit-logs.index') }}" class="sidebar-submenu-link {{ request()->routeIs('audit-logs.*') ? 'sidebar-submenu-link-active' : '' }}">Audit Log</a>
+                @endcanany
             </div>
         </div>
     </nav>

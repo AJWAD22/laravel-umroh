@@ -83,6 +83,159 @@ if (chartElement && window.dashboardChartData) {
     });
 }
 
+document.querySelectorAll('[data-location-picker]').forEach((picker) => {
+    const mapElement = picker.querySelector('[data-location-map]');
+    const latInput = picker.querySelector('[data-location-lat]');
+    const lngInput = picker.querySelector('[data-location-lng]');
+    const latDisplay = picker.querySelector('[data-location-lat-display]');
+    const lngDisplay = picker.querySelector('[data-location-lng-display]');
+    const searchInput = picker.querySelector('[data-location-search]');
+    const searchButton = picker.querySelector('[data-location-search-button]');
+    const currentButton = picker.querySelector('[data-location-current]');
+    const message = picker.querySelector('[data-location-message]');
+    const citySelect = document.querySelector('select[name="city"]');
+    const presets = {
+        makkah: { label: 'Pusat Makkah', lat: 21.422487, lng: 39.826206, zoom: 15 },
+        madinah: { label: 'Pusat Madinah', lat: 24.467213, lng: 39.611193, zoom: 15 },
+        jeddah: { label: 'Pusat Jeddah', lat: 21.543333, lng: 39.172778, zoom: 12 },
+        other: { label: 'Arab Saudi', lat: 23.885942, lng: 45.079162, zoom: 5 },
+    };
+    const initialLat = Number(picker.dataset.lat);
+    const initialLng = Number(picker.dataset.lng);
+    const initialPreset = presets[picker.dataset.city] || presets.makkah;
+    const initialPosition = Number.isFinite(initialLat) && Number.isFinite(initialLng)
+        ? { lat: initialLat, lng: initialLng, zoom: 16 }
+        : initialPreset;
+    const map = L.map(mapElement, { zoomControl: true }).setView([initialPosition.lat, initialPosition.lng], initialPosition.zoom);
+    let marker = null;
+    let circle = null;
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19,
+    }).addTo(map);
+
+    const radiusInput = document.querySelector('input[name="geofence_radius_meters"]');
+    const setMessage = (text, tone = 'neutral') => {
+        message.textContent = text;
+        message.className = `mt-2 text-xs ${tone === 'error' ? 'text-red-600' : tone === 'success' ? 'text-emerald-700' : 'text-slate-500'}`;
+    };
+    const radius = () => {
+        const value = Number(radiusInput?.value);
+        return Number.isFinite(value) && value > 0 ? value : 250;
+    };
+    const updateCircle = (lat, lng) => {
+        if (circle) circle.remove();
+        circle = L.circle([lat, lng], {
+            radius: radius(),
+            color: '#2563eb',
+            weight: 1,
+            fillColor: '#3b82f6',
+            fillOpacity: .08,
+        }).addTo(map);
+    };
+    const setLocation = (lat, lng, label = 'Titik dipilih dari peta', zoom = 17) => {
+        const cleanLat = Number(lat);
+        const cleanLng = Number(lng);
+        if (!Number.isFinite(cleanLat) || !Number.isFinite(cleanLng)) return;
+
+        latInput.value = cleanLat.toFixed(7);
+        lngInput.value = cleanLng.toFixed(7);
+        latDisplay.value = cleanLat.toFixed(7);
+        lngDisplay.value = cleanLng.toFixed(7);
+
+        if (marker) {
+            marker.setLatLng([cleanLat, cleanLng]);
+        } else {
+            marker = L.marker([cleanLat, cleanLng], { draggable: true }).addTo(map);
+            marker.on('dragend', () => {
+                const position = marker.getLatLng();
+                setLocation(position.lat, position.lng, 'Titik dipindahkan dari marker', map.getZoom());
+            });
+        }
+        marker.bindPopup(label).openPopup();
+
+        updateCircle(cleanLat, cleanLng);
+        map.setView([cleanLat, cleanLng], zoom);
+        setMessage(`${label}. Koordinat sudah terisi otomatis.`, 'success');
+    };
+
+    map.on('click', (event) => {
+        setLocation(event.latlng.lat, event.latlng.lng, 'Titik dipilih dari peta', map.getZoom());
+    });
+
+    radiusInput?.addEventListener('input', () => {
+        if (latInput.value && lngInput.value) updateCircle(Number(latInput.value), Number(lngInput.value));
+    });
+
+    picker.querySelectorAll('[data-location-preset]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const preset = presets[button.dataset.locationPreset] || presets.makkah;
+            map.setView([preset.lat, preset.lng], preset.zoom);
+            setMessage(`Peta diarahkan ke ${preset.label}. Klik lokasi yang paling tepat.`, 'neutral');
+        });
+    });
+
+    citySelect?.addEventListener('change', () => {
+        const preset = presets[citySelect.value] || presets.other;
+        map.setView([preset.lat, preset.lng], preset.zoom);
+        setMessage(`Peta diarahkan ke ${preset.label}. Klik lokasi yang paling tepat.`, 'neutral');
+    });
+
+    currentButton?.addEventListener('click', () => {
+        if (!navigator.geolocation) {
+            setMessage('Browser tidak mendukung pengambilan lokasi perangkat.', 'error');
+            return;
+        }
+        setMessage('Mengambil lokasi perangkat...', 'neutral');
+        navigator.geolocation.getCurrentPosition(
+            (position) => setLocation(position.coords.latitude, position.coords.longitude, 'Lokasi perangkat saat ini', 17),
+            () => setMessage('Lokasi perangkat tidak dapat diambil. Pastikan izin lokasi browser aktif.', 'error'),
+            { enableHighAccuracy: true, timeout: 10000 },
+        );
+    });
+
+    const searchLocation = async () => {
+        const query = searchInput.value.trim();
+        if (!query) {
+            setMessage('Isi nama tempat atau alamat yang ingin dicari.', 'error');
+            return;
+        }
+
+        setMessage('Mencari lokasi...', 'neutral');
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`, {
+                headers: { Accept: 'application/json' },
+            });
+            if (!response.ok) throw new Error('Pencarian lokasi gagal.');
+            const [result] = await response.json();
+            if (!result) {
+                setMessage('Lokasi tidak ditemukan. Coba gunakan nama tempat yang lebih spesifik.', 'error');
+                return;
+            }
+            setLocation(result.lat, result.lon, result.display_name || 'Hasil pencarian lokasi', 17);
+        } catch (error) {
+            setMessage(error.message || 'Pencarian lokasi gagal.', 'error');
+        }
+    };
+
+    searchButton?.addEventListener('click', searchLocation);
+    searchInput?.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            searchLocation();
+        }
+    });
+
+    if (Number.isFinite(initialLat) && Number.isFinite(initialLng)) {
+        setLocation(initialLat, initialLng, 'Lokasi tersimpan', 16);
+    } else {
+        setMessage('Peta sudah diarahkan ke kota default. Klik titik tujuan yang benar.', 'neutral');
+    }
+
+    setTimeout(() => map.invalidateSize(), 150);
+});
+
 const monitoringMapElement = document.getElementById('monitoring-map');
 
 if (monitoringMapElement) {

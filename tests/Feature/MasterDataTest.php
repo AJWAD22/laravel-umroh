@@ -90,6 +90,19 @@ class MasterDataTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_checkpoint_form_uses_map_location_picker_instead_of_manual_coordinate_fields(): void
+    {
+        [$admin] = $this->branchAdmin('LOC');
+
+        $this->actingAs($admin)
+            ->get(route('master-data.create', 'checkpoints'))
+            ->assertOk()
+            ->assertSee('Pilih Lokasi dari Peta')
+            ->assertSee('data-location-picker', false)
+            ->assertSee('name="latitude"', false)
+            ->assertSee('name="longitude"', false);
+    }
+
     public function test_branch_admin_creates_tour_leader_with_a_mobile_login_account(): void
     {
         [$admin, $branch] = $this->branchAdmin('BJM');

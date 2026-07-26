@@ -1,10 +1,33 @@
 <x-app-layout>
     <x-slot:title>Audit Log</x-slot:title>
     <x-slot:header>
-        <nav class="mb-1 text-xs font-medium text-slate-500">Keamanan / Audit</nav>
+        <nav class="mb-1 text-xs font-medium text-slate-500">Pengaturan / Audit Log</nav>
         <h1 class="text-2xl font-bold tracking-tight text-slate-950 dark:text-white">Audit Log</h1>
         <p class="mt-1 text-sm text-slate-500">Jejak tindakan penting, pelaku, waktu, dan cakupan cabang.</p>
     </x-slot:header>
+
+    @if ($canPurgeExpired)
+        <section class="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900 dark:bg-amber-950/30">
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div class="flex items-start gap-3">
+                    <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-amber-700 ring-1 ring-amber-200 dark:bg-slate-900 dark:text-amber-300 dark:ring-amber-900">
+                        <i data-lucide="shield-check" class="size-5"></i>
+                    </span>
+                    <div>
+                        <h2 class="font-bold text-amber-950 dark:text-amber-100">Retensi audit aktif: {{ $retentionDays }} hari</h2>
+                        <p class="mt-1 text-sm leading-6 text-amber-800 dark:text-amber-200">Audit log tidak dihapus manual per baris. Super Admin hanya dapat membersihkan log yang sudah melewati masa simpan, dan tindakan ini tetap dicatat sebagai audit log baru.</p>
+                    </div>
+                </div>
+                <form method="POST" action="{{ route('audit-logs.purge-expired') }}">
+                    @csrf
+                    <button class="button-secondary whitespace-nowrap border-amber-300 bg-white text-amber-800 hover:bg-amber-100 dark:border-amber-900 dark:bg-slate-900 dark:text-amber-200 dark:hover:bg-amber-950">
+                        <i data-lucide="archive-x" class="size-4"></i>
+                        Bersihkan Log Kedaluwarsa
+                    </button>
+                </form>
+            </div>
+        </section>
+    @endif
 
     <section class="surface-card overflow-hidden">
         <form method="GET" class="grid gap-3 border-b border-slate-200 p-5 dark:border-slate-800 md:grid-cols-3">
