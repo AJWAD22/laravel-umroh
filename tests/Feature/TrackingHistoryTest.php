@@ -91,7 +91,10 @@ class TrackingHistoryTest extends TestCase
             ->get(route('monitoring.tracking.index'))
             ->assertOk()
             ->assertSee($pilgrim->full_name)
-            ->assertSee('tanpa batas jarak');
+            ->assertSee('Histori Perjalanan Jamaah')
+            ->assertSee('Pilih jamaah')
+            ->assertSee('Data berasal dari aplikasi mobile yang sudah aktif')
+            ->assertSee('Jalur perjalanan tampil jika aplikasi jamaah aktif');
     }
 
     /**

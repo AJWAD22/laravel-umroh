@@ -111,7 +111,7 @@ document.querySelectorAll('[data-location-picker]').forEach((picker) => {
     let circle = null;
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
+        attribution: 'OpenStreetMap contributors',
         maxZoom: 19,
     }).addTo(map);
 
@@ -250,7 +250,7 @@ if (monitoringMapElement) {
     let latestPayload = { markers: [], staff: [], checkpoints: [] };
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
+        attribution: 'OpenStreetMap contributors',
         maxZoom: 19,
     }).addTo(map);
 
@@ -536,7 +536,7 @@ if (sosDetailMapElement) {
     const map = L.map(sosDetailMapElement, { zoomControl: true }).setView([lat, lng], 17);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
+        attribution: 'OpenStreetMap contributors',
         maxZoom: 19,
     }).addTo(map);
 
@@ -564,17 +564,22 @@ if (trackingMapElement) {
     const person = document.getElementById('tracking-person');
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
+        attribution: 'OpenStreetMap contributors',
         maxZoom: 19,
     }).addTo(map);
 
     const setText = (id, value) => {
         const element = document.getElementById(id);
-        element.textContent = `${value ?? '—'}${value !== null && value !== undefined ? element.dataset.suffix : ''}`;
+        element.textContent = `${value ?? '-'}${value !== null && value !== undefined ? element.dataset.suffix : ''}`;
     };
 
     const renderTimeline = (points) => {
         timeline.innerHTML = '';
+        if (!points.length) {
+            timeline.innerHTML = '<p class="py-10 text-center text-sm text-slate-500">Tidak ada titik GPS pada tanggal ini.</p>';
+            return;
+        }
+
         points.forEach((point, index) => {
             const item = document.createElement('button');
             item.type = 'button';
@@ -585,7 +590,7 @@ if (trackingMapElement) {
                 ${index < points.length - 1 ? '<span class="absolute left-[13px] top-7 h-[calc(100%-1.25rem)] w-px bg-slate-200"></span>' : ''}
                 <span><strong class="block text-sm">Pukul ${time}</strong>
                 <small class="mt-1 block text-slate-500">${Number(point.latitude).toFixed(7)}, ${Number(point.longitude).toFixed(7)}</small>
-                <small class="block text-slate-400">Akurasi ${point.accuracy ?? '-'} m · Battery ${point.battery ?? '-'}%</small></span>`;
+                <small class="block text-slate-400">Akurasi ${point.accuracy ?? '-'} m - Battery ${point.battery ?? '-'}%</small></span>`;
             item.addEventListener('click', () => map.flyTo([point.latitude, point.longitude], 18));
             timeline.appendChild(item);
         });
@@ -620,7 +625,7 @@ if (trackingMapElement) {
                         weight: 2,
                         fillColor: color,
                         fillOpacity: 1,
-                    }).bindTooltip(`Titik ${point.sequence} · ${new Date(point.recorded_at).toLocaleTimeString('id-ID')}`).addTo(routeLayer);
+                    }).bindTooltip(`Titik ${point.sequence} - ${new Date(point.recorded_at).toLocaleTimeString('id-ID')}`).addTo(routeLayer);
                 });
                 map.fitBounds(coordinates, { padding: [35, 35], maxZoom: 17 });
             }
@@ -629,7 +634,7 @@ if (trackingMapElement) {
             setText('tracking-distance', payload.summary.total_distance_km);
             setText('tracking-start', payload.summary.started_at ? new Date(payload.summary.started_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : null);
             setText('tracking-end', payload.summary.ended_at ? new Date(payload.summary.ended_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : null);
-            person.textContent = `${payload.pilgrim.name} · ${payload.pilgrim.registration_number} · Data GPS`;
+            person.textContent = `${payload.pilgrim.name} - ${payload.pilgrim.registration_number} - Data GPS`;
             renderTimeline(payload.points);
             empty.classList.toggle('hidden', coordinates.length > 0);
         } catch (error) {
