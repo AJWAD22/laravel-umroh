@@ -347,8 +347,8 @@
 
         @if ($hasLocationPicker)
             @php
-                $latitudeValue = $value('latitude');
-                $longitudeValue = $value('longitude');
+                $latitudeValue = filled($value('latitude')) ? $value('latitude') : '';
+                $longitudeValue = filled($value('longitude')) ? $value('longitude') : '';
                 $pickerCity = $value('city', 'makkah');
             @endphp
             <section class="mt-7 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"

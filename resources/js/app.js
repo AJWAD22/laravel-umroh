@@ -100,15 +100,29 @@ document.querySelectorAll('[data-location-picker]').forEach((picker) => {
         jeddah: { label: 'Pusat Jeddah', lat: 21.543333, lng: 39.172778, zoom: 12 },
         other: { label: 'Arab Saudi', lat: 23.885942, lng: 45.079162, zoom: 5 },
     };
-    const initialLat = Number(picker.dataset.lat);
-    const initialLng = Number(picker.dataset.lng);
+    const parseCoordinate = (value) => {
+        if (value === null || value === undefined || String(value).trim() === '') {
+            return null;
+        }
+
+        const coordinate = Number(value);
+        return Number.isFinite(coordinate) ? coordinate : null;
+    };
+    const initialLat = parseCoordinate(picker.dataset.lat);
+    const initialLng = parseCoordinate(picker.dataset.lng);
     const initialPreset = presets[picker.dataset.city] || presets.makkah;
-    const initialPosition = Number.isFinite(initialLat) && Number.isFinite(initialLng)
+    const initialPosition = initialLat !== null && initialLng !== null
         ? { lat: initialLat, lng: initialLng, zoom: 16 }
         : initialPreset;
     const map = L.map(mapElement, { zoomControl: true }).setView([initialPosition.lat, initialPosition.lng], initialPosition.zoom);
     let marker = null;
     let circle = null;
+    const pickerIcon = L.divIcon({
+        className: '',
+        html: '<span class="grid size-9 place-items-center rounded-full border-2 border-white bg-blue-600 text-xs font-bold text-white shadow-lg">T</span>',
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
+    });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: 'OpenStreetMap contributors',
@@ -147,7 +161,7 @@ document.querySelectorAll('[data-location-picker]').forEach((picker) => {
         if (marker) {
             marker.setLatLng([cleanLat, cleanLng]);
         } else {
-            marker = L.marker([cleanLat, cleanLng], { draggable: true }).addTo(map);
+            marker = L.marker([cleanLat, cleanLng], { draggable: true, icon: pickerIcon }).addTo(map);
             marker.on('dragend', () => {
                 const position = marker.getLatLng();
                 setLocation(position.lat, position.lng, 'Titik dipindahkan dari marker', map.getZoom());
@@ -227,9 +241,11 @@ document.querySelectorAll('[data-location-picker]').forEach((picker) => {
         }
     });
 
-    if (Number.isFinite(initialLat) && Number.isFinite(initialLng)) {
+    if (initialLat !== null && initialLng !== null) {
         setLocation(initialLat, initialLng, 'Lokasi tersimpan', 16);
     } else {
+        latDisplay.value = 'Belum dipilih';
+        lngDisplay.value = 'Belum dipilih';
         setMessage('Peta sudah diarahkan ke kota default. Klik titik tujuan yang benar.', 'neutral');
     }
 
