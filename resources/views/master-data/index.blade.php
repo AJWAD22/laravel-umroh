@@ -102,6 +102,18 @@
                 </div>
             </div>
         </section>
+        <section class="mb-5 grid gap-3 md:grid-cols-3">
+            @foreach ([
+                ['Umum Cabang', 'Kosongkan paket dan rombongan jika titik berlaku untuk semua perjalanan cabang.'],
+                ['Khusus Paket', 'Pilih paket jika titik harus terlihat untuk semua jamaah yang mengambil paket tersebut.'],
+                ['Khusus Rombongan', 'Pilih rombongan jika titik hanya dipakai oleh satu rombongan, misalnya titik kumpul harian.'],
+            ] as $scope)
+                <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <h2 class="text-sm font-extrabold text-slate-950 dark:text-white">{{ $scope[0] }}</h2>
+                    <p class="mt-2 text-xs leading-5 text-slate-500">{{ $scope[1] }}</p>
+                </article>
+            @endforeach
+        </section>
     @endif
 
     @if ($resource === 'groups' && session('reset_pins'))

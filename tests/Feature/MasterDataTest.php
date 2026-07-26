@@ -98,9 +98,28 @@ class MasterDataTest extends TestCase
             ->get(route('master-data.create', 'checkpoints'))
             ->assertOk()
             ->assertSee('Pilih Lokasi dari Peta')
+            ->assertSee('Titik ini muncul di mobile sesuai paket atau rombongan')
+            ->assertSee('Umum Cabang')
+            ->assertSee('Khusus Paket')
+            ->assertSee('Khusus Rombongan')
+            ->assertSee('Kategori Titik Kumpul dan Hotel dipakai sebagai radius aman tracking')
             ->assertSee('data-location-picker', false)
             ->assertSee('name="latitude"', false)
             ->assertSee('name="longitude"', false);
+    }
+
+    public function test_checkpoint_index_explains_scope_for_mobile_monitoring_and_geofence(): void
+    {
+        [$admin] = $this->branchAdmin('CPI');
+
+        $this->actingAs($admin)
+            ->get(route('master-data.index', 'checkpoints'))
+            ->assertOk()
+            ->assertSeeText('Titik Tujuan & Kumpul dipakai oleh aplikasi dan monitoring')
+            ->assertSee('Umum Cabang')
+            ->assertSee('Khusus Paket')
+            ->assertSee('Khusus Rombongan')
+            ->assertSee('Koordinat dipilih lewat peta');
     }
 
     public function test_branch_admin_manages_package_departures_from_supporting_data(): void

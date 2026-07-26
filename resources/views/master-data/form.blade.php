@@ -37,6 +37,12 @@
         ['title' => '3. Jadwal harian', 'description' => 'Tulis agenda per hari agar jamaah melihat rencana perjalanan di landing dan portal.'],
         ['title' => '4. Publikasi', 'description' => 'Gunakan status Terjadwal dan Tampil di Landing Page jika paket sudah siap dipilih.'],
     ];
+    $checkpointGuide = [
+        ['title' => 'Umum Cabang', 'description' => 'Kosongkan paket dan rombongan untuk titik umum cabang.'],
+        ['title' => 'Khusus Paket', 'description' => 'Pilih paket agar titik terlihat untuk semua jamaah paket tersebut.'],
+        ['title' => 'Khusus Rombongan', 'description' => 'Pilih rombongan untuk titik kumpul khusus satu rombongan.'],
+        ['title' => 'Geofence', 'description' => 'Kategori Titik Kumpul dan Hotel dipakai sebagai radius aman tracking.'],
+    ];
     $fields = match ($resource) {
         'branches' => [
             ['code','Kode Cabang','text'], ['name','Nama Cabang','text'], ['city','Kota','text'], ['province','Provinsi','text'],
@@ -185,6 +191,14 @@
                     </div>
                 </div>
             </section>
+            <section class="mb-7 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                @foreach ($checkpointGuide as $guide)
+                    <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                        <h2 class="text-sm font-extrabold text-slate-950 dark:text-white">{{ $guide['title'] }}</h2>
+                        <p class="mt-2 text-xs leading-5 text-slate-500">{{ $guide['description'] }}</p>
+                    </article>
+                @endforeach
+            </section>
         @endif
 
         <div class="grid gap-x-6 gap-y-5 md:grid-cols-2">
@@ -221,6 +235,19 @@
                                class="control-field w-full border p-2">
                         <span class="mt-1 block text-xs text-slate-500">JPG, PNG, atau WebP. Maksimal 2 MB.</span>
                     @elseif ($type === 'select')
+                        @if ($resource === 'checkpoints' && $name === 'departure_id')
+                            <div class="mb-2 rounded-xl bg-blue-50 p-3 text-xs leading-5 text-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
+                                Pilih paket jika titik ini harus dikirim ke semua jamaah dalam paket perjalanan tersebut.
+                            </div>
+                        @elseif ($resource === 'checkpoints' && $name === 'group_id')
+                            <div class="mb-2 rounded-xl bg-violet-50 p-3 text-xs leading-5 text-violet-900 dark:bg-violet-950/30 dark:text-violet-100">
+                                Pilih rombongan jika titik ini hanya dipakai oleh rombongan tertentu. Rombongan harus berasal dari paket yang sama.
+                            </div>
+                        @elseif ($resource === 'checkpoints' && $name === 'category')
+                            <div class="mb-2 rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
+                                Kategori Titik Kumpul dan Hotel dipakai oleh geofence. Kategori lain tetap tampil sebagai tujuan/navigasi.
+                            </div>
+                        @endif
                         <select name="{{ $name }}" class="control-field w-full">
                             <option value="">Pilih {{ str($label)->lower() }}</option>
                             @foreach ($choices as $optionValue => $optionLabel)
