@@ -61,12 +61,24 @@
                         'verified' => 'Lunas',
                         'cancelled' => 'Dibatalkan',
                     ];
+                    $nextActionMap = [
+                        'draft' => ['Lengkapi biodata dan dokumen, lalu kirim untuk verifikasi cabang.', 'Isi Biodata'],
+                        'submitted' => ['Biodata sudah dikirim. Tunggu Admin Cabang memeriksa data dan dokumen Anda.', 'Lihat Detail Paket'],
+                        'revision_requested' => ['Perbaiki catatan dari Admin Cabang, lalu kirim ulang pendaftaran.', 'Perbaiki Biodata'],
+                        'approved' => ['Datang atau hubungi kantor cabang untuk menyelesaikan pembayaran sesuai arahan travel.', 'Lihat Detail Paket'],
+                        'in_group' => ['Anda sudah masuk rombongan. Simpan informasi cabang dan tunggu arahan aktivasi aplikasi dari travel.', 'Lihat Detail Paket'],
+                        'rejected' => ['Pendaftaran ditolak. Hubungi cabang jika membutuhkan penjelasan lebih lanjut.', 'Lihat Paket Lain'],
+                        'cancelled' => ['Pendaftaran dibatalkan. Anda dapat memilih paket lain jika ingin mendaftar kembali.', 'Lihat Paket Lain'],
+                    ];
                     [$statusLabel, $statusClass, $progress] = $statusMap[$registration->status] ?? [str($registration->status)->replace('_', ' ')->title(), 'bg-slate-100 text-slate-700', 1];
+                    [$nextAction, $buttonLabel] = $nextActionMap[$registration->status] ?? ['Ikuti arahan Admin Cabang untuk melanjutkan proses pendaftaran.', 'Lanjutkan Pendaftaran'];
                     $steps = ['Pilih Paket', 'Isi Biodata', 'Verifikasi', 'Pembayaran', 'Masuk Rombongan'];
                     $biodataComplete = filled($registration->nik) && filled($registration->gender) && filled($registration->birth_date) && filled($registration->address) && filled($registration->emergency_contact_name) && filled($registration->emergency_contact_phone);
                     $continueRoute = in_array($registration->status, ['draft', 'revision_requested'], true)
                         ? route('portal.biodata.edit')
-                        : route('portal.packages.show', $registration->departure);
+                        : (in_array($registration->status, ['cancelled', 'rejected'], true)
+                            ? route('portal.packages.index')
+                            : route('portal.packages.show', $registration->departure));
                 @endphp
                 <article class="travel-panel overflow-hidden">
                     <div class="grid lg:grid-cols-[1fr_360px]">
@@ -90,13 +102,20 @@
                                 <p><strong class="block text-xs uppercase text-slate-400">Kelengkapan biodata</strong>{{ $biodataComplete ? 'Lengkap' : 'Belum lengkap' }}</p>
                                 <p><strong class="block text-xs uppercase text-slate-400">Status verifikasi</strong>{{ $statusLabel }}</p>
                                 <p><strong class="block text-xs uppercase text-slate-400">Status pembayaran</strong>{{ $paymentMap[$registration->payment_status] ?? str($registration->payment_status)->replace('_', ' ')->title() }}</p>
+                                <p><strong class="block text-xs uppercase text-slate-400">Jadwal berangkat</strong>{{ $registration->departure?->departure_date?->translatedFormat('d M Y') ?: '-' }}</p>
+                                <p><strong class="block text-xs uppercase text-slate-400">Hotel</strong>{{ $registration->departure?->hotels?->pluck('name')->take(2)->join(' & ') ?: 'Menunggu informasi hotel' }}</p>
                             </div>
 
                             @if ($registration->revision_notes)
                                 <div class="mt-5 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm font-semibold leading-6 text-orange-900">{{ $registration->revision_notes }}</div>
                             @endif
 
-                            <a href="{{ $continueRoute }}" class="button-primary mt-6">Lanjutkan Pendaftaran</a>
+                            <div class="mt-6 rounded-2xl border border-teal-200 bg-teal-50 p-4 text-sm leading-6 text-teal-950">
+                                <p class="text-xs font-extrabold uppercase tracking-[.14em] text-teal-700">Langkah Berikutnya</p>
+                                <p class="mt-2">{{ $nextAction }}</p>
+                            </div>
+
+                            <a href="{{ $continueRoute }}" class="button-primary mt-6">{{ $buttonLabel }}</a>
                         </div>
                         <aside class="border-t border-slate-200 bg-slate-50 p-6 lg:border-l lg:border-t-0">
                             <p class="text-xs font-bold uppercase tracking-[.14em] text-amber-700">Cabang Pelayanan</p>
@@ -105,6 +124,10 @@
                             @if ($registration->branch?->phone)
                                 <a href="https://wa.me/{{ preg_replace('/\D+/', '', $registration->branch->phone) }}" target="_blank" rel="noopener" class="button-secondary mt-4 w-full">Hubungi Cabang</a>
                             @endif
+                            <div class="mt-5 rounded-2xl bg-white p-4 text-sm leading-6 text-slate-600">
+                                <p class="font-extrabold text-slate-900">Pembayaran</p>
+                                <p class="mt-1">Pembayaran dilakukan melalui kantor cabang travel. Status akan diperbarui oleh Admin Cabang setelah pembayaran dicatat.</p>
+                            </div>
                         </aside>
                     </div>
                 </article>

@@ -172,7 +172,10 @@ class PublicPackageRegistrationTest extends TestCase
 
         $this->get(route('portal.packages.index'))
             ->assertOk()
-            ->assertSee('Umroh Publik 12 Hari');
+            ->assertSee('Umroh Publik 12 Hari')
+            ->assertSee('Pilih paket lebih dulu')
+            ->assertSee('Bandingkan tanggal, hotel, maskapai, harga, dan kuota')
+            ->assertSee('Pembayaran dicatat melalui kantor cabang travel');
 
         $this->post(route('portal.packages.select', $departure))
             ->assertRedirect(route('portal.biodata.edit'));
@@ -606,7 +609,10 @@ class PublicPackageRegistrationTest extends TestCase
         $this->actingAs($jamaah)
             ->get(route('portal.dashboard'))
             ->assertOk()
-            ->assertSee('Mohon perbaiki catatan dokumen.');
+            ->assertSee('Mohon perbaiki catatan dokumen.')
+            ->assertSee('Langkah Berikutnya')
+            ->assertSee('Perbaiki catatan dari Admin Cabang, lalu kirim ulang pendaftaran')
+            ->assertSee('Perbaiki Biodata');
 
         $this->actingAs($jamaah)
             ->post(route('portal.biodata.store'), [
@@ -658,7 +664,10 @@ class PublicPackageRegistrationTest extends TestCase
             ->get(route('portal.dashboard'))
             ->assertOk()
             ->assertSee('Masuk Rombongan')
-            ->assertSee('Lunas');
+            ->assertSee('Lunas')
+            ->assertSee('Anda sudah masuk rombongan')
+            ->assertSee('Pembayaran dilakukan melalui kantor cabang travel')
+            ->assertSee('Umroh Simulasi 10 Hari');
 
         $pilgrim = Pilgrim::where('user_id', $jamaah->id)->firstOrFail();
         $this->assertDatabaseHas('group_members', [
