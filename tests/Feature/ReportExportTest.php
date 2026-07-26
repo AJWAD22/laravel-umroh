@@ -49,8 +49,10 @@ class ReportExportTest extends TestCase
         ];
 
         $expectations = [
+            'all' => ['Jamaah Laporan A', 'Jamaah Rahasia B'],
             'pilgrims' => ['Jamaah Laporan A', 'Jamaah Rahasia B'],
             'tracking' => ['Jamaah Laporan A', 'Jamaah Rahasia B'],
+            'sos' => ['Jamaah Laporan A', 'Jamaah Rahasia B'],
         ];
 
         foreach ($expectations as $type => [$visible, $hidden]) {
@@ -66,12 +68,13 @@ class ReportExportTest extends TestCase
     {
         [$superAdmin] = $this->scenario();
 
-        foreach (['pilgrims', 'tracking'] as $type) {
+        foreach (['all', 'pilgrims', 'tracking', 'sos'] as $type) {
             $this->actingAs($superAdmin)
                 ->get(route('reports.index', $type))
                 ->assertOk()
                 ->assertSee('Export PDF')
-                ->assertSee('Export Excel');
+                ->assertSee('Export Excel')
+                ->assertSee('Preview Laporan');
         }
     }
 
