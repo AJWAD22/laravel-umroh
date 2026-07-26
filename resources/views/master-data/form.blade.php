@@ -31,6 +31,12 @@
         default => 'Data',
     };
     $hasLocationPicker = in_array($resource, ['hotels', 'checkpoints'], true);
+    $departureGuide = [
+        ['title' => '1. Data dasar', 'description' => 'Isi nama paket, tanggal berangkat-pulang, harga, kuota, dan kota/bandara keberangkatan.'],
+        ['title' => '2. Hotel & pesawat', 'description' => 'Pilih hotel Makkah/Madinah yang sudah dibuat, lalu isi maskapai dan nomor penerbangan.'],
+        ['title' => '3. Jadwal harian', 'description' => 'Tulis agenda per hari agar jamaah melihat rencana perjalanan di landing dan portal.'],
+        ['title' => '4. Publikasi', 'description' => 'Gunakan status Terjadwal dan Tampil di Landing Page jika paket sudah siap dipilih.'],
+    ];
     $fields = match ($resource) {
         'branches' => [
             ['code','Kode Cabang','text'], ['name','Nama Cabang','text'], ['city','Kota','text'], ['province','Provinsi','text'],
@@ -151,6 +157,14 @@
                     </div>
                 </div>
             </section>
+            <section class="mb-7 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                @foreach ($departureGuide as $guide)
+                    <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                        <h2 class="text-sm font-extrabold text-slate-950 dark:text-white">{{ $guide['title'] }}</h2>
+                        <p class="mt-2 text-xs leading-5 text-slate-500">{{ $guide['description'] }}</p>
+                    </article>
+                @endforeach
+            </section>
         @elseif ($resource === 'hotels')
             <section class="mb-7 rounded-2xl border border-teal-200 bg-teal-50/80 p-4 text-sm leading-6 text-teal-950 dark:border-teal-900 dark:bg-teal-950/30 dark:text-teal-100">
                 <div class="flex gap-3">
@@ -215,6 +229,11 @@
                         </select>
                     @elseif ($type === 'multiselect')
                         @php $selectedValues = collect($current ?? [])->map(fn ($item) => (string) $item)->all(); @endphp
+                        @if ($resource === 'departures' && $name === 'hotel_ids')
+                            <div class="mb-2 rounded-xl bg-teal-50 p-3 text-xs leading-5 text-teal-900 dark:bg-teal-950/30 dark:text-teal-100">
+                                Pilih minimal satu hotel Makkah dan satu hotel Madinah jika tersedia. Jika daftar kosong, buat data hotel terlebih dahulu di menu Hotel.
+                            </div>
+                        @endif
                         <select name="{{ $name }}[]" multiple class="control-field min-h-32 w-full">
                             @foreach ($choices as $optionValue => $optionLabel)
                                 <option value="{{ $optionValue }}" @selected(in_array((string) $optionValue, $selectedValues, true))>{{ $optionLabel }}</option>
@@ -228,8 +247,13 @@
                     @elseif ($type === 'textarea')
                         <textarea name="{{ $name }}" rows="4" class="control-field w-full">{{ $current }}</textarea>
                     @elseif ($type === 'itinerary')
+                        @if ($resource === 'departures')
+                            <div class="mb-2 rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
+                                Jadwal harian boleh diisi bertahap. Nomor hari tidak boleh melebihi durasi paket dari tanggal berangkat sampai pulang.
+                            </div>
+                        @endif
                         <textarea name="{{ $name }}" rows="7" class="control-field w-full" placeholder="1|Berangkat dari Indonesia|Jeddah|Penerbangan dan proses imigrasi.&#10;2|Umroh pertama|Makkah|Thawaf, sai, dan tahallul.">{{ $current }}</textarea>
-                        <span class="mt-1.5 block text-xs leading-5 text-slate-500">Tulis satu agenda per baris dengan format: hari|judul kegiatan|kota|keterangan singkat. Contoh: 1|Berangkat dari Indonesia|Jeddah|Penerbangan dan proses imigrasi.</span>
+                        <span class="mt-1.5 block text-xs leading-5 text-slate-500">Format per baris: hari|judul kegiatan|kota|keterangan singkat. Contoh: 1|Berangkat dari Indonesia|Jeddah|Penerbangan dan proses imigrasi.</span>
                     @elseif ($type === 'boolean')
                         <select name="{{ $name }}" class="control-field w-full">
                             <option value="1" @selected((string) $current === '1')>Aktif</option>

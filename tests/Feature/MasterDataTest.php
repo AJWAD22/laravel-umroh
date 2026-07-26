@@ -115,6 +115,22 @@ class MasterDataTest extends TestCase
             ->assertSee('Tambah Paket Perjalanan');
     }
 
+    public function test_package_departure_form_guides_branch_admin_through_operational_input(): void
+    {
+        [$admin] = $this->branchAdmin('PFR');
+
+        $this->actingAs($admin)
+            ->get(route('master-data.create', 'departures'))
+            ->assertOk()
+            ->assertSee('Paket ini menjadi sumber data landing page dan pilihan jamaah')
+            ->assertSee('1. Data dasar')
+            ->assertSee('2. Hotel &amp; pesawat', false)
+            ->assertSee('3. Jadwal harian')
+            ->assertSee('4. Publikasi')
+            ->assertSee('Jika daftar kosong, buat data hotel terlebih dahulu')
+            ->assertSee('Nomor hari tidak boleh melebihi durasi paket');
+    }
+
     public function test_branch_admin_creates_tour_leader_with_a_mobile_login_account(): void
     {
         [$admin, $branch] = $this->branchAdmin('BJM');
