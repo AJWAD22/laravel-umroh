@@ -13,6 +13,7 @@
 @php
     $whatsapp = preg_replace('/\D+/', '', (string) $travel['whatsapp']);
     $whatsappUrl = $whatsapp ? 'https://wa.me/'.$whatsapp : '#kontak';
+    $legalBadge = $travel['license'] ? 'PPIU '.$travel['license'] : 'Legalitas dapat dikonfirmasi';
 @endphp
 <body class="bg-white font-sans text-slate-900 antialiased">
 <header
@@ -64,7 +65,7 @@
     <div class="relative mx-auto flex min-h-screen max-w-7xl items-end px-5 pb-24 pt-32 lg:px-8">
         <div class="max-w-4xl">
             <p class="inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.16em] text-teal-100 backdrop-blur">
-                PPIU resmi - Pendamping berpengalaman
+                {{ $legalBadge }} - Pendamping berpengalaman
             </p>
             <h1 class="mt-6 max-w-4xl text-4xl font-extrabold leading-tight sm:text-6xl lg:text-7xl">
                 Perjalanan Ibadah yang Aman, Nyaman, dan Terpantau
@@ -81,7 +82,7 @@
                 </a>
             </div>
             <div class="mt-10 grid max-w-4xl gap-3 text-sm font-semibold text-slate-100 sm:grid-cols-2 lg:grid-cols-4">
-                @foreach (['PPIU resmi', 'Pendamping berpengalaman', 'Monitoring jamaah selama perjalanan', 'Pembayaran melalui kantor cabang'] as $item)
+                @foreach ([$legalBadge, 'Pendamping berpengalaman', 'Monitoring jamaah selama perjalanan', 'Pembayaran melalui kantor cabang'] as $item)
                     <div class="flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
                         <i data-lucide="check-circle-2" class="size-4 shrink-0 text-teal-300"></i>
                         <span>{{ $item }}</span>
@@ -120,7 +121,7 @@
             </div>
 
             <div class="mt-10 grid gap-6 lg:grid-cols-3">
-                @foreach ($packages as $package)
+                @forelse ($packages as $package)
                     <article class="overflow-hidden rounded-[1.15rem] border border-slate-200 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.07)]">
                         <img src="{{ $package['image'] }}" alt="Foto {{ $package['name'] }}" class="h-56 w-full object-cover">
                         <div class="p-6">
@@ -145,7 +146,26 @@
                             </div>
                         </div>
                     </article>
-                @endforeach
+                @empty
+                    <article class="rounded-[1.15rem] border border-dashed border-slate-300 bg-white p-8 shadow-sm lg:col-span-3">
+                        <div class="grid gap-6 lg:grid-cols-[1fr_0.9fr] lg:items-center">
+                            <div>
+                                <span class="grid size-12 place-items-center rounded-2xl bg-teal-50 text-teal-700"><i data-lucide="plane" class="size-5"></i></span>
+                                <h3 class="mt-5 text-2xl font-extrabold text-[#071827]">Paket keberangkatan sedang disiapkan.</h3>
+                                <p class="mt-3 max-w-2xl leading-7 text-slate-600">Jadwal paket terbaru belum dibuka untuk pendaftaran online. Tim kami tetap dapat membantu konsultasi jadwal, estimasi biaya, dan persyaratan keberangkatan melalui WhatsApp.</p>
+                                <a href="{{ $whatsappUrl }}" target="{{ $whatsapp ? '_blank' : '_self' }}" rel="noopener" class="mt-6 inline-flex min-h-12 items-center justify-center rounded-2xl bg-teal-600 px-6 text-sm font-extrabold text-white hover:bg-teal-500">Konsultasi Jadwal</a>
+                            </div>
+                            <div class="rounded-[1.15rem] bg-slate-50 p-5">
+                                <p class="text-sm font-extrabold uppercase tracking-[0.16em] text-teal-700">Informasi yang bisa ditanyakan</p>
+                                <ul class="mt-4 space-y-3 text-sm font-semibold text-slate-700">
+                                    <li class="flex gap-3"><i data-lucide="check-circle-2" class="mt-0.5 size-4 shrink-0 text-teal-700"></i>Estimasi jadwal keberangkatan.</li>
+                                    <li class="flex gap-3"><i data-lucide="check-circle-2" class="mt-0.5 size-4 shrink-0 text-teal-700"></i>Persyaratan dokumen jamaah.</li>
+                                    <li class="flex gap-3"><i data-lucide="check-circle-2" class="mt-0.5 size-4 shrink-0 text-teal-700"></i>Kantor cabang pelayanan terdekat.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+                @endforelse
             </div>
         </div>
     </section>
@@ -200,15 +220,15 @@
                 <div class="mt-7 grid gap-4 sm:grid-cols-3">
                     <div class="rounded-[1.15rem] border border-slate-200 bg-white p-5">
                         <p class="text-sm text-slate-500">Nomor izin PPIU</p>
-                        <p class="mt-2 font-extrabold text-[#071827]">{{ $travel['license'] ?: 'Lengkapi di pengaturan sistem' }}</p>
+                        <p class="mt-2 font-extrabold text-[#071827]">{{ $travel['license'] ?: 'Konfirmasi melalui kantor' }}</p>
                     </div>
                     <div class="rounded-[1.15rem] border border-slate-200 bg-white p-5">
-                        <p class="text-sm text-slate-500">Pengalaman</p>
-                        <p class="mt-2 font-extrabold text-[#071827]">Pendampingan keberangkatan umroh</p>
+                        <p class="text-sm text-slate-500">Paket aktif</p>
+                        <p class="mt-2 font-extrabold text-[#071827]">{{ number_format($stats['public_packages']) }} paket</p>
                     </div>
                     <div class="rounded-[1.15rem] border border-slate-200 bg-white p-5">
-                        <p class="text-sm text-slate-500">Jamaah diberangkatkan</p>
-                        <p class="mt-2 font-extrabold text-[#071827]">Lengkapi dengan data resmi travel</p>
+                        <p class="text-sm text-slate-500">Cabang aktif</p>
+                        <p class="mt-2 font-extrabold text-[#071827]">{{ number_format($stats['active_branches']) }} cabang</p>
                     </div>
                 </div>
             </div>
@@ -224,24 +244,17 @@
         <div class="mx-auto max-w-7xl px-5 lg:px-8">
             <div class="grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
                 <div>
-                    <p class="text-sm font-extrabold uppercase tracking-[0.16em] text-teal-700">Testimoni & Galeri</p>
-                    <h2 class="mt-3 text-3xl font-extrabold text-[#071827] sm:text-4xl">Gunakan testimoni nyata dari jamaah.</h2>
-                    <p class="mt-5 leading-8 text-slate-600">Bagian ini disiapkan tanpa nama palsu. Isi dengan dokumentasi keberangkatan, hotel, manasik, dan pendamping perjalanan yang benar-benar milik travel.</p>
-                    <div class="mt-7 rounded-[1.15rem] border border-amber-200 bg-amber-50 p-5 text-sm font-semibold leading-7 text-amber-900">
-                        Belum ada testimoni resmi yang ditampilkan agar tidak terlihat seperti ulasan palsu.
-                    </div>
+                    <p class="text-sm font-extrabold uppercase tracking-[0.16em] text-teal-700">Layanan Jamaah</p>
+                    <h2 class="mt-3 text-3xl font-extrabold text-[#071827] sm:text-4xl">Pendampingan dibuat jelas dari awal.</h2>
+                    <p class="mt-5 leading-8 text-slate-600">Calon jamaah mendapat informasi paket, cabang pelayanan, alur biodata, dan status pendaftaran secara bertahap sehingga proses tidak membingungkan.</p>
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2">
-                    @foreach ([
-                        ['Keberangkatan jamaah','https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?auto=format&fit=crop&w=800&q=80'],
-                        ['Hotel jamaah','https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'],
-                        ['Kegiatan manasik','https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=800&q=80'],
-                        ['Pendamping perjalanan','https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80'],
-                    ] as $gallery)
-                        <figure class="overflow-hidden rounded-[1.15rem] bg-white shadow-sm">
-                            <img src="{{ $gallery[1] }}" alt="{{ $gallery[0] }}" class="h-44 w-full object-cover">
-                            <figcaption class="p-4 text-sm font-extrabold text-[#071827]">{{ $gallery[0] }}</figcaption>
-                        </figure>
+                    @foreach ([['clipboard-list','Pendaftaran bertahap','Akun dibuat lebih dulu, lalu biodata dan dokumen dilengkapi setelah memilih paket.'],['building-2','Verifikasi cabang','Admin cabang memeriksa biodata, dokumen, dan pembayaran secara langsung.'],['users','Rombongan jelas','Jamaah yang diterima ditempatkan ke rombongan sesuai paket dan cabang.'],['shield-check','Bantuan perjalanan','Aplikasi membantu jadwal, titik kumpul, monitoring, dan SOS saat perjalanan.']] as $service)
+                        <article class="rounded-[1.15rem] border border-slate-200 bg-white p-5 shadow-sm">
+                            <span class="grid size-11 place-items-center rounded-2xl bg-teal-50 text-teal-700"><i data-lucide="{{ $service[0] }}" class="size-5"></i></span>
+                            <h3 class="mt-4 font-extrabold text-[#071827]">{{ $service[1] }}</h3>
+                            <p class="mt-2 text-sm leading-6 text-slate-600">{{ $service[2] }}</p>
+                        </article>
                     @endforeach
                 </div>
             </div>
@@ -290,10 +303,20 @@
                 <h3 class="text-xl font-extrabold">Daftar Cabang</h3>
                 <div class="mt-5 grid gap-4">
                     @forelse ($branches as $branch)
+                        @php
+                            $branchPhone = preg_replace('/\D+/', '', (string) $branch->phone);
+                            if (str_starts_with($branchPhone, '0')) {
+                                $branchPhone = '62'.substr($branchPhone, 1);
+                            } elseif (str_starts_with($branchPhone, '8')) {
+                                $branchPhone = '62'.$branchPhone;
+                            }
+                        @endphp
                         <div class="rounded-2xl bg-white/[0.08] p-4">
                             <p class="font-extrabold">{{ $branch->name }}</p>
                             <p class="mt-1 text-sm text-slate-300">{{ $branch->city ?: $branch->address }}</p>
-                            @if ($branch->phone)<p class="mt-1 text-sm text-teal-200">{{ $branch->phone }}</p>@endif
+                            @if ($branch->phone)
+                                <a href="https://wa.me/{{ $branchPhone }}" target="_blank" rel="noopener" class="mt-2 inline-flex text-sm font-bold text-teal-200 hover:text-teal-100">WhatsApp {{ $branch->phone }}</a>
+                            @endif
                         </div>
                     @empty
                         <p class="rounded-2xl bg-white/[0.08] p-4 text-sm leading-7 text-slate-300">Data cabang belum tersedia. Lengkapi dari pengaturan cabang.</p>

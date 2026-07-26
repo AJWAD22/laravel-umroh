@@ -4,9 +4,9 @@ import Alpine from 'alpinejs';
 import Chart from 'chart.js/auto';
 import L from 'leaflet';
 import {
-    ArrowDown, ArrowRight, ArrowUp, ArrowUpDown, Bell, BookOpen, Building2, ChevronDown, ChevronRight,
-    CalendarDays, CalendarRange, CircleAlert, CircleCheck, ClipboardList, Clock, createIcons, Database, Hotel, Inbox, KeyRound, LayoutDashboard,
-    Eye, EyeOff, ListFilter, LockKeyhole, LogOut, Mail, Map, MapPinned, Menu, Moon,
+    ArrowDown, ArrowRight, ArrowUp, ArrowUpDown, BadgeCheck, Bell, BookOpen, Building2, ChevronDown, ChevronRight,
+    CalendarDays, CalendarRange, CheckCircle2, CircleAlert, CircleCheck, ClipboardList, Clock, createIcons, Database, FileCheck2, HeartHandshake, History, Hotel, Inbox, KeyRound, LayoutDashboard,
+    Eye, EyeOff, ListFilter, LockKeyhole, LogOut, Mail, Map, MapPin, MapPinned, Menu, Moon,
     PanelLeftClose, PanelLeftOpen, Pencil, Plane, Plus, RotateCcw, Save, Search, Settings,
     ShieldCheck, Siren, Sun, Trash2, TriangleAlert, UserRound, Wallet,
     UserRoundCheck, Users, UsersRound, X,
@@ -18,9 +18,9 @@ Alpine.start();
 
 createIcons({
     icons: {
-        ArrowDown, ArrowRight, ArrowUp, ArrowUpDown, Bell, BookOpen, Building2, CalendarDays, CalendarRange, ChevronDown,
-        ChevronRight, CircleAlert, CircleCheck, ClipboardList, Clock, Database, Eye, EyeOff, Hotel, Inbox, KeyRound,
-        LayoutDashboard, ListFilter, LockKeyhole, LogOut, Mail, Map, MapPinned, Menu, Moon,
+        ArrowDown, ArrowRight, ArrowUp, ArrowUpDown, BadgeCheck, Bell, BookOpen, Building2, CalendarDays, CalendarRange, CheckCircle2, ChevronDown,
+        ChevronRight, CircleAlert, CircleCheck, ClipboardList, Clock, Database, Eye, EyeOff, FileCheck2, HeartHandshake, History, Hotel, Inbox, KeyRound,
+        LayoutDashboard, ListFilter, LockKeyhole, LogOut, Mail, Map, MapPin, MapPinned, Menu, Moon,
         PanelLeftClose, PanelLeftOpen, Pencil, Plane, Plus, RotateCcw,
         Save, Search, Settings, ShieldCheck, Siren, Sun, Trash2, TriangleAlert, UserRound,
         UserRoundCheck, Users, UsersRound, Wallet, X,

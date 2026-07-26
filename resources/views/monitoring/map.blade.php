@@ -121,7 +121,20 @@
                     <span id="monitoring-connection" class="rounded-full bg-slate-200 px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:bg-slate-800">Menghubungkan</span>
                 </div>
                 <div id="monitoring-list" class="max-h-[360px] overflow-y-auto 2xl:max-h-[720px]"></div>
-                <div id="monitoring-empty" class="hidden p-8 text-center"><span class="mx-auto grid size-12 place-items-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800"><i data-lucide="users" class="size-5"></i></span><p class="mt-3 text-sm font-bold">Belum ada lokasi</p><p class="mt-1 text-xs leading-5 text-slate-500">Coba ubah filter atau pastikan aplikasi jamaah mengirim GPS.</p></div>
+                <div id="monitoring-empty" class="hidden p-6 text-center">
+                    <span class="mx-auto grid size-12 place-items-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800"><i data-lucide="users" class="size-5"></i></span>
+                    <p class="mt-3 text-sm font-bold">Belum ada lokasi</p>
+                    <p class="mt-1 text-xs leading-5 text-slate-500">Lokasi muncul setelah aplikasi jamaah aktif dan mengirim GPS.</p>
+                    <div class="mt-5 rounded-2xl bg-white p-4 text-left text-xs leading-5 text-slate-600 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800">
+                        <p class="font-bold text-slate-800 dark:text-slate-100">Checklist sebelum tracking tampil:</p>
+                        <ul class="mt-2 space-y-1.5">
+                            <li class="flex gap-2"><i data-lucide="circle-check" class="mt-0.5 size-3.5 shrink-0 text-emerald-600"></i> Jamaah sudah lunas dan masuk rombongan.</li>
+                            <li class="flex gap-2"><i data-lucide="circle-check" class="mt-0.5 size-3.5 shrink-0 text-emerald-600"></i> PIN aktivasi sudah dibuat oleh Admin Cabang.</li>
+                            <li class="flex gap-2"><i data-lucide="circle-check" class="mt-0.5 size-3.5 shrink-0 text-emerald-600"></i> Jamaah sudah login aplikasi dan mengizinkan lokasi.</li>
+                            <li class="flex gap-2"><i data-lucide="circle-check" class="mt-0.5 size-3.5 shrink-0 text-emerald-600"></i> Filter paket atau rombongan sesuai data jamaah.</li>
+                        </ul>
+                    </div>
+                </div>
             </aside>
 
             <div class="relative order-1 min-w-0 2xl:order-1">

@@ -47,6 +47,19 @@ class PublicPackageRegistrationTest extends TestCase
         $this->assertDatabaseCount('departure_itineraries', 20);
     }
 
+    public function test_landing_does_not_show_fake_package_cards_when_no_public_package_exists(): void
+    {
+        $this->seed(SystemSettingSeeder::class);
+
+        $this->get(route('landing'))
+            ->assertOk()
+            ->assertSee('Paket keberangkatan sedang disiapkan')
+            ->assertDontSee('Umroh Hemat')
+            ->assertDontSee('Umroh Premium')
+            ->assertDontSee('Rp25.900.000')
+            ->assertSee('Konsultasi Jadwal');
+    }
+
     public function test_public_package_detail_can_be_seen_before_creating_account(): void
     {
         $this->seed(PublicPackageDemoSeeder::class);
@@ -81,6 +94,23 @@ class PublicPackageRegistrationTest extends TestCase
         $this->get(route('landing'))
             ->assertOk()
             ->assertSee('https://wa.me/6285947566363', false);
+    }
+
+    public function test_landing_shows_branch_whatsapp_links_from_branch_data(): void
+    {
+        $this->seed(SystemSettingSeeder::class);
+        Branch::create([
+            'code' => 'WA',
+            'name' => 'Cabang WhatsApp',
+            'city' => 'Banjarmasin',
+            'phone' => '081234567890',
+            'is_active' => true,
+        ]);
+
+        $this->get(route('landing'))
+            ->assertOk()
+            ->assertSee('Cabang WhatsApp')
+            ->assertSee('https://wa.me/6281234567890', false);
     }
 
     public function test_selected_public_package_is_preserved_after_account_registration(): void

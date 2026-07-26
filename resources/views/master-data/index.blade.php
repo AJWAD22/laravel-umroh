@@ -16,7 +16,7 @@
         $resourceIcon = $resourceIcons[$resource] ?? 'database';
         $sectionLabel = match (true) {
             in_array($resource, ['branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs', 'groups'], true) => 'Data Master',
-            in_array($resource, ['departures', 'hotels', 'checkpoints'], true) => 'Data Pendukung Sistem',
+            in_array($resource, ['departures', 'hotels', 'checkpoints'], true) => 'Operasional Perjalanan',
             $resource === 'branches' => 'Organisasi',
             default => 'Data',
         };
@@ -75,6 +75,30 @@
                 <div>
                     <p class="font-bold">Paket Perjalanan dikelola oleh Admin Cabang.</p>
                     <p class="mt-1">Isi paket meliputi tanggal berangkat-pulang, hotel, pesawat, harga, kuota, fasilitas, persyaratan, dan jadwal harian. Super Admin dapat memantau seluruh paket, sedangkan input dan perubahan operasional dilakukan oleh cabang.</p>
+                </div>
+            </div>
+        </section>
+    @endif
+
+    @if ($resource === 'hotels')
+        <section class="mb-5 rounded-2xl border border-teal-200 bg-teal-50 p-5 text-sm leading-6 text-teal-950 dark:border-teal-900 dark:bg-teal-950/30 dark:text-teal-100">
+            <div class="flex items-start gap-3">
+                <i data-lucide="hotel" class="mt-0.5 size-5 shrink-0 text-teal-700 dark:text-teal-300"></i>
+                <div>
+                    <p class="font-bold">Hotel disiapkan sebagai data pilihan paket.</p>
+                    <p class="mt-1">Admin Cabang cukup input hotel Makkah dan Madinah sekali, lalu memilih hotel tersebut saat membuat Paket Perjalanan. Data hotel yang dipilih akan terlihat pada landing page dan portal jamaah.</p>
+                </div>
+            </div>
+        </section>
+    @endif
+
+    @if ($resource === 'checkpoints')
+        <section class="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
+            <div class="flex items-start gap-3">
+                <i data-lucide="map-pinned" class="mt-0.5 size-5 shrink-0 text-amber-700 dark:text-amber-300"></i>
+                <div>
+                    <p class="font-bold">Titik Tujuan & Kumpul dipakai oleh aplikasi dan monitoring.</p>
+                    <p class="mt-1">Gunakan kategori Titik Kumpul untuk lokasi kumpul jamaah, dan kategori lain untuk hotel, bandara, tempat ibadah, atau tujuan perjalanan. Koordinat dipilih lewat peta, bukan diketik manual.</p>
                 </div>
             </div>
         </section>

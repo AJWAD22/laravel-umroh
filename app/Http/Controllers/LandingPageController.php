@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Departure;
+use App\Models\Pilgrim;
 use App\Services\SystemSettingService;
 use Illuminate\Contracts\View\View;
 
@@ -31,14 +32,20 @@ class LandingPageController extends Controller
 
         return view('public.landing', [
             'travel' => $this->travelProfile(),
-            'packages' => $packages->isNotEmpty() ? $packages : collect($this->fallbackPackageCards()),
+            'packages' => $packages,
             'branches' => $this->activeBranches(),
+            'stats' => $this->stats(),
         ]);
     }
 
     public function show(Departure $departure): View
     {
-        abort_unless($departure->is_public && $departure->status === 'scheduled', 404);
+        abort_unless(
+            $departure->is_public
+                && $departure->status === 'scheduled'
+                && $departure->departure_date?->gte(today()),
+            404,
+        );
 
         $departure->load(['branch', 'hotels', 'itineraries']);
 
@@ -113,55 +120,6 @@ class LandingPageController extends Controller
         return isset($match[1]) ? 'Bintang '.$match[1] : 'Hotel pilihan';
     }
 
-    /** @return array<int, array<string, string>> */
-    private function fallbackPackageCards(): array
-    {
-        return [
-            [
-                'name' => 'Umroh Hemat',
-                'duration' => '9 hari',
-                'hotel_class' => 'Bintang 3',
-                'makkah_hotel' => 'Hotel Makkah bintang 3',
-                'madinah_hotel' => 'Hotel Madinah bintang 3',
-                'airline' => 'Lion Air',
-                'departure_city' => 'Jakarta',
-                'departure_date' => '12 September 2026',
-                'price' => 'Rp25.900.000',
-                'quota' => '18 kursi tersisa',
-                'image' => $this->packageImages()[0],
-                'url' => route('portal.register'),
-            ],
-            [
-                'name' => 'Umroh Reguler',
-                'duration' => '12 hari',
-                'hotel_class' => 'Bintang 4',
-                'makkah_hotel' => 'Hotel Makkah bintang 4',
-                'madinah_hotel' => 'Hotel Madinah bintang 4',
-                'airline' => 'Garuda Indonesia',
-                'departure_city' => 'Makassar',
-                'departure_date' => '4 Oktober 2026',
-                'price' => 'Rp32.500.000',
-                'quota' => '12 kursi tersisa',
-                'image' => $this->packageImages()[1],
-                'url' => route('portal.register'),
-            ],
-            [
-                'name' => 'Umroh Premium',
-                'duration' => '12 hari',
-                'hotel_class' => 'Bintang 5',
-                'makkah_hotel' => 'Hotel Makkah bintang 5',
-                'madinah_hotel' => 'Hotel Madinah bintang 5',
-                'airline' => 'Saudia Airlines',
-                'departure_city' => 'Jakarta',
-                'departure_date' => '18 November 2026',
-                'price' => 'Rp42.900.000',
-                'quota' => '8 kursi tersisa',
-                'image' => $this->packageImages()[2],
-                'url' => route('portal.register'),
-            ],
-        ];
-    }
-
     /** @return array<int, string> */
     private function packageImages(): array
     {
@@ -179,5 +137,19 @@ class LandingPageController extends Controller
             ->orderBy('name')
             ->limit(6)
             ->get(['name', 'city', 'phone', 'address']);
+    }
+
+    /** @return array<string, int> */
+    private function stats(): array
+    {
+        return [
+            'active_branches' => Branch::query()->where('is_active', true)->count(),
+            'public_packages' => Departure::query()
+                ->where('is_public', true)
+                ->where('status', 'scheduled')
+                ->whereDate('departure_date', '>=', now()->toDateString())
+                ->count(),
+            'completed_pilgrims' => Pilgrim::query()->where('status', 'completed')->count(),
+        ];
     }
 }

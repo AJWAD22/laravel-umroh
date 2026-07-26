@@ -26,7 +26,7 @@
     };
     $sectionLabel = match (true) {
         in_array($resource, ['branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs', 'groups'], true) => 'Data Master',
-        in_array($resource, ['departures', 'hotels', 'checkpoints'], true) => 'Data Pendukung Sistem',
+        in_array($resource, ['departures', 'hotels', 'checkpoints'], true) => 'Operasional Perjalanan',
         $resource === 'branches' => 'Organisasi',
         default => 'Data',
     };
@@ -80,14 +80,14 @@
             ['description','Petunjuk Singkat','textarea'], ['is_active','Status','boolean'],
         ],
         'departures' => [...$commonBranch,
-            ['code','Kode Jadwal','text'], ['program_name','Nama Paket','text'], ['description','Deskripsi Paket','textarea'],
+            ['code','Kode Paket','text'], ['program_name','Nama Paket','text'], ['description','Deskripsi Paket','textarea'],
             ['facilities','Fasilitas Paket','textarea'], ['requirements','Persyaratan Paket','textarea'],
             ['departure_date','Tanggal Berangkat','date'],
             ['return_date','Tanggal Pulang','date'], ['departure_airport','Bandara Berangkat','text'],
             ['arrival_airport','Bandara Kedatangan','text'], ['airline','Maskapai','text'],
             ['flight_number','Nomor Penerbangan','text'], ['price','Harga Paket','number'],
-            ['hotel_ids','Hotel Paket','multiselect',$options['hotels']],
-            ['itinerary_plan','Jadwal Harian','itinerary'],
+            ['hotel_ids','Hotel Makkah/Madinah','multiselect',$options['hotels']],
+            ['itinerary_plan','Jadwal Perjalanan per Hari','itinerary'],
             ['quota','Kuota','number'], ['is_public','Tampil di Landing Page','boolean'],
             ['status','Status','select',['draft'=>'Draft','scheduled'=>'Terjadwal','departed'=>'Berangkat','completed'=>'Selesai','cancelled'=>'Batal']],
         ],
@@ -141,6 +141,38 @@
             </div>
         @endif
 
+        @if ($resource === 'departures')
+            <section class="mb-7 rounded-2xl border border-blue-200 bg-blue-50/80 p-4 text-sm leading-6 text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
+                <div class="flex gap-3">
+                    <i data-lucide="plane" class="mt-0.5 size-5 shrink-0 text-blue-700 dark:text-blue-300"></i>
+                    <div>
+                        <p class="font-bold">Paket ini menjadi sumber data landing page dan pilihan jamaah.</p>
+                        <p class="mt-1">Aktifkan <strong>Tampil di Landing Page</strong> dan pilih status <strong>Terjadwal</strong> jika paket sudah siap dipilih calon jamaah. Hotel, pesawat, harga, kuota, dan jadwal harian akan dibaca dari data ini.</p>
+                    </div>
+                </div>
+            </section>
+        @elseif ($resource === 'hotels')
+            <section class="mb-7 rounded-2xl border border-teal-200 bg-teal-50/80 p-4 text-sm leading-6 text-teal-950 dark:border-teal-900 dark:bg-teal-950/30 dark:text-teal-100">
+                <div class="flex gap-3">
+                    <i data-lucide="hotel" class="mt-0.5 size-5 shrink-0 text-teal-700 dark:text-teal-300"></i>
+                    <div>
+                        <p class="font-bold">Pilih lokasi hotel dari peta.</p>
+                        <p class="mt-1">Koordinat hotel dipakai untuk marker monitoring dan dapat dipakai sebagai titik geofence. Admin tidak perlu mengarang latitude atau longitude.</p>
+                    </div>
+                </div>
+            </section>
+        @elseif ($resource === 'checkpoints')
+            <section class="mb-7 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-sm leading-6 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
+                <div class="flex gap-3">
+                    <i data-lucide="map-pinned" class="mt-0.5 size-5 shrink-0 text-amber-700 dark:text-amber-300"></i>
+                    <div>
+                        <p class="font-bold">Titik ini muncul di mobile sesuai paket atau rombongan.</p>
+                        <p class="mt-1">Isi paket jika titik berlaku untuk semua jamaah paket tersebut. Isi rombongan jika titik hanya berlaku untuk rombongan tertentu, misalnya titik kumpul sebelum ziarah.</p>
+                    </div>
+                </div>
+            </section>
+        @endif
+
         <div class="grid gap-x-6 gap-y-5 md:grid-cols-2">
             @foreach ($fields as $field)
                 @php
@@ -188,12 +220,16 @@
                                 <option value="{{ $optionValue }}" @selected(in_array((string) $optionValue, $selectedValues, true))>{{ $optionLabel }}</option>
                             @endforeach
                         </select>
-                        <span class="mt-1.5 block text-xs leading-5 text-slate-500">Tahan Ctrl untuk memilih lebih dari satu hotel. Urutan pilihan mengikuti urutan hotel pada daftar.</span>
+                        <span class="mt-1.5 block text-xs leading-5 text-slate-500">
+                            {{ $resource === 'departures' && $name === 'hotel_ids'
+                                ? 'Pilih hotel yang dipakai paket ini, minimal hotel Makkah dan Madinah. Tahan Ctrl untuk memilih lebih dari satu hotel.'
+                                : 'Tahan Ctrl untuk memilih lebih dari satu data.' }}
+                        </span>
                     @elseif ($type === 'textarea')
                         <textarea name="{{ $name }}" rows="4" class="control-field w-full">{{ $current }}</textarea>
                     @elseif ($type === 'itinerary')
                         <textarea name="{{ $name }}" rows="7" class="control-field w-full" placeholder="1|Berangkat dari Indonesia|Jeddah|Penerbangan dan proses imigrasi.&#10;2|Umroh pertama|Makkah|Thawaf, sai, dan tahallul.">{{ $current }}</textarea>
-                        <span class="mt-1.5 block text-xs leading-5 text-slate-500">Format per baris: hari|judul|kota|keterangan.</span>
+                        <span class="mt-1.5 block text-xs leading-5 text-slate-500">Tulis satu agenda per baris dengan format: hari|judul kegiatan|kota|keterangan singkat. Contoh: 1|Berangkat dari Indonesia|Jeddah|Penerbangan dan proses imigrasi.</span>
                     @elseif ($type === 'boolean')
                         <select name="{{ $name }}" class="control-field w-full">
                             <option value="1" @selected((string) $current === '1')>Aktif</option>

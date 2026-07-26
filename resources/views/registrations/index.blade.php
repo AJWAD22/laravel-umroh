@@ -36,6 +36,24 @@
         </div>
     </section>
 
+    <section class="mb-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5" aria-label="Alur verifikasi pendaftaran">
+        @foreach ([
+            ['Menunggu Verifikasi', 'Periksa biodata dan dokumen jamaah.', 'clipboard-list', 'bg-blue-50 text-blue-700'],
+            ['Perlu Perbaikan', 'Tulis catatan agar jamaah memperbaiki data.', 'circle-alert', 'bg-amber-50 text-amber-700'],
+            ['Menunggu Pembayaran', 'Data sudah benar, pembayaran diproses di cabang.', 'wallet', 'bg-cyan-50 text-cyan-700'],
+            ['Lunas', 'Pembayaran selesai dan siap ditempatkan.', 'circle-check', 'bg-emerald-50 text-emerald-700'],
+            ['Masuk Rombongan', 'Jamaah resmi menjadi data operasional.', 'users-round', 'bg-violet-50 text-violet-700'],
+        ] as $step)
+            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <span class="grid size-10 place-items-center rounded-2xl {{ $step[3] }} dark:bg-slate-800">
+                    <i data-lucide="{{ $step[2] }}" class="size-4.5"></i>
+                </span>
+                <h2 class="mt-3 text-sm font-extrabold">{{ $step[0] }}</h2>
+                <p class="mt-1 text-xs leading-5 text-slate-500">{{ $step[1] }}</p>
+            </article>
+        @endforeach
+    </section>
+
     <section class="surface-card overflow-hidden">
         <form method="GET" class="grid gap-3 border-b border-slate-200 p-5 dark:border-slate-800 md:grid-cols-5">
             <input name="search" value="{{ request('search') }}" placeholder="Nama atau telepon" class="control-field w-full">

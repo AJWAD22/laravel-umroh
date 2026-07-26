@@ -47,7 +47,7 @@
             $supportMenus = [
                 ['label' => 'Paket Perjalanan', 'resource' => 'departures', 'permission' => 'departures.manage', 'view' => 'departures.view'],
                 ['label' => 'Hotel', 'resource' => 'hotels', 'permission' => 'hotels.manage', 'view' => 'hotels.view'],
-                ['label' => 'Tujuan & Titik Penting', 'resource' => 'checkpoints', 'permission' => 'checkpoints.manage', 'view' => 'checkpoints.view'],
+                ['label' => 'Titik Tujuan & Kumpul', 'resource' => 'checkpoints', 'permission' => 'checkpoints.manage', 'view' => 'checkpoints.view'],
             ];
             $organizationMenus = [
                 ['label' => 'Data Cabang', 'resource' => 'branches', 'permission' => 'branches.manage', 'view' => 'branches.manage'],
@@ -75,7 +75,7 @@
         <div x-data="{ open: {{ request()->routeIs('master-data.*') && in_array(request()->route('resource'), array_column($supportMenus, 'resource'), true) ? 'true' : 'false' }} }">
             <button @click="open = !open" class="sidebar-link w-full">
                 <i data-lucide="calendar-range" class="size-5 shrink-0"></i>
-                <span x-show="!sidebarCollapsed" class="flex-1 text-left">Data Pendukung Sistem</span>
+                <span x-show="!sidebarCollapsed" class="flex-1 text-left">Operasional Perjalanan</span>
                 <i x-show="!sidebarCollapsed" data-lucide="chevron-down" class="size-4 transition" :class="{ 'rotate-180': open }"></i>
             </button>
             <div x-cloak x-show="open && !sidebarCollapsed" x-transition class="ml-5 mt-1 space-y-0.5 border-l border-slate-800 pl-5">

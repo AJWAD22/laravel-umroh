@@ -31,5 +31,12 @@ class OperationalPackageExampleSeederTest extends TestCase
         $this->assertNotNull($package->groups->first()->tourLeader);
         $this->assertNotNull($package->groups->first()->muthawwif);
         $this->assertSame(4, Checkpoint::query()->where('departure_id', $package->id)->count());
+
+        $this->get(route('landing'))
+            ->assertOk()
+            ->assertSee('Umroh Reguler 12 Hari')
+            ->assertSee('Rp32.500.000')
+            ->assertSee('Al Safwah Royale Orchid Makkah')
+            ->assertSee('Lihat Detail');
     }
 }
