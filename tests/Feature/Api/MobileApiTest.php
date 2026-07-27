@@ -242,6 +242,62 @@ class MobileApiTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_pilgrim_sos_without_gps_is_still_saved(): void
+    {
+        Event::fake([AdminNotificationCreated::class]);
+        $context = $this->scenario();
+        $token = $this->login($context['pilgrimUser']);
+        $requestId = (string) Str::uuid();
+
+        $this->withToken($token)
+            ->postJson('/api/mobile/sos', [
+                'request_id' => $requestId,
+                'message' => 'Lokasi tidak terbaca, tetapi butuh bantuan.',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.request_id', $requestId)
+            ->assertJsonPath('data.location_status', 'unavailable')
+            ->assertJsonPath('data.latitude', null)
+            ->assertJsonPath('data.longitude', null);
+
+        $this->assertDatabaseHas('sos_reports', [
+            'pilgrim_id' => $context['pilgrim']->id,
+            'request_id' => $requestId,
+            'location_status' => 'unavailable',
+            'status' => 'new',
+        ]);
+        $this->assertSame('sos', $context['pilgrim']->fresh()->monitoring_status);
+    }
+
+    public function test_repeated_pilgrim_sos_returns_existing_active_report(): void
+    {
+        Event::fake([AdminNotificationCreated::class]);
+        $context = $this->scenario();
+        $token = $this->login($context['pilgrimUser']);
+        $requestId = (string) Str::uuid();
+
+        $first = $this->withToken($token)
+            ->postJson('/api/mobile/sos', [
+                'request_id' => $requestId,
+                'latitude' => 21.422487,
+                'longitude' => 39.826206,
+            ])
+            ->assertCreated()
+            ->json('data.id');
+
+        $second = $this->withToken($token)
+            ->postJson('/api/mobile/sos', [
+                'request_id' => $requestId,
+                'latitude' => 21.422487,
+                'longitude' => 39.826206,
+            ])
+            ->assertOk()
+            ->json('data.id');
+
+        $this->assertSame($first, $second);
+        $this->assertSame(1, SosReport::query()->where('pilgrim_id', $context['pilgrim']->id)->active()->count());
+    }
+
     public function test_checkpoint_created_by_branch_admin_is_visible_to_assigned_pilgrim(): void
     {
         $context = $this->scenario();
@@ -345,7 +401,10 @@ class MobileApiTest extends TestCase
             ->assertUnprocessable()
             ->assertJsonValidationErrors('journey');
 
-        $this->assertDatabaseCount('personal_access_tokens', 0);
+        $this->assertDatabaseCount('personal_access_tokens', 1);
+        $this->withToken($token)
+            ->getJson('/api/mobile/profile')
+            ->assertOk();
         $this->assertDatabaseMissing('pilgrim_locations', [
             'pilgrim_id' => $context['pilgrim']->id,
         ]);

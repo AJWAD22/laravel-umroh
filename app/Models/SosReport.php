@@ -14,15 +14,20 @@ class SosReport extends Model
         'branch_id',
         'pilgrim_id',
         'group_id',
+        'request_id',
         'handled_by',
         'latitude',
         'longitude',
         'accuracy',
+        'location_status',
         'message',
         'status',
         'reported_at',
         'acknowledged_at',
+        'assigned_at',
+        'arrived_at',
         'resolved_at',
+        'resolution_note',
         'resolution_notes',
     ];
 
@@ -34,6 +39,8 @@ class SosReport extends Model
             'accuracy' => 'float',
             'reported_at' => 'datetime',
             'acknowledged_at' => 'datetime',
+            'assigned_at' => 'datetime',
+            'arrived_at' => 'datetime',
             'resolved_at' => 'datetime',
         ];
     }
@@ -60,6 +67,6 @@ class SosReport extends Model
 
     public function scopeActive($query)
     {
-        return $query->whereIn('status', ['new', 'handling']);
+        return $query->whereIn('status', ['new', 'handling', 'acknowledged', 'assigned', 'on_the_way', 'arrived']);
     }
 }

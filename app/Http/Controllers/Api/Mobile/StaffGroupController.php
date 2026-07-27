@@ -162,7 +162,7 @@ class StaffGroupController extends Controller
         $status = $request->query('status');
         $reports = $this->access->sosReportsForStaff($request->user(), $role)
             ->when(
-                in_array($status, ['new', 'handling', 'resolved'], true),
+                in_array($status, ['new', 'handling', 'acknowledged', 'assigned', 'on_the_way', 'arrived', 'resolved', 'cancelled', 'false_alarm'], true),
                 fn ($query) => $query->where('status', $status)
             )
             ->latest('reported_at')
@@ -181,7 +181,7 @@ class StaffGroupController extends Controller
 
         if ($shouldNotifyPilgrim) {
             $sosReport->forceFill([
-                'status' => 'handling',
+                'status' => 'acknowledged',
                 'handled_by' => $request->user()->id,
                 'acknowledged_at' => now(),
             ])->save();
@@ -210,6 +210,7 @@ class StaffGroupController extends Controller
             'handled_by' => $sosReport->handled_by ?: $request->user()->id,
             'acknowledged_at' => $sosReport->acknowledged_at ?: now(),
             'resolved_at' => now(),
+            'resolution_note' => $data['resolution_notes'] ?? 'Sudah ditangani oleh petugas.',
             'resolution_notes' => $data['resolution_notes'] ?? 'Sudah ditangani oleh petugas.',
         ])->save();
 

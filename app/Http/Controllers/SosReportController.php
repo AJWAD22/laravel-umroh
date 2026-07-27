@@ -24,7 +24,7 @@ class SosReportController extends Controller
         $reports = SosReport::query()
             ->with(['pilgrim:id,branch_id,registration_number,full_name,phone', 'group:id,name,code', 'handler:id,name'])
             ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
-            ->when(in_array($status, ['new', 'handling', 'resolved'], true), fn (Builder $query) => $query->where('status', $status))
+            ->when(in_array($status, ['new', 'handling', 'acknowledged', 'assigned', 'on_the_way', 'arrived', 'resolved', 'cancelled', 'false_alarm'], true), fn (Builder $query) => $query->where('status', $status))
             ->latest('reported_at')
             ->paginate(20)
             ->withQueryString();
@@ -37,7 +37,7 @@ class SosReportController extends Controller
             'status' => $status,
             'summary' => [
                 'new' => (clone $summaryQuery)->where('status', 'new')->count(),
-                'handling' => (clone $summaryQuery)->where('status', 'handling')->count(),
+                'handling' => (clone $summaryQuery)->whereIn('status', ['handling', 'acknowledged', 'assigned', 'on_the_way', 'arrived'])->count(),
                 'resolved' => (clone $summaryQuery)->where('status', 'resolved')->count(),
             ],
         ]);
@@ -69,6 +69,7 @@ class SosReportController extends Controller
         $sosReport->forceFill([
             'status' => 'resolved',
             'resolved_at' => now(),
+            'resolution_note' => $data['resolution_notes'],
             'resolution_notes' => $data['resolution_notes'],
         ])->save();
 

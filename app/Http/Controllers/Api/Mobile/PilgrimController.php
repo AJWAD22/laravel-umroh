@@ -10,10 +10,10 @@ use App\Http\Resources\Mobile\SosReportResource;
 use App\Models\LocationHistory;
 use App\Models\Group;
 use App\Models\PilgrimLocation;
-use App\Models\SosReport;
 use App\Services\AdminNotificationService;
 use App\Services\GeofenceMonitorService;
 use App\Services\MobileGroupAccessService;
+use App\Services\SosService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,6 +26,7 @@ class PilgrimController extends Controller
         private readonly MobileGroupAccessService $access,
         private readonly AdminNotificationService $notifications,
         private readonly GeofenceMonitorService $geofence,
+        private readonly SosService $sosService,
     ) {}
 
     public function sendLocation(SendLocationRequest $request): JsonResponse
@@ -99,36 +100,7 @@ class PilgrimController extends Controller
         $group = $this->activeJourney($request);
         $data = $request->validated();
 
-        $report = DB::transaction(function () use ($pilgrim, $group, $data): SosReport {
-            // Jika masih ada SOS aktif, sistem tidak membuat laporan ganda.
-            // Ini mencegah tombol SOS ditekan berkali-kali menghasilkan banyak data.
-            $existing = SosReport::query()
-                ->where('pilgrim_id', $pilgrim->id)
-                ->active()
-                ->latest('reported_at')
-                ->first();
-
-            if ($existing) {
-                return $existing->load(['pilgrim.branch', 'pilgrim.latestLocation', 'group', 'handler']);
-            }
-
-            $report = SosReport::query()->create([
-                'branch_id' => $pilgrim->branch_id,
-                'pilgrim_id' => $pilgrim->id,
-                'group_id' => $group?->id,
-                'latitude' => $data['latitude'],
-                'longitude' => $data['longitude'],
-                'accuracy' => $data['accuracy'] ?? null,
-                'message' => $data['message'] ?? 'Jamaah meminta bantuan.',
-                'status' => 'new',
-                'reported_at' => now(),
-            ]);
-
-            // Status jamaah di Live Map berubah menjadi SOS.
-            $pilgrim->forceFill(['monitoring_status' => 'sos'])->save();
-
-            return $report->load(['pilgrim.branch', 'pilgrim.latestLocation', 'group', 'handler']);
-        });
+        $report = $this->sosService->createOrReturnActive($pilgrim, $group, $data);
 
         if ($report->wasRecentlyCreated) {
             // Notifikasi database dan FCM dikirim hanya untuk laporan baru.
@@ -184,10 +156,8 @@ class PilgrimController extends Controller
         if (! $group?->departure
             || ! in_array($group->departure->status, ['scheduled', 'departed'], true)
             || $group->departure->return_date?->endOfDay()->isPast()) {
-            $request->user()->currentAccessToken()?->delete();
-
             throw ValidationException::withMessages([
-                'journey' => ['Perjalanan tidak aktif atau telah selesai. Tracking dan SOS dihentikan.'],
+                'journey' => ['Perjalanan tidak aktif atau telah selesai. Tracking dan SOS sedang dinonaktifkan.'],
             ]);
         }
 
