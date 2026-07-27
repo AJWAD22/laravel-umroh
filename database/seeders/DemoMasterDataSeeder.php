@@ -165,7 +165,13 @@ class DemoMasterDataSeeder extends Seeder
     private function deleteLegacyBranchAdmins(): void
     {
         User::query()
-            ->whereIn('email', ['admin.cabang@umrah.test', 'adminbjm@umrah.test'])
+            ->whereIn('email', [
+                'admin.cabang@umrah.test',
+                'adminbjm@umrah.test',
+                'admin.banjarmasin@mantauumroh.id',
+                'admin.banjarbaru@mantauumroh.id',
+                'admin.martapura@mantauumroh.id',
+            ])
             ->get()
             ->each(function (User $user): void {
                 $user->syncRoles([]);
@@ -471,24 +477,12 @@ class DemoMasterDataSeeder extends Seeder
                 ['name' => 'Al Safwah Tower Makkah', 'city' => 'makkah', 'address' => 'Ajyad, sekitar Masjidil Haram, Makkah', 'lat' => 21.4206000, 'lng' => 39.8249000, 'sequence' => 1],
                 ['name' => 'Dallah Taibah Madinah', 'city' => 'madinah', 'address' => 'Markaziyah Utara, sekitar Masjid Nabawi, Madinah', 'lat' => 24.4707000, 'lng' => 39.6119000, 'sequence' => 2],
             ],
-            'Banjarbaru' => [
-                ['name' => 'Anjum Hotel Makkah', 'city' => 'makkah', 'address' => 'Jabal Omar, Makkah', 'lat' => 21.4238000, 'lng' => 39.8226000, 'sequence' => 1],
-                ['name' => 'Pullman Zamzam Madinah', 'city' => 'madinah', 'address' => 'Area Masjid Nabawi, Madinah', 'lat' => 24.4669000, 'lng' => 39.6123000, 'sequence' => 2],
-            ],
-            'Martapura' => [
-                ['name' => 'Swissotel Makkah', 'city' => 'makkah', 'address' => 'Abraj Al Bait, Makkah', 'lat' => 21.4197000, 'lng' => 39.8255000, 'sequence' => 1],
-                ['name' => 'Madinah Hilton', 'city' => 'madinah', 'address' => 'King Fahd Road, Madinah', 'lat' => 24.4694000, 'lng' => 39.6111000, 'sequence' => 2],
-            ],
         ];
 
-        foreach ($departures as $groupName => $departure) {
-            $branchCity = match ($groupName) {
-                'Al Hijrah 01' => 'Banjarmasin',
-                'Al Hijrah 02' => 'Banjarbaru',
-                default => 'Martapura',
-            };
-
+        foreach ($departures as $departure) {
+            $branchCity = 'Banjarmasin';
             $sync = [];
+
             foreach ($hotels[$branchCity] as $hotelData) {
                 $hotel = Hotel::query()->updateOrCreate(
                     ['branch_id' => $branches[$branchCity]->id, 'name' => $hotelData['name']],
@@ -517,9 +511,8 @@ class DemoMasterDataSeeder extends Seeder
     private function seedGroups(Collection $branches, Collection $departures, Collection $leaders, Collection $muthawwifs): Collection
     {
         return collect([
-            'Al Hijrah 01' => ['code' => 'RH-001', 'branch' => 'Banjarmasin', 'leader' => 'Muhammad Arif', 'muthawwif' => 'Ust. Abdullah', 'notes' => 'Rombongan keberangkatan Januari 2027 dari Cabang Banjarmasin'],
-            'Al Hijrah 02' => ['code' => 'RH-002', 'branch' => 'Banjarbaru', 'leader' => 'Agus Salim', 'muthawwif' => 'Ust. Hasan Basri', 'notes' => 'Rombongan keberangkatan Februari 2027 dari Cabang Banjarbaru'],
-            'Al Hijrah 03' => ['code' => 'RH-003', 'branch' => 'Martapura', 'leader' => 'Fajar Hidayat', 'muthawwif' => 'Ust. Syamsuddin', 'notes' => 'Rombongan keberangkatan Maret 2027 dari Cabang Martapura'],
+            'Al Hijrah 01' => ['code' => 'RH-001', 'branch' => 'Banjarmasin', 'leader' => 'Padil Banjarmasin', 'muthawwif' => 'Hafis Banjarmasin', 'notes' => 'Rombongan keberangkatan Januari 2027 dari Cabang Banjarmasin'],
+            'Al Hijrah 02' => ['code' => 'RH-002', 'branch' => 'Banjarmasin', 'leader' => 'Padil Banjarmasin', 'muthawwif' => 'Hafis Banjarmasin', 'notes' => 'Rombongan keberangkatan Februari 2027 dari Cabang Banjarmasin'],
         ])->mapWithKeys(fn (array $data, string $name): array => [$name => Group::query()->updateOrCreate(
             ['code' => $data['code']],
             [
@@ -549,14 +542,9 @@ class DemoMasterDataSeeder extends Seeder
                 ['Lobi Dallah Taibah Madinah', 'hotel', 'madinah', 'Titik kumpul keberangkatan ziarah Madinah.', 24.4707000, 39.6119000, 180],
             ],
             'Al Hijrah 02' => [
-                ['Lobi Anjum Hotel Makkah', 'hotel', 'makkah', 'Titik kumpul rombongan sebelum ibadah bersama.', 21.4238000, 39.8226000, 180],
-                ['Area Bus Jabal Omar', 'titik_kumpul', 'makkah', 'Titik kumpul naik bus ziarah Makkah.', 21.4243000, 39.8219000, 150],
-                ['Lobi Pullman Zamzam Madinah', 'hotel', 'madinah', 'Titik kumpul jamaah saat agenda Masjid Nabawi.', 24.4669000, 39.6123000, 180],
-            ],
-            'Al Hijrah 03' => [
-                ['Lobi Swissotel Makkah', 'hotel', 'makkah', 'Titik kumpul jamaah premium sebelum kegiatan harian.', 21.4197000, 39.8255000, 180],
-                ['Pelataran Abraj Al Bait', 'titik_kumpul', 'makkah', 'Titik kumpul setelah ibadah mandiri di Masjidil Haram.', 21.4199000, 39.8260000, 130],
-                ['Lobi Madinah Hilton', 'hotel', 'madinah', 'Titik kumpul sebelum ziarah Madinah.', 24.4694000, 39.6111000, 180],
+                ['Lobi Al Safwah Tower Hemat', 'hotel', 'makkah', 'Titik kumpul jamaah paket hemat sebelum menuju Masjidil Haram.', 21.4206000, 39.8249000, 180],
+                ['Area Bus Ajyad', 'titik_kumpul', 'makkah', 'Titik kumpul naik bus ziarah Makkah.', 21.4213000, 39.8242000, 150],
+                ['Lobi Dallah Taibah Madinah Hemat', 'hotel', 'madinah', 'Titik kumpul jamaah saat agenda Masjid Nabawi.', 24.4707000, 39.6119000, 180],
             ],
         ];
 
@@ -710,16 +698,16 @@ class DemoMasterDataSeeder extends Seeder
             ['name' => 'Nurul Hidayah', 'number' => 'JMH-250018', 'phone' => '081234567818', 'gender' => 'female', 'group' => 'Al Hijrah 02', 'pin' => '748315', 'notes' => 'Pendamping ibu'],
             ['name' => 'Muhammad Hafiz', 'number' => 'JMH-250019', 'phone' => '081234567819', 'gender' => 'male', 'group' => 'Al Hijrah 02', 'pin' => '281643', 'notes' => 'Tidak ada catatan khusus'],
             ['name' => 'Hj. Salmah', 'number' => 'JMH-250020', 'phone' => '081234567820', 'gender' => 'female', 'group' => 'Al Hijrah 02', 'pin' => '653197', 'notes' => 'Lansia dan membutuhkan bantuan saat berjalan jauh'],
-            ['name' => 'Ahmad Syauqi', 'number' => 'JMH-250021', 'phone' => '081234567821', 'gender' => 'male', 'group' => 'Al Hijrah 03', 'pin' => '839251', 'notes' => 'Tidak ada catatan khusus'],
-            ['name' => 'Maimunah', 'number' => 'JMH-250022', 'phone' => '081234567822', 'gender' => 'female', 'group' => 'Al Hijrah 03', 'pin' => '417685', 'notes' => 'Membawa obat diabetes'],
-            ['name' => 'Muhammad Fadli', 'number' => 'JMH-250023', 'phone' => '081234567823', 'gender' => 'male', 'group' => 'Al Hijrah 03', 'pin' => '725943', 'notes' => 'Tidak ada catatan khusus'],
-            ['name' => 'Siti Rahmah', 'number' => 'JMH-250024', 'phone' => '081234567824', 'gender' => 'female', 'group' => 'Al Hijrah 03', 'pin' => '368152', 'notes' => 'Pendamping suami'],
-            ['name' => 'Abdul Hakim', 'number' => 'JMH-250025', 'phone' => '081234567825', 'gender' => 'male', 'group' => 'Al Hijrah 03', 'pin' => '951374', 'notes' => 'Lansia, membutuhkan waktu istirahat lebih sering'],
-            ['name' => 'Norhasanah', 'number' => 'JMH-250026', 'phone' => '081234567826', 'gender' => 'female', 'group' => 'Al Hijrah 03', 'pin' => '586421', 'notes' => 'Tidak ada catatan khusus'],
-            ['name' => 'Rahmat Hidayat', 'number' => 'JMH-250027', 'phone' => '081234567827', 'gender' => 'male', 'group' => 'Al Hijrah 03', 'pin' => '214796', 'notes' => 'Pendamping orang tua'],
-            ['name' => 'Siti Mariam', 'number' => 'JMH-250028', 'phone' => '081234567828', 'gender' => 'female', 'group' => 'Al Hijrah 03', 'pin' => '674832', 'notes' => 'Memiliki riwayat asma ringan'],
-            ['name' => 'Muhammad Akbar', 'number' => 'JMH-250029', 'phone' => '081234567829', 'gender' => 'male', 'group' => 'Al Hijrah 03', 'pin' => '439618', 'notes' => 'Tidak ada catatan khusus'],
-            ['name' => 'Halimah', 'number' => 'JMH-250030', 'phone' => '081234567830', 'gender' => 'female', 'group' => 'Al Hijrah 03', 'pin' => '812547', 'notes' => 'Lansia dan perlu didampingi selama perjalanan'],
+            ['name' => 'Ahmad Syauqi', 'number' => 'JMH-250021', 'phone' => '081234567821', 'gender' => 'male', 'group' => 'Al Hijrah 02', 'pin' => '839251', 'notes' => 'Tidak ada catatan khusus'],
+            ['name' => 'Maimunah', 'number' => 'JMH-250022', 'phone' => '081234567822', 'gender' => 'female', 'group' => 'Al Hijrah 02', 'pin' => '417685', 'notes' => 'Membawa obat diabetes'],
+            ['name' => 'Muhammad Fadli', 'number' => 'JMH-250023', 'phone' => '081234567823', 'gender' => 'male', 'group' => 'Al Hijrah 02', 'pin' => '725943', 'notes' => 'Tidak ada catatan khusus'],
+            ['name' => 'Siti Rahmah', 'number' => 'JMH-250024', 'phone' => '081234567824', 'gender' => 'female', 'group' => 'Al Hijrah 02', 'pin' => '368152', 'notes' => 'Pendamping suami'],
+            ['name' => 'Abdul Hakim', 'number' => 'JMH-250025', 'phone' => '081234567825', 'gender' => 'male', 'group' => 'Al Hijrah 02', 'pin' => '951374', 'notes' => 'Lansia, membutuhkan waktu istirahat lebih sering'],
+            ['name' => 'Norhasanah', 'number' => 'JMH-250026', 'phone' => '081234567826', 'gender' => 'female', 'group' => 'Al Hijrah 02', 'pin' => '586421', 'notes' => 'Tidak ada catatan khusus'],
+            ['name' => 'Rahmat Hidayat', 'number' => 'JMH-250027', 'phone' => '081234567827', 'gender' => 'male', 'group' => 'Al Hijrah 02', 'pin' => '214796', 'notes' => 'Pendamping orang tua'],
+            ['name' => 'Siti Mariam', 'number' => 'JMH-250028', 'phone' => '081234567828', 'gender' => 'female', 'group' => 'Al Hijrah 02', 'pin' => '674832', 'notes' => 'Memiliki riwayat asma ringan'],
+            ['name' => 'Muhammad Akbar', 'number' => 'JMH-250029', 'phone' => '081234567829', 'gender' => 'male', 'group' => 'Al Hijrah 02', 'pin' => '439618', 'notes' => 'Tidak ada catatan khusus'],
+            ['name' => 'Halimah', 'number' => 'JMH-250030', 'phone' => '081234567830', 'gender' => 'female', 'group' => 'Al Hijrah 02', 'pin' => '812547', 'notes' => 'Lansia dan perlu didampingi selama perjalanan'],
         ];
     }
 }

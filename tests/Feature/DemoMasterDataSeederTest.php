@@ -21,11 +21,11 @@ class DemoMasterDataSeederTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
         $this->seed(DemoMasterDataSeeder::class);
 
-        $this->assertSame(3, Departure::query()->where('is_public', true)->where('status', 'scheduled')->count());
-        $this->assertSame(3, Group::query()->count());
+        $this->assertSame(2, Departure::query()->where('is_public', true)->where('status', 'scheduled')->count());
+        $this->assertSame(2, Group::query()->count());
         $this->assertSame(30, Pilgrim::query()->count());
-        $this->assertSame(39, Departure::query()->withCount('itineraries')->get()->sum('itineraries_count'));
-        $this->assertGreaterThanOrEqual(24, Checkpoint::query()->where('is_active', true)->count());
+        $this->assertSame(26, Departure::query()->withCount('itineraries')->get()->sum('itineraries_count'));
+        $this->assertGreaterThanOrEqual(11, Checkpoint::query()->where('is_active', true)->count());
 
         $package = Departure::query()
             ->with(['branch', 'hotels', 'itineraries', 'groups.tourLeader', 'groups.muthawwif'])
@@ -35,10 +35,11 @@ class DemoMasterDataSeederTest extends TestCase
         $this->assertSame('Umroh Reguler Al Hijrah Januari 2027', $package->program_name);
         $this->assertSame(32_500_000, $package->price);
         $this->assertTrue($package->is_public);
+        $this->assertSame('Cabang Banjarmasin', $package->branch->name);
         $this->assertCount(2, $package->hotels);
         $this->assertCount(13, $package->itineraries);
-        $this->assertNotNull($package->groups->first()->tourLeader);
-        $this->assertNotNull($package->groups->first()->muthawwif);
+        $this->assertSame('Padil Banjarmasin', $package->groups->first()->tourLeader->full_name);
+        $this->assertSame('Hafis Banjarmasin', $package->groups->first()->muthawwif->full_name);
 
         $this->assertDatabaseHas('checkpoints', [
             'name' => 'Pintu 79 Masjidil Haram',
@@ -47,6 +48,11 @@ class DemoMasterDataSeederTest extends TestCase
             'group_id' => $package->groups->first()->id,
         ]);
 
-        $this->assertTrue(User::query()->where('email', 'admin.banjarmasin@mantauumroh.id')->firstOrFail()->hasRole('admin-cabang'));
+        $this->assertTrue(User::query()->where('email', 'adminbjm@mantauumrah.id')->firstOrFail()->hasRole('admin-cabang'));
+        $this->assertTrue(User::query()->where('email', 'padilbjm@mantauumrah.id')->firstOrFail()->hasRole('tour-leader'));
+        $this->assertTrue(User::query()->where('email', 'hafisbjm@mantauumrah.id')->firstOrFail()->hasRole('muthawwif'));
+
+        $this->assertDatabaseMissing('branches', ['code' => 'BJB']);
+        $this->assertDatabaseMissing('branches', ['code' => 'MTP']);
     }
 }
