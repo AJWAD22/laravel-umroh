@@ -107,7 +107,7 @@
             <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div>
                     <h2 class="font-semibold">Aktivasi Aplikasi Jamaah</h2>
-                    <p class="mt-1 text-sm text-slate-500">PIN baru hanya tampil setelah dibuat atau direset. Reset PIN tidak mencabut perangkat yang sudah aktif.</p>
+                    <p class="mt-1 text-sm text-slate-500">PIN baru hanya tampil setelah dibuat atau direset. Reset PIN akan mencabut perangkat aktif agar aktivasi lama berhenti.</p>
                 </div>
                 <div class="grid gap-2 sm:grid-cols-3">
                     <form method="POST" action="{{ route('groups.generate-missing-pins', $group) }}" class="grid gap-2">

@@ -20,7 +20,6 @@ use App\Models\TourLeader;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -615,7 +614,7 @@ class DemoMasterDataSeeder extends Seeder
 
             $pilgrim->forceFill([
                 'activation_pin_hash' => $this->digest($data['pin']),
-                'activation_pin_encrypted' => Crypt::encryptString($data['pin']),
+                'activation_pin_encrypted' => null,
                 'activation_pin_created_by' => $group->tourLeader?->user_id,
                 'activation_pin_generated_at' => now(),
                 'activation_pin_used_at' => null,

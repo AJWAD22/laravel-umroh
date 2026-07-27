@@ -159,6 +159,7 @@ class GroupMemberManagementTest extends TestCase
             ->assertSessionHas('reset_pins', fn (array $pins) => count($pins) === 1);
 
         $this->assertNotNull($pilgrim->fresh()->activation_pin_hash);
+        $this->assertNull($pilgrim->fresh()->activation_pin_encrypted);
         $this->assertSame($admin->id, $pilgrim->fresh()->activation_pin_created_by);
         $this->assertDatabaseHas('audit_logs', [
             'actor_id' => $admin->id,
@@ -197,10 +198,10 @@ class GroupMemberManagementTest extends TestCase
             ->assertSee('PIN Dibuat')
             ->assertSee('Aplikasi Aktif')
             ->assertSee('Alur sampai tracking muncul')
-            ->assertSee('Reset PIN tidak mencabut perangkat yang sudah aktif');
+            ->assertSee('Reset PIN akan mencabut perangkat aktif');
     }
 
-    public function test_reset_pin_does_not_revoke_active_device(): void
+    public function test_reset_pin_revokes_active_device_and_token(): void
     {
         [$admin, $group, $pilgrim] = $this->scenario();
         GroupMember::create([
@@ -217,6 +218,7 @@ class GroupMemberManagementTest extends TestCase
             'activated_at' => now(),
             'last_used_at' => now(),
         ]);
+        $token = $pilgrim->user->createToken('activation-active-device-001', [MobileRole::Pilgrim->ability()]);
 
         $this->actingAs($admin)
             ->post(route('groups.pilgrims.reset-pin', [$group, $pilgrim]), [
@@ -226,7 +228,10 @@ class GroupMemberManagementTest extends TestCase
             ->assertSessionHasNoErrors()
             ->assertSessionHas('reset_pins', fn (array $pins) => count($pins) === 1);
 
-        $this->assertNull($device->fresh()->revoked_at);
+        $this->assertNotNull($device->fresh()->revoked_at);
+        $this->withToken($token->plainTextToken)
+            ->getJson(route('api.mobile.profile'))
+            ->assertForbidden();
     }
 
     public function test_branch_admin_can_revoke_pilgrim_devices_with_reason(): void

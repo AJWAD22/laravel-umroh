@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Crypt;
 
 class Pilgrim extends Model
 {
@@ -94,10 +93,6 @@ class Pilgrim extends Model
 
     public function activationPin(): ?string
     {
-        if (! $this->activation_pin_encrypted || $this->activation_pin_used_at) {
-            return null;
-        }
-
-        return Crypt::decryptString($this->activation_pin_encrypted);
+        return null;
     }
 }

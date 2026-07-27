@@ -12,7 +12,6 @@ use App\Models\PilgrimLocation;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -49,17 +48,16 @@ class MobileActivationService
                 'activation_pin_used_at',
             ]);
 
-            // Reset PIN tidak mencabut perangkat aktif. Perangkat dicabut lewat
-            // aksi terpisah agar operasional jamaah yang sudah aktif tidak terganggu.
             MobileActivationSession::query()
                 ->where('pilgrim_id', $pilgrim->id)
                 ->whereIn('status', ['created', 'awaiting_approval', 'approved'])
                 ->update(['status' => 'cancelled']);
+            $revokedDevices = $this->revokeActiveDevicesForPilgrim($pilgrim);
 
             $numericCode = $this->uniqueNumericCode();
             $pilgrim->forceFill([
                 'activation_pin_hash' => $this->digest($numericCode),
-                'activation_pin_encrypted' => Crypt::encryptString($numericCode),
+                'activation_pin_encrypted' => null,
                 'activation_pin_created_by' => $actor->id,
                 'activation_pin_generated_at' => now(),
                 'activation_pin_used_at' => null,
@@ -78,7 +76,8 @@ class MobileActivationService
                 [
                     'branch_id' => $pilgrim->branch_id,
                     'reason' => $reason,
-                    'revoked_existing_devices' => false,
+                    'revoked_existing_devices' => $revokedDevices > 0,
+                    'revoked_devices' => $revokedDevices,
                 ],
             );
 
@@ -191,35 +190,21 @@ class MobileActivationService
                 return 0;
             }
 
-            $devices = MobileDevice::query()
-                ->where('user_id', $user->id)
-                ->whereNull('revoked_at')
-                ->get();
-
-            $devices->each(function (MobileDevice $device) use ($user): void {
-                $user->tokens()
-                    ->where('name', 'activation-'.$device->device_uuid)
-                    ->delete();
-                $device->forceFill(['revoked_at' => now()])->save();
-            });
-
-            PilgrimLocation::query()
-                ->where('pilgrim_id', $pilgrim->id)
-                ->delete();
+            $revokedDevices = $this->revokeActiveDevicesForPilgrim($pilgrim);
 
             $this->audit->record(
                 $actor,
                 'activation.devices.revoked',
                 $pilgrim,
-                ['active_devices' => $devices->count()],
-                ['revoked_devices' => $devices->count()],
+                ['active_devices' => $revokedDevices],
+                ['revoked_devices' => $revokedDevices],
                 [
                     'branch_id' => $pilgrim->branch_id,
                     'reason' => $reason,
                 ],
             );
 
-            return $devices->count();
+            return $revokedDevices;
         });
     }
 
@@ -466,5 +451,31 @@ class MobileActivationService
     private function digest(string $value): string
     {
         return hash_hmac('sha256', $value, (string) config('app.key'));
+    }
+
+    private function revokeActiveDevicesForPilgrim(Pilgrim $pilgrim): int
+    {
+        $user = $pilgrim->user;
+        if (! $user) {
+            return 0;
+        }
+
+        $devices = MobileDevice::query()
+            ->where('user_id', $user->id)
+            ->whereNull('revoked_at')
+            ->get();
+
+        $devices->each(function (MobileDevice $device) use ($user): void {
+            $user->tokens()
+                ->where('name', 'activation-'.$device->device_uuid)
+                ->delete();
+            $device->forceFill(['revoked_at' => now()])->save();
+        });
+
+        PilgrimLocation::query()
+            ->where('pilgrim_id', $pilgrim->id)
+            ->delete();
+
+        return $devices->count();
     }
 }
