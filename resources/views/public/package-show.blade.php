@@ -29,8 +29,11 @@
             <a href="{{ route('portal.register', ['paket' => $package->id]) }}" class="inline-flex min-h-11 items-center justify-center rounded-2xl bg-teal-500 px-4 text-sm font-extrabold text-white hover:bg-teal-400">Daftar Sekarang</a>
         </div>
     </nav>
-    <section class="mx-auto grid max-w-7xl gap-8 px-5 pb-14 pt-8 lg:grid-cols-[1fr_360px] lg:px-8">
-        <div>
+    <section class="relative isolate overflow-hidden">
+        <img src="{{ $package->cover_image_url }}" alt="Foto sampul {{ $package->program_name }}" class="absolute inset-0 -z-20 h-full w-full object-cover">
+        <div class="absolute inset-0 -z-10 bg-[#071827]/85"></div>
+        <div class="mx-auto grid max-w-7xl gap-8 px-5 pb-14 pt-10 lg:grid-cols-[1fr_360px] lg:px-8">
+        <div class="self-end">
             <a href="{{ route('landing') }}#paket" class="text-sm font-bold text-teal-200">Kembali ke paket</a>
             <p class="mt-8 text-sm font-extrabold uppercase tracking-[0.16em] text-teal-300">{{ $package->branch?->name }}</p>
             <h1 class="mt-3 text-4xl font-extrabold leading-tight sm:text-6xl">{{ $package->program_name }}</h1>
@@ -45,6 +48,7 @@
                 <div class="flex gap-2"><i data-lucide="users" class="size-4 text-teal-300"></i>{{ $package->remaining_quota === null ? 'Kuota tersedia' : $package->remaining_quota.' kursi tersisa' }}</div>
             </dl>
         </aside>
+        </div>
     </section>
 </header>
 

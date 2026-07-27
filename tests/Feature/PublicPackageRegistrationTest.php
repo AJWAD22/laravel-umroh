@@ -72,6 +72,96 @@ class PublicPackageRegistrationTest extends TestCase
             ->assertSee('Buat akun untuk memilih paket ini.');
     }
 
+    public function test_branch_admin_can_upload_and_replace_package_cover_image(): void
+    {
+        Storage::fake('public');
+        $this->seed(RolePermissionSeeder::class);
+
+        $branch = Branch::create([
+            'code' => 'IMG',
+            'name' => 'Cabang Gambar',
+            'city' => 'Banjarmasin',
+            'is_active' => true,
+        ]);
+        $admin = User::factory()->create(['branch_id' => $branch->id]);
+        $admin->assignRole(UserRole::BranchAdmin->value);
+
+        $packageData = [
+            'program_name' => 'Umroh dengan Foto Resmi',
+            'description' => 'Paket yang memiliki foto sampul.',
+            'departure_date' => today()->addMonth()->toDateString(),
+            'return_date' => today()->addMonth()->addDays(9)->toDateString(),
+            'price' => 30_000_000,
+            'quota' => 40,
+            'is_public' => '1',
+            'status' => 'scheduled',
+        ];
+
+        $this->actingAs($admin)
+            ->post(route('master-data.store', 'departures'), [
+                ...$packageData,
+                'cover_image' => UploadedFile::fake()->image('paket-awal.jpg', 1200, 800),
+            ])
+            ->assertRedirect(route('master-data.index', 'departures'))
+            ->assertSessionHasNoErrors();
+
+        $departure = Departure::query()->where('program_name', 'Umroh dengan Foto Resmi')->firstOrFail();
+        $oldPath = $departure->cover_image_path;
+        $this->assertNotNull($oldPath);
+        Storage::disk('public')->assertExists($oldPath);
+
+        $this->get(route('landing'))
+            ->assertOk()
+            ->assertSee(asset('storage/'.$oldPath), false);
+
+        $this->actingAs($admin)
+            ->put(route('master-data.update', ['departures', $departure->id]), [
+                ...$packageData,
+                'cover_image' => UploadedFile::fake()->image('paket-baru.webp', 1200, 800),
+            ])
+            ->assertRedirect(route('master-data.index', 'departures'))
+            ->assertSessionHasNoErrors();
+
+        $departure->refresh();
+        $this->assertNotSame($oldPath, $departure->cover_image_path);
+        Storage::disk('public')->assertMissing($oldPath);
+        Storage::disk('public')->assertExists($departure->cover_image_path);
+    }
+
+    public function test_new_package_defaults_to_draft_and_hidden_from_landing_page(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $branch = Branch::create([
+            'code' => 'DFT',
+            'name' => 'Cabang Default Paket',
+            'city' => 'Banjarmasin',
+            'is_active' => true,
+        ]);
+        $admin = User::factory()->create(['branch_id' => $branch->id]);
+        $admin->assignRole(UserRole::BranchAdmin->value);
+
+        $this->actingAs($admin)
+            ->get(route('master-data.create', 'departures'))
+            ->assertOk()
+            ->assertSee('<option value="0" selected>Nonaktif</option>', false)
+            ->assertSee('<option value="draft" selected>Draft</option>', false);
+
+        $departure = Departure::create([
+            'branch_id' => $branch->id,
+            'code' => 'DFT-DEP-001',
+            'program_name' => 'Paket Belum Dipublikasikan',
+            'departure_date' => today()->addMonth(),
+            'return_date' => today()->addMonth()->addDays(9),
+        ]);
+
+        $this->assertFalse($departure->is_public);
+        $this->assertSame('draft', $departure->status);
+
+        $this->get(route('landing'))
+            ->assertOk()
+            ->assertDontSee('Paket Belum Dipublikasikan');
+    }
+
     public function test_landing_whatsapp_uses_configured_number_in_international_format(): void
     {
         $this->seed(SystemSettingSeeder::class);

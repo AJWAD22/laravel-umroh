@@ -13,11 +13,17 @@ class Departure extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $attributes = [
+        'is_public' => false,
+        'status' => 'draft',
+    ];
+
     protected $fillable = [
         'branch_id',
         'code',
         'program_name',
         'description',
+        'cover_image_path',
         'facilities',
         'requirements',
         'departure_date',
@@ -90,5 +96,12 @@ class Departure extends Model
         }
 
         return $this->departure_date->diffInDays($this->return_date) + 1;
+    }
+
+    public function getCoverImageUrlAttribute(): string
+    {
+        return $this->cover_image_path
+            ? asset('storage/'.$this->cover_image_path)
+            : asset('images/packages/default-umrah-package.webp');
     }
 }

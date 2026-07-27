@@ -51,6 +51,7 @@
     $fieldHelp = [
         'departures' => [
             'program_name' => 'Nama ini tampil di landing page, portal jamaah, pendaftaran, dan rombongan.',
+            'cover_image' => 'Gunakan foto paket yang jelas dan relevan. Foto tampil di landing page dan halaman detail paket.',
             'description' => 'Gunakan bahasa singkat yang menjelaskan kelas paket, durasi, dan keunggulan utama.',
             'facilities' => 'Tulis satu fasilitas per baris, misalnya visa umroh, hotel, transportasi, manasik, dan pendamping.',
             'requirements' => 'Tulis satu persyaratan per baris, misalnya paspor, KTP, KK, buku nikah, dan vaksin jika diperlukan.',
@@ -130,6 +131,7 @@
         ],
         'departures' => [...$commonBranch,
             ['code','Kode Paket','text'], ['program_name','Nama Paket','text'], ['description','Deskripsi Paket','textarea'],
+            ['cover_image','Foto Sampul Paket','file'],
             ['facilities','Fasilitas Paket','textarea'], ['requirements','Persyaratan Paket','textarea'],
             ['departure_date','Tanggal Berangkat','date'],
             ['return_date','Tanggal Pulang','date'], ['departure_airport','Bandara Berangkat','text'],
@@ -251,7 +253,13 @@
                 @php
                     [$name, $label, $type] = $field;
                     $choices = $field[3] ?? [];
-                    $default = $type === 'boolean' ? true : ($name === 'geofence_radius_meters' ? 250 : null);
+                    $default = match (true) {
+                        $resource === 'departures' && $name === 'is_public' => false,
+                        $resource === 'departures' && $name === 'status' => 'draft',
+                        $type === 'boolean' => true,
+                        $name === 'geofence_radius_meters' => 250,
+                        default => null,
+                    };
                     $current = $value($name, $default);
                     $isAutomaticCode = $automaticCodeHelp !== null
                         && in_array($name, ['registration_number', 'employee_number', 'code'], true);
@@ -273,12 +281,20 @@
                         </span>
                         <span class="mt-1.5 block text-xs leading-5 text-slate-500">{{ $automaticCodeHelp }}</span>
                     @elseif ($type === 'file')
-                        @if ($editing && $record->photo_path)
-                            <img src="{{ asset('storage/'.$record->photo_path) }}" alt="Foto {{ $definition['label'] }}" class="mb-3 size-20 rounded-2xl object-cover">
+                        @php
+                            $storedImagePath = $editing
+                                ? ($name === 'cover_image' ? $record->cover_image_path : $record->photo_path)
+                                : null;
+                        @endphp
+                        @if ($storedImagePath)
+                            <img src="{{ asset('storage/'.$storedImagePath) }}" alt="{{ $label }}" class="mb-3 h-32 w-full max-w-sm rounded-2xl object-cover">
                         @endif
                         <input type="file" name="{{ $name }}" accept="image/jpeg,image/png,image/webp"
                                class="control-field w-full border p-2">
-                        <span class="mt-1 block text-xs text-slate-500">JPG, PNG, atau WebP. Maksimal 2 MB.</span>
+                        <span class="mt-1 block text-xs text-slate-500">
+                            JPG, PNG, atau WebP. Maksimal {{ $name === 'cover_image' ? '3' : '2' }} MB.
+                            @if ($editing && $storedImagePath) Kosongkan jika tidak ingin mengganti gambar. @endif
+                        </span>
                     @elseif ($type === 'select')
                         @if ($resource === 'checkpoints' && $name === 'departure_id')
                             <div class="mb-2 rounded-xl bg-blue-50 p-3 text-xs leading-5 text-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
@@ -327,9 +343,12 @@
                         <textarea name="{{ $name }}" rows="7" class="control-field w-full" placeholder="1|Berangkat dari Indonesia|Jeddah|Penerbangan dan proses imigrasi.&#10;2|Umroh pertama|Makkah|Thawaf, sai, dan tahallul.">{{ $current }}</textarea>
                         <span class="mt-1.5 block text-xs leading-5 text-slate-500">Format per baris: hari|judul kegiatan|kota|keterangan singkat. Contoh: 1|Berangkat dari Indonesia|Jeddah|Penerbangan dan proses imigrasi.</span>
                     @elseif ($type === 'boolean')
+                        @php
+                            $booleanCurrent = filter_var($current, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                        @endphp
                         <select name="{{ $name }}" class="control-field w-full">
-                            <option value="1" @selected((string) $current === '1')>Aktif</option>
-                            <option value="0" @selected((string) $current === '0')>Nonaktif</option>
+                            <option value="1" @selected($booleanCurrent === true)>Aktif</option>
+                            <option value="0" @selected($booleanCurrent !== true)>Nonaktif</option>
                         </select>
                     @else
                         <input type="{{ $type }}" name="{{ $name }}" value="{{ $type === 'password' ? '' : $current }}"

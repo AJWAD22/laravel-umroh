@@ -28,7 +28,7 @@ class LandingPageController extends Controller
             ->orderBy('departure_date')
             ->limit(3)
             ->get()
-            ->map(fn (Departure $departure, int $index): array => $this->packageCard($departure, $index));
+            ->map(fn (Departure $departure): array => $this->packageCard($departure));
 
         return view('public.landing', [
             'travel' => $this->travelProfile(),
@@ -88,7 +88,7 @@ class LandingPageController extends Controller
     }
 
     /** @return array<string, mixed> */
-    private function packageCard(Departure $departure, int $index): array
+    private function packageCard(Departure $departure): array
     {
         $hotels = $departure->hotels;
         $makkahHotel = $hotels->first(fn ($hotel): bool => str_contains(strtolower((string) $hotel->city), 'makkah'))
@@ -108,7 +108,7 @@ class LandingPageController extends Controller
             'departure_date' => $departure->departure_date?->translatedFormat('d F Y') ?: 'Jadwal menyusul',
             'price' => $departure->price ? 'Rp'.number_format($departure->price, 0, ',', '.') : 'Hubungi cabang',
             'quota' => $departure->remaining_quota === null ? 'Kuota tersedia' : $departure->remaining_quota.' kursi tersisa',
-            'image' => $this->packageImages()[$index % count($this->packageImages())],
+            'image' => $departure->cover_image_url,
             'url' => route('packages.show', $departure),
         ];
     }
@@ -118,16 +118,6 @@ class LandingPageController extends Controller
         preg_match('/([3-5])\s*(?:bintang|star|\*)/i', $hotelNames, $match);
 
         return isset($match[1]) ? 'Bintang '.$match[1] : 'Hotel pilihan';
-    }
-
-    /** @return array<int, string> */
-    private function packageImages(): array
-    {
-        return [
-            'https://images.unsplash.com/photo-1564769625905-50e93615e769?auto=format&fit=crop&w=900&q=80',
-            'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?auto=format&fit=crop&w=900&q=80',
-            'https://images.unsplash.com/photo-1580418827493-f2b22c0a76cb?auto=format&fit=crop&w=900&q=80',
-        ];
     }
 
     private function activeBranches()

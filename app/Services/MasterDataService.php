@@ -36,6 +36,7 @@ class MasterDataService
      */
     public function __construct(
         private readonly ProfilePhotoService $photos,
+        private readonly PackageCoverService $packageCovers,
         private readonly OperationalCodeGenerator $codes,
         private readonly AuditLogService $audit,
     ) {}
@@ -114,7 +115,8 @@ class MasterDataService
     public function save(string $resource, array $data, User $actor, ?Model $record = null): Model
     {
         $photo = $data['photo'] ?? null;
-        unset($data['photo']);
+        $coverImage = $data['cover_image'] ?? null;
+        unset($data['photo'], $data['cover_image']);
 
         if (in_array($resource, ['tour-leaders', 'muthawwifs'], true)) {
             return DB::transaction(function () use ($resource, $data, $actor, $record, $photo): Model {
@@ -210,7 +212,7 @@ class MasterDataService
             return $admin;
         }
 
-        return DB::transaction(function () use ($resource, $data, $actor, $record, $photo): Model {
+        return DB::transaction(function () use ($resource, $data, $actor, $record, $photo, $coverImage): Model {
             $isNew = ! $record;
             $before = $record?->getOriginal() ?? [];
             $groupId = null;
@@ -242,6 +244,11 @@ class MasterDataService
                 };
                 $model->forceFill([
                     'photo_path' => $this->photos->store($photo, $model->photo_path, $directory),
+                ])->save();
+            }
+            if ($resource === 'departures' && $model instanceof Departure && $coverImage) {
+                $model->forceFill([
+                    'cover_image_path' => $this->packageCovers->store($coverImage, $model->cover_image_path),
                 ])->save();
             }
 

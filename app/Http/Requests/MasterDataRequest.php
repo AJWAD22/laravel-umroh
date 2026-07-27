@@ -118,6 +118,7 @@ class MasterDataRequest extends FormRequest
                 'code' => ['exclude'],
                 'program_name' => ['required', 'string', 'max:255'],
                 'description' => ['nullable', 'string'],
+                'cover_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
                 'facilities' => ['nullable', 'string', 'max:3000'],
                 'requirements' => ['nullable', 'string', 'max:3000'],
                 'departure_date' => ['required', 'date'],
