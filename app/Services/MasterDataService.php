@@ -430,7 +430,6 @@ class MasterDataService
             'status' => $departure->status === 'completed' ? 'completed' : 'cancelled',
             'monitoring_status' => 'normal',
             'activation_pin_hash' => null,
-            'activation_pin_encrypted' => null,
             'activation_pin_used_at' => now(),
         ]);
         Group::query()->whereIn('id', $groupIds)->update(['is_active' => false]);

@@ -614,7 +614,6 @@ class DemoMasterDataSeeder extends Seeder
 
             $pilgrim->forceFill([
                 'activation_pin_hash' => $this->digest($data['pin']),
-                'activation_pin_encrypted' => null,
                 'activation_pin_created_by' => $group->tourLeader?->user_id,
                 'activation_pin_generated_at' => now(),
                 'activation_pin_used_at' => null,

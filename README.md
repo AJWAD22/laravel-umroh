@@ -366,28 +366,37 @@ cd ~/domains/mantauumroh.web.id/public_html
 Perintah aman setelah deploy biasa:
 
 ```bash
+git pull origin main
 php artisan optimize:clear
-php artisan optimize
-```
-
-Jika ada perubahan database atau migration:
-
-```bash
 php artisan migrate --force
-php artisan optimize:clear
-php artisan optimize
+php artisan db:seed --class=RolePermissionSeeder --force
+php artisan db:seed --class=SystemSettingSeeder --force
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
 ```
 
-Jika perlu mengisi ulang data demo:
+Untuk pemasangan pertama atau penetapan ulang satu akun Super Admin:
 
 ```bash
-php artisan db:seed --force
+php artisan db:seed --class=ProductionSuperAdminSeeder --force
 ```
 
-Hati-hati:
+Akun awalnya adalah `superadmin@mantauumrah.id`. Segera ganti password awal melalui menu Profil Saya.
 
-- `db:seed --force` bisa mengubah/menghapus data demo sesuai isi seeder.
-- Jangan jalankan seeder sembarangan jika data asli sudah dipakai.
+Seeder data demo hanya boleh dijalankan pada komputer pengembangan:
+
+```bash
+php artisan db:seed --class=DemoMasterDataSeeder
+```
+
+Jangan menjalankan `DemoMasterDataSeeder` pada production karena seeder tersebut mengganti data operasional contoh.
+
+Tambahkan Cron Job Hostinger berikut agar retensi histori tracking berjalan:
+
+```cron
+* * * * * cd /home/u799496565/domains/mantauumroh.web.id/public_html && php artisan schedule:run
+```
 
 ---
 

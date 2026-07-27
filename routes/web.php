@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\GroupMemberController;
 use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\LocationSearchController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\MonitoringMapController;
 use App\Http\Controllers\NotificationController;
@@ -47,6 +48,9 @@ Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->
     // Super Admin menerima ringkasan nasional dari dashboard dan laporan,
     // tanpa akses ke lokasi maupun histori individu jamaah.
     Route::middleware('role:admin-cabang')->group(function () {
+        Route::get('/location-search', LocationSearchController::class)
+            ->middleware('throttle:20,1')
+            ->name('locations.search');
         Route::get('/monitoring/live-map', [MonitoringMapController::class, 'index'])->name('monitoring.map.index');
         Route::get('/monitoring/live-map/data', [MonitoringMapController::class, 'data'])->name('monitoring.map.data');
         Route::get('/monitoring/tracking-history', [TrackingHistoryController::class, 'index'])->name('monitoring.tracking.index');

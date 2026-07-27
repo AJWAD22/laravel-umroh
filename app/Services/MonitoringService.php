@@ -12,6 +12,12 @@ use Illuminate\Database\Eloquent\Builder;
 
 class MonitoringService
 {
+    private const MAX_PILGRIM_MARKERS = 500;
+
+    private const MAX_STAFF_MARKERS = 100;
+
+    private const MAX_CHECKPOINT_MARKERS = 300;
+
     public function __construct(private readonly SystemSettingService $settings) {}
 
     /**
@@ -75,6 +81,8 @@ class MonitoringService
                 fn (Builder $groupQuery) => $groupQuery->where('departure_id', $departureId),
             ))
             ->when($groupId, fn (Builder $query) => $query->where('group_id', $groupId))
+            ->orderByDesc('recorded_at')
+            ->limit(self::MAX_PILGRIM_MARKERS)
             ->get()
             ->map(function (PilgrimLocation $location) use ($offlineThreshold): array {
                 // Prioritas status:
@@ -135,6 +143,8 @@ class MonitoringService
                 $query->whereHas('tourLeader', fn (Builder $staffQuery) => $staffQuery->whereIn('id', $tourLeaderIds))
                     ->orWhereHas('muthawwif', fn (Builder $staffQuery) => $staffQuery->whereIn('id', $muthawwifIds));
             }))
+            ->orderByDesc('recorded_at')
+            ->limit(self::MAX_STAFF_MARKERS)
             ->get()
             ->map(function (StaffLocation $location) use ($offlineThreshold, $scopeGroups): array {
                 $isTourLeader = $location->user->tourLeader !== null;
@@ -179,6 +189,7 @@ class MonitoringService
                 }
             })
             ->orderBy('name')
+            ->limit(self::MAX_CHECKPOINT_MARKERS)
             ->get()
             ->map(fn (Checkpoint $checkpoint): array => [
                 'id' => "checkpoint-{$checkpoint->id}",
@@ -211,6 +222,11 @@ class MonitoringService
             ],
             'generated_at' => now()->toIso8601String(),
             'source' => 'database',
+            'limits' => [
+                'pilgrims' => self::MAX_PILGRIM_MARKERS,
+                'staff' => self::MAX_STAFF_MARKERS,
+                'checkpoints' => self::MAX_CHECKPOINT_MARKERS,
+            ],
         ];
     }
 }

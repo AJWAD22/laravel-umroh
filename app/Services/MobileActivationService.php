@@ -57,7 +57,6 @@ class MobileActivationService
             $numericCode = $this->uniqueNumericCode();
             $pilgrim->forceFill([
                 'activation_pin_hash' => $this->digest($numericCode),
-                'activation_pin_encrypted' => null,
                 'activation_pin_created_by' => $actor->id,
                 'activation_pin_generated_at' => now(),
                 'activation_pin_used_at' => null,

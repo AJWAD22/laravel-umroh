@@ -92,6 +92,7 @@ document.querySelectorAll('[data-location-picker]').forEach((picker) => {
     const searchInput = picker.querySelector('[data-location-search]');
     const searchButton = picker.querySelector('[data-location-search-button]');
     const currentButton = picker.querySelector('[data-location-current]');
+    const locationSearchUrl = picker.dataset.locationSearchUrl;
     const message = picker.querySelector('[data-location-message]');
     const citySelect = document.querySelector('select[name="city"]');
     const presets = {
@@ -218,16 +219,20 @@ document.querySelectorAll('[data-location-picker]').forEach((picker) => {
 
         setMessage('Mencari lokasi...', 'neutral');
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`, {
-                headers: { Accept: 'application/json' },
+            const response = await fetch(`${locationSearchUrl}?q=${encodeURIComponent(query)}`, {
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
             });
-            if (!response.ok) throw new Error('Pencarian lokasi gagal.');
-            const [result] = await response.json();
+            const payload = await response.json();
+            if (!response.ok) throw new Error(payload.message || 'Pencarian lokasi gagal.');
+            const [result] = payload.data || [];
             if (!result) {
                 setMessage('Lokasi tidak ditemukan. Coba gunakan nama tempat yang lebih spesifik.', 'error');
                 return;
             }
-            setLocation(result.lat, result.lon, result.display_name || 'Hasil pencarian lokasi', 17);
+            setLocation(result.latitude, result.longitude, result.label || 'Hasil pencarian lokasi', 17);
         } catch (error) {
             setMessage(error.message || 'Pencarian lokasi gagal.', 'error');
         }

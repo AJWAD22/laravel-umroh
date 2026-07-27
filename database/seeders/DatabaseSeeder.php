@@ -2,34 +2,22 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
     /**
      * Seeder utama yang dipanggil oleh `php artisan db:seed`.
-     * Urutannya penting: role/pengaturan dibuat lebih dulu, lalu akun dan
-     * data master demo dibuat setelah struktur pendukung tersedia.
+     * Seeder utama aman dijalankan ulang di production. Data demo hanya
+     * boleh dibuat secara eksplisit pada environment local/testing.
      */
     public function run(): void
     {
         $this->call(RolePermissionSeeder::class);
         $this->call(SystemSettingSeeder::class);
 
-        $superAdmin = User::query()->updateOrCreate(
-            ['email' => 'superadmin@umrah.test'],
-            [
-                'name' => 'Super Admin',
-                'password' => 'password',
-                'email_verified_at' => now(),
-            ],
-        );
-        $superAdmin->syncRoles('super-admin');
-
-        $this->call(DemoMasterDataSeeder::class);
-
         if (app()->environment(['local', 'testing']) && env('SEED_DEMO_DATA', false)) {
+            $this->call(DemoMasterDataSeeder::class);
             $this->call(MobileDemoSeeder::class);
         }
     }

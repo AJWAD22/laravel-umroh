@@ -1,5 +1,5 @@
 @php
-    $tabs = ['' => 'Semua', 'new' => 'Baru', 'acknowledged' => 'Ditangani', 'resolved' => 'Selesai'];
+    $tabs = ['' => 'Semua', 'new' => 'Baru', 'active' => 'Ditangani', 'resolved' => 'Selesai'];
     $statusClass = [
         'new' => 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-200',
         'handling' => 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-200',

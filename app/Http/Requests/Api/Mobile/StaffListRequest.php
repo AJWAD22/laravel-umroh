@@ -16,7 +16,17 @@ class StaffListRequest extends FormRequest
     {
         return [
             'per_page' => ['nullable', 'integer', 'between:1,100'],
-            'status' => ['nullable', Rule::in(['active', 'acknowledged', 'resolved', 'cancelled'])],
+            'status' => ['nullable', Rule::in([
+                'new',
+                'handling',
+                'acknowledged',
+                'assigned',
+                'on_the_way',
+                'arrived',
+                'resolved',
+                'cancelled',
+                'false_alarm',
+            ])],
         ];
     }
 }

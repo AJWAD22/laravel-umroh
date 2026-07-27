@@ -91,8 +91,4 @@ class Pilgrim extends Model
         return $this->belongsTo(User::class, 'activation_pin_created_by');
     }
 
-    public function activationPin(): ?string
-    {
-        return null;
-    }
 }

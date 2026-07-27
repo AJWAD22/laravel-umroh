@@ -24,7 +24,14 @@ class SosReportController extends Controller
         $reports = SosReport::query()
             ->with(['pilgrim:id,branch_id,registration_number,full_name,phone', 'group:id,name,code', 'handler:id,name'])
             ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
-            ->when(in_array($status, ['new', 'handling', 'acknowledged', 'assigned', 'on_the_way', 'arrived', 'resolved', 'cancelled', 'false_alarm'], true), fn (Builder $query) => $query->where('status', $status))
+            ->when($status === 'active', fn (Builder $query) => $query->whereIn(
+                'status',
+                ['handling', 'acknowledged', 'assigned', 'on_the_way', 'arrived'],
+            ))
+            ->when(
+                in_array($status, ['new', 'resolved', 'cancelled', 'false_alarm'], true),
+                fn (Builder $query) => $query->where('status', $status),
+            )
             ->latest('reported_at')
             ->paginate(20)
             ->withQueryString();

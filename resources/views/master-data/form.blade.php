@@ -372,6 +372,7 @@
             @endphp
             <section class="mt-7 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
                      data-location-picker
+                     data-location-search-url="{{ route('locations.search') }}"
                      data-lat="{{ $latitudeValue }}"
                      data-lng="{{ $longitudeValue }}"
                      data-city="{{ $pickerCity }}">

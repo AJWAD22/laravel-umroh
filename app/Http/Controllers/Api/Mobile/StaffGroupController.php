@@ -156,7 +156,7 @@ class StaffGroupController extends Controller
             ->additional(['message' => 'Titik kumpul berhasil dinonaktifkan.']);
     }
 
-    public function sosReports(Request $request)
+    public function sosReports(StaffListRequest $request)
     {
         $role = $this->mobileRole($request);
         $status = $request->query('status');
@@ -250,6 +250,7 @@ class StaffGroupController extends Controller
             ->whereHas('latestLocation')
             ->whereHas('user.mobileDevices', fn ($query) => $query->whereNull('revoked_at'))
             ->with('latestLocation')
+            ->limit(min(max($request->integer('per_page', 30), 1), 100))
             ->get()
             ->map(fn ($pilgrim) => [
                 'pilgrim' => (new PilgrimResource($pilgrim))->resolve($request),

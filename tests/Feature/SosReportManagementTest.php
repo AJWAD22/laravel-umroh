@@ -72,6 +72,18 @@ class SosReportManagementTest extends TestCase
         $this->assertSame('normal', $report->pilgrim->fresh()->monitoring_status);
     }
 
+    public function test_active_tab_includes_all_in_progress_sos_statuses(): void
+    {
+        [$admin, $report] = $this->scenario();
+        $report->forceFill(['status' => 'on_the_way'])->save();
+
+        $this->actingAs($admin)
+            ->get(route('monitoring.sos.index', ['status' => 'active']))
+            ->assertOk()
+            ->assertSee($report->pilgrim->full_name)
+            ->assertSee('Menuju Lokasi');
+    }
+
     /**
      * @return array{User, SosReport}
      */
