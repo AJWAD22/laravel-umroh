@@ -36,18 +36,18 @@ class PilgrimController extends Controller
         $pilgrim = $request->user()->pilgrim;
         $group = $this->activeJourney($request);
         $data = $request->validated();
-        $recordedAt = isset($data['recorded_at']) ? CarbonImmutable::parse($data['recorded_at']) : now();
-        if ($recordedAt->isFuture()) {
-            $recordedAt = CarbonImmutable::now();
-        }
+        $serverReceivedAt = CarbonImmutable::now();
+        $recordedAt = isset($data['recorded_at']) ? CarbonImmutable::parse($data['recorded_at']) : $serverReceivedAt;
         unset($data['recorded_at']);
 
-        [$latest, $history, $isCurrent] = DB::transaction(function () use ($pilgrim, $group, $data, $recordedAt): array {
+        [$latest, $history, $isCurrent] = DB::transaction(function () use ($pilgrim, $group, $data, $recordedAt, $serverReceivedAt): array {
             $attributes = [
                 ...$data,
                 'branch_id' => $pilgrim->branch_id,
                 'group_id' => $group?->id,
                 'recorded_at' => $recordedAt,
+                'device_recorded_at' => $recordedAt,
+                'server_received_at' => $serverReceivedAt,
             ];
 
             // pilgrim_locations hanya menyimpan posisi terbaru untuk Live Map.
@@ -64,11 +64,21 @@ class PilgrimController extends Controller
                 $latest->fill([...$attributes, 'gps_status' => 'online'])->save();
             }
 
-            // location_histories menyimpan seluruh riwayat untuk laporan.
-            $history = LocationHistory::query()->create([
-                'pilgrim_id' => $pilgrim->id,
-                ...$attributes,
-            ]);
+            $lastHistory = LocationHistory::query()
+                ->where('pilgrim_id', $pilgrim->id)
+                ->latest('recorded_at')
+                ->lockForUpdate()
+                ->first();
+
+            // Histori tidak menyimpan semua GPS point; cukup simpan jika
+            // pergerakan berarti atau jeda waktu cukup jauh.
+            $history = null;
+            if ($this->shouldStoreLocationHistory($lastHistory, $attributes, $recordedAt)) {
+                $history = LocationHistory::query()->create([
+                    'pilgrim_id' => $pilgrim->id,
+                    ...$attributes,
+                ]);
+            }
 
             return [$latest, $history, $isCurrent];
         });
@@ -88,7 +98,8 @@ class PilgrimController extends Controller
         return response()->json([
             'message' => 'Lokasi berhasil disimpan.',
             'latest_location' => new LocationResource($latest),
-            'history' => new LocationResource($history),
+            'history_saved' => $history !== null,
+            'history' => $history ? new LocationResource($history) : null,
         ], 201);
     }
 
@@ -162,6 +173,35 @@ class PilgrimController extends Controller
         }
 
         return $group;
+    }
+
+    private function shouldStoreLocationHistory(?LocationHistory $lastHistory, array $attributes, CarbonImmutable $recordedAt): bool
+    {
+        if (! $lastHistory) {
+            return true;
+        }
+
+        $distanceMeters = $this->distanceMeters(
+            (float) $lastHistory->latitude,
+            (float) $lastHistory->longitude,
+            (float) $attributes['latitude'],
+            (float) $attributes['longitude'],
+        );
+
+        return $distanceMeters >= 20
+            || abs($recordedAt->diffInSeconds($lastHistory->recorded_at)) >= 60;
+    }
+
+    private function distanceMeters(float $fromLatitude, float $fromLongitude, float $toLatitude, float $toLongitude): float
+    {
+        $earthRadius = 6_371_000;
+        $deltaLatitude = deg2rad($toLatitude - $fromLatitude);
+        $deltaLongitude = deg2rad($toLongitude - $fromLongitude);
+
+        $a = sin($deltaLatitude / 2) ** 2
+            + cos(deg2rad($fromLatitude)) * cos(deg2rad($toLatitude)) * sin($deltaLongitude / 2) ** 2;
+
+        return $earthRadius * 2 * atan2(sqrt($a), sqrt(1 - $a));
     }
 
 }

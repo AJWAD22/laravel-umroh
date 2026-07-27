@@ -21,6 +21,8 @@ class StaffLocation extends Model
         'heading',
         'battery_level',
         'recorded_at',
+        'device_recorded_at',
+        'server_received_at',
     ];
 
     protected function casts(): array
@@ -33,6 +35,8 @@ class StaffLocation extends Model
             'heading' => 'decimal:2',
             'battery_level' => 'integer',
             'recorded_at' => 'datetime',
+            'device_recorded_at' => 'datetime',
+            'server_received_at' => 'datetime',
         ];
     }
 

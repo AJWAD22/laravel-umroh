@@ -67,13 +67,11 @@ class StaffGroupController extends Controller
             'Petugas belum ditugaskan ke rombongan dengan perjalanan aktif.',
         );
         $data = $request->validated();
-        $recordedAt = isset($data['recorded_at']) ? Carbon::parse($data['recorded_at']) : now();
-        if ($recordedAt->isFuture()) {
-            $recordedAt = now();
-        }
+        $serverReceivedAt = now();
+        $recordedAt = isset($data['recorded_at']) ? Carbon::parse($data['recorded_at']) : $serverReceivedAt;
         unset($data['recorded_at']);
 
-        $location = DB::transaction(function () use ($user, $role, $data, $recordedAt): StaffLocation {
+        $location = DB::transaction(function () use ($user, $role, $data, $recordedAt, $serverReceivedAt): StaffLocation {
             $location = StaffLocation::query()
                 ->where('user_id', $user->id)
                 ->lockForUpdate()
@@ -86,6 +84,8 @@ class StaffGroupController extends Controller
                     'role' => $role,
                     ...$data,
                     'recorded_at' => $recordedAt,
+                    'device_recorded_at' => $recordedAt,
+                    'server_received_at' => $serverReceivedAt,
                 ])->save();
             }
 

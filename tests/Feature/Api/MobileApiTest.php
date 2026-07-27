@@ -85,6 +85,66 @@ class MobileApiTest extends TestCase
 
     }
 
+    public function test_location_timestamp_too_far_from_server_time_is_rejected(): void
+    {
+        $context = $this->scenario();
+        $token = $this->login($context['pilgrimUser']);
+
+        $this->withToken($token)->postJson('/api/mobile/send-location', [
+            'latitude' => 21.422487,
+            'longitude' => 39.826206,
+            'recorded_at' => now()->addMinutes(6)->toIso8601String(),
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('recorded_at');
+
+        $this->withToken($token)->postJson('/api/mobile/send-location', [
+            'latitude' => 21.422487,
+            'longitude' => 39.826206,
+            'recorded_at' => now()->subDay()->subMinute()->toIso8601String(),
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('recorded_at');
+
+        $this->assertDatabaseMissing('pilgrim_locations', [
+            'pilgrim_id' => $context['pilgrim']->id,
+        ]);
+    }
+
+    public function test_location_history_is_deduplicated_by_distance_or_interval(): void
+    {
+        Event::fake([AdminNotificationCreated::class]);
+        $context = $this->scenario();
+        $token = $this->login($context['pilgrimUser']);
+        $baseTime = now();
+
+        $this->withToken($token)->postJson('/api/mobile/send-location', [
+            'latitude' => 21.422487,
+            'longitude' => 39.826206,
+            'recorded_at' => $baseTime->toIso8601String(),
+        ])->assertCreated()->assertJsonPath('history_saved', true);
+
+        $this->withToken($token)->postJson('/api/mobile/send-location', [
+            'latitude' => 21.422488,
+            'longitude' => 39.826207,
+            'recorded_at' => $baseTime->copy()->addSeconds(30)->toIso8601String(),
+        ])->assertCreated()->assertJsonPath('history_saved', false);
+
+        $this->assertDatabaseCount('location_histories', 1);
+        $this->assertDatabaseHas('pilgrim_locations', [
+            'pilgrim_id' => $context['pilgrim']->id,
+            'latitude' => 21.422488,
+        ]);
+
+        $this->withToken($token)->postJson('/api/mobile/send-location', [
+            'latitude' => 21.422488,
+            'longitude' => 39.826207,
+            'recorded_at' => $baseTime->copy()->addSeconds(61)->toIso8601String(),
+        ])->assertCreated()->assertJsonPath('history_saved', true);
+
+        $this->assertDatabaseCount('location_histories', 2);
+    }
+
     public function test_leaving_group_meeting_point_radius_sends_one_geofence_alert_until_reentry(): void
     {
         Event::fake([AdminNotificationCreated::class]);

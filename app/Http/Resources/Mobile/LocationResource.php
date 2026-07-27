@@ -19,6 +19,8 @@ class LocationResource extends JsonResource
             'battery_level' => $this->battery_level,
             'gps_status' => $this->when(isset($this->gps_status), $this->gps_status),
             'recorded_at' => $this->recorded_at?->toIso8601String(),
+            'device_recorded_at' => $this->device_recorded_at?->toIso8601String(),
+            'server_received_at' => $this->server_received_at?->toIso8601String(),
         ];
     }
 }

@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Api\Mobile;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class SendLocationRequest extends FormRequest
 {
@@ -25,5 +27,31 @@ class SendLocationRequest extends FormRequest
             // tracking tidak gagal hanya karena clock skew pada ponsel.
             'recorded_at' => ['nullable', 'date'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $value = $this->input('recorded_at');
+            if (! $value) {
+                return;
+            }
+
+            try {
+                $recordedAt = CarbonImmutable::parse($value);
+            } catch (\Throwable) {
+                return;
+            }
+
+            $now = CarbonImmutable::now();
+
+            if ($recordedAt->gt($now->addMinutes(5))) {
+                $validator->errors()->add('recorded_at', 'Waktu perangkat tidak boleh lebih dari 5 menit ke depan.');
+            }
+
+            if ($recordedAt->lt($now->subDay())) {
+                $validator->errors()->add('recorded_at', 'Waktu perangkat tidak boleh lebih lama dari 24 jam.');
+            }
+        });
     }
 }
