@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\Checkpoint;
 use App\Models\Group;
 use App\Models\PilgrimLocation;
+use App\Models\SosReport;
 use App\Models\StaffLocation;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -56,6 +57,25 @@ class MonitoringService
             (int) $this->settings->get('gps_offline_threshold_minutes', 10)
         );
 
+        $activeSosReports = SosReport::query()
+            ->active()
+            ->with(['pilgrim:id,branch_id,registration_number,full_name,phone', 'group:id,name,departure_id'])
+            ->when($branchId, fn (Builder $query) => $query->where('branch_id', $branchId))
+            ->when($departureId, fn (Builder $query) => $query->whereHas(
+                'group',
+                fn (Builder $groupQuery) => $groupQuery->where('departure_id', $departureId),
+            ))
+            ->when($groupId, fn (Builder $query) => $query->where('group_id', $groupId))
+            ->when($search, fn (Builder $query) => $query->whereHas('pilgrim', function (Builder $pilgrimQuery) use ($search): void {
+                $pilgrimQuery->where('full_name', 'like', "%{$search}%")
+                    ->orWhere('registration_number', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
+            }))
+            ->latest('reported_at')
+            ->get()
+            ->unique('pilgrim_id')
+            ->keyBy('pilgrim_id');
+
         $pilgrims = PilgrimLocation::query()
             ->with([
                 'pilgrim:id,branch_id,registration_number,full_name,phone,photo_path,monitoring_status',
@@ -84,16 +104,21 @@ class MonitoringService
             ->orderByDesc('recorded_at')
             ->limit(self::MAX_PILGRIM_MARKERS)
             ->get()
-            ->map(function (PilgrimLocation $location) use ($offlineThreshold): array {
+            ->map(function (PilgrimLocation $location) use ($offlineThreshold, $activeSosReports): array {
+                $activeSos = $activeSosReports->get($location->pilgrim_id);
                 // Prioritas status:
                 // 1. SOS selalu ditandai merah.
                 // 2. Online hanya jika GPS masih online dan waktu lokasinya masih baru.
                 // 3. Selain itu dianggap offline.
-                $status = $location->pilgrim->monitoring_status === 'sos'
+                $status = $activeSos || $location->pilgrim->monitoring_status === 'sos'
                     ? 'sos'
                     : ($location->gps_status === 'online' && $location->recorded_at->gte($offlineThreshold)
                         ? 'online'
                         : 'offline');
+                $latitude = $activeSos?->latitude ?? $location->latitude;
+                $longitude = $activeSos?->longitude ?? $location->longitude;
+                $accuracy = $activeSos?->accuracy ?? $location->accuracy;
+                $updatedAt = $activeSos?->reported_at ?? $location->recorded_at;
 
                 return [
                     'id' => "pilgrim-{$location->pilgrim_id}",
@@ -112,12 +137,22 @@ class MonitoringService
                     'tour_leader' => $location->group?->tourLeader?->full_name,
                     'muthawwif' => $location->group?->muthawwif?->full_name,
                     'status' => $status,
+                    'sos_report_id' => $activeSos?->id,
+                    'sos_status' => $activeSos?->status,
+                    'sos_message' => $activeSos?->message,
+                    'location_status' => $activeSos?->location_status,
                     'battery' => $location->battery_level,
-                    'accuracy' => $location->accuracy !== null ? (float) $location->accuracy : null,
-                    'latitude' => (float) $location->latitude,
-                    'longitude' => (float) $location->longitude,
-                    'location_name' => 'Koordinat GPS terakhir',
-                    'updated_at' => $location->recorded_at->toIso8601String(),
+                    'accuracy' => $accuracy !== null ? (float) $accuracy : null,
+                    'latitude' => (float) $latitude,
+                    'longitude' => (float) $longitude,
+                    'location_name' => $activeSos
+                        ? match ($activeSos->location_status) {
+                            'available' => 'Lokasi SOS terbaru',
+                            'cached' => 'Lokasi terakhir sebelum SOS',
+                            default => 'SOS tanpa koordinat terbaru',
+                        }
+                        : 'Koordinat GPS terakhir',
+                    'updated_at' => $updatedAt->toIso8601String(),
                 ];
             })
             ->when(

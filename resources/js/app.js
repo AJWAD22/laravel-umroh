@@ -312,20 +312,53 @@ if (monitoringMapElement) {
         return ['#16a34a', 'J'];
     };
 
+    const statusMeta = (marker) => {
+        if (marker.type === 'checkpoint') return { label: 'Titik tujuan', tone: 'bg-amber-50 text-amber-700 ring-amber-200', dot: 'bg-amber-500' };
+        if (marker.type === 'tour-leader') return { label: marker.status === 'offline' ? 'Petugas offline' : 'Petugas online', tone: marker.status === 'offline' ? 'bg-slate-100 text-slate-700 ring-slate-200' : 'bg-sky-50 text-sky-700 ring-sky-200', dot: marker.status === 'offline' ? 'bg-slate-500' : 'bg-sky-500' };
+        if (marker.type === 'muthawwif') return { label: marker.status === 'offline' ? 'Muthawwif offline' : 'Muthawwif online', tone: marker.status === 'offline' ? 'bg-slate-100 text-slate-700 ring-slate-200' : 'bg-violet-50 text-violet-700 ring-violet-200', dot: marker.status === 'offline' ? 'bg-slate-500' : 'bg-violet-500' };
+        if (marker.status === 'sos') return { label: 'SOS aktif', tone: 'bg-red-50 text-red-700 ring-red-200', dot: 'bg-red-500' };
+        if (marker.status === 'offline') return { label: 'GPS terlambat', tone: 'bg-slate-100 text-slate-700 ring-slate-200', dot: 'bg-slate-500' };
+        return { label: 'GPS aktif', tone: 'bg-emerald-50 text-emerald-700 ring-emerald-200', dot: 'bg-emerald-500' };
+    };
+
+    const formatDateTime = (value) => value
+        ? new Date(value).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
+        : '-';
+
+    const relativeTime = (value) => {
+        if (!value) return '-';
+        const seconds = Math.max(0, Math.round((Date.now() - new Date(value).getTime()) / 1000));
+        if (seconds < 60) return `${seconds} detik lalu`;
+        const minutes = Math.round(seconds / 60);
+        if (minutes < 60) return `${minutes} menit lalu`;
+        const hours = Math.round(minutes / 60);
+        if (hours < 24) return `${hours} jam lalu`;
+        return `${Math.round(hours / 24)} hari lalu`;
+    };
+
+    const locationStatusLabel = (marker) => {
+        if (marker.location_status === 'available') return 'Lokasi SOS terbaru';
+        if (marker.location_status === 'cached') return 'Lokasi terakhir sebelum SOS';
+        if (marker.location_status === 'unavailable') return 'SOS tanpa koordinat GPS';
+        return marker.location_name || 'Koordinat GPS terakhir';
+    };
+
     const popup = (marker) => {
         if (marker.type === 'checkpoint') {
-            return `<div class="min-w-52"><strong>${escapeHtml(marker.name)}</strong><br><span>${escapeHtml(marker.category)} · ${escapeHtml(marker.city)}</span><br><span>${escapeHtml(marker.group || marker.departure || marker.branch || '-')}</span></div>`;
+            return `<div class="min-w-52"><strong>${escapeHtml(marker.name)}</strong><br><span>${escapeHtml(marker.category)} - ${escapeHtml(marker.city)}</span><br><span>${escapeHtml(marker.group || marker.departure || marker.branch || '-')}</span></div>`;
         }
+        const meta = statusMeta(marker);
 
         return `<div class="min-w-52">
             <strong>${escapeHtml(marker.name)}</strong><br>
-            <span>${escapeHtml(marker.branch || '-')} · ${escapeHtml(marker.group || '-')}</span><br>
+            <span>${escapeHtml(marker.branch || '-')} - ${escapeHtml(marker.group || '-')}</span><br>
+            <span><strong>${escapeHtml(meta.label)}</strong>${marker.updated_at ? ` - ${escapeHtml(relativeTime(marker.updated_at))}` : ''}</span><br>
+            ${marker.status === 'sos' ? `<span>${escapeHtml(locationStatusLabel(marker))}</span><br>` : ''}
             ${marker.phone ? `<span>${escapeHtml(marker.phone)}</span><br>` : ''}
             ${marker.battery !== undefined && marker.battery !== null ? `<span>Baterai: ${escapeHtml(marker.battery)}%</span><br>` : ''}
-            <span>Status: <strong>${escapeHtml(marker.status || marker.type)}</strong></span>
+            ${marker.sos_message ? `<span>Pesan: ${escapeHtml(marker.sos_message)}</span>` : ''}
         </div>`;
     };
-
     const renderDetail = (marker) => {
         selectedMarkerId = marker.id;
         const isCheckpoint = marker.type === 'checkpoint';
@@ -342,12 +375,10 @@ if (monitoringMapElement) {
             : `<div class="grid size-16 shrink-0 place-items-center rounded-2xl ${isCheckpoint ? 'bg-amber-500' : marker.type === 'muthawwif' ? 'bg-violet-600' : marker.type === 'tour-leader' ? 'bg-sky-600' : 'bg-blue-600'} text-xl font-bold text-white">${isCheckpoint ? 'T' : escapeHtml(initials)}</div>`;
         const hasBattery = marker.battery !== null && marker.battery !== undefined;
         const batteryColor = marker.battery <= 20 ? '#dc2626' : marker.battery <= 50 ? '#d97706' : '#16a34a';
-        const updatedAt = marker.updated_at ? new Date(marker.updated_at).toLocaleString('id-ID', {
-            dateStyle: 'medium',
-            timeStyle: 'short',
-        }) : null;
         const typeLabel = isCheckpoint ? 'Titik Tujuan' : isPilgrim ? 'Detail Jamaah' : marker.type === 'tour-leader' ? 'Tour Leader' : 'Muthawwif';
-        const statusLabel = isCheckpoint ? marker.category : marker.status;
+        const statusLabel = isCheckpoint ? marker.category : statusMeta(marker).label;
+        const updatedAt = formatDateTime(marker.updated_at);
+        const updatedRelative = relativeTime(marker.updated_at);
         const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(marker.latitude)},${encodeURIComponent(marker.longitude)}`;
 
         elements.detailContent.innerHTML = `
@@ -370,12 +401,13 @@ if (monitoringMapElement) {
                     <div><dt class="text-xs uppercase tracking-wide text-slate-400">Cakupan</dt><dd class="mt-1 font-medium">${escapeHtml([marker.branch, marker.departure, marker.group].filter(Boolean).join(' · ') || '-')}</dd></div>
                     ${isPilgrim ? `<div><dt class="text-xs uppercase tracking-wide text-slate-400">Tour Leader</dt><dd class="mt-1 font-medium">${escapeHtml(marker.tour_leader || '-')}</dd></div>
                     <div><dt class="text-xs uppercase tracking-wide text-slate-400">Muthawwif</dt><dd class="mt-1 font-medium">${escapeHtml(marker.muthawwif || '-')}</dd></div>` : ''}
+                    ${marker.status === 'sos' ? `<div class="rounded-2xl bg-red-50 p-4 text-red-800 ring-1 ring-red-200"><dt class="text-xs font-bold uppercase tracking-wide text-red-500">Keadaan Darurat</dt><dd class="mt-1 font-bold">${escapeHtml(marker.sos_message || 'Jamaah meminta bantuan.')}</dd><dd class="mt-1 text-xs">${escapeHtml(locationStatusLabel(marker))}</dd></div>` : ''}
                     ${isCheckpoint && marker.description ? `<div><dt class="text-xs uppercase tracking-wide text-slate-400">Keterangan</dt><dd class="mt-1 leading-6">${escapeHtml(marker.description)}</dd></div>` : ''}
                     <div><dt class="text-xs uppercase tracking-wide text-slate-400">Koordinat${isCheckpoint && marker.radius ? ` · Radius ${escapeHtml(marker.radius)} m` : ''}</dt>
                         <dd class="mt-1 font-mono text-xs text-slate-500">${Number(marker.latitude).toFixed(7)}, ${Number(marker.longitude).toFixed(7)} · akurasi ±${escapeHtml(marker.accuracy ?? '-')} m</dd></div>
                     ${hasBattery ? `<div><dt class="text-xs uppercase tracking-wide text-slate-400">Baterai</dt>
                         <dd class="mt-2 flex items-center gap-3"><span class="h-2 flex-1 overflow-hidden rounded-full bg-slate-200"><span class="block h-full rounded-full" style="width:${Number(marker.battery)}%;background:${batteryColor}"></span></span><strong>${escapeHtml(marker.battery)}%</strong></dd></div>` : ''}
-                    ${updatedAt ? `<div><dt class="text-xs uppercase tracking-wide text-slate-400">Waktu Update</dt><dd class="mt-1 font-medium">${escapeHtml(updatedAt)}</dd></div>` : ''}
+                    ${marker.updated_at ? `<div><dt class="text-xs uppercase tracking-wide text-slate-400">Waktu Update</dt><dd class="mt-1 font-medium">${escapeHtml(updatedRelative)} (${escapeHtml(updatedAt)})</dd></div>` : ''}
                 </dl>
                 <div class="mt-6 grid ${marker.phone ? 'grid-cols-2' : 'grid-cols-1'} gap-2">
                     ${marker.phone ? `<a href="tel:${escapeHtml(marker.phone)}" class="button-secondary">Hubungi</a>` : ''}
@@ -397,11 +429,13 @@ if (monitoringMapElement) {
 
         markers.forEach((marker) => {
             const statusTone = marker.status === 'sos' ? 'bg-red-500' : marker.status === 'online' ? 'bg-emerald-500' : 'bg-slate-400';
-            const updated = new Date(marker.updated_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            const meta = statusMeta(marker);
+            const updated = relativeTime(marker.updated_at);
+            const accuracy = marker.accuracy !== null && marker.accuracy !== undefined ? `Akurasi ${Math.round(Number(marker.accuracy))} m` : 'Akurasi -';
             const item = document.createElement('button');
             item.type = 'button';
             item.className = 'flex w-full items-center gap-3 border-b border-slate-200/80 px-4 py-3 text-left transition hover:bg-white focus:bg-white dark:border-slate-800 dark:hover:bg-slate-900 dark:focus:bg-slate-900';
-            item.innerHTML = `<span class="relative grid size-10 shrink-0 place-items-center rounded-2xl bg-slate-200 text-xs font-extrabold text-slate-700 dark:bg-slate-800 dark:text-slate-200">${escapeHtml(marker.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase())}<i class="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white ${statusTone} dark:border-slate-900"></i></span><span class="min-w-0 flex-1"><strong class="block truncate text-sm">${escapeHtml(marker.name)}</strong><small class="mt-0.5 block truncate text-slate-500">${escapeHtml(marker.group || marker.branch || '-')}</small></span><span class="shrink-0 text-right"><small class="block font-bold text-slate-500">${escapeHtml(updated)}</small><small class="mt-1 block text-[10px] uppercase text-slate-400">${escapeHtml(marker.status)}</small></span>`;
+            item.innerHTML = `<span class="relative grid size-10 shrink-0 place-items-center rounded-2xl bg-slate-200 text-xs font-extrabold text-slate-700 dark:bg-slate-800 dark:text-slate-200">${escapeHtml(marker.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase())}<i class="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white ${statusTone} dark:border-slate-900"></i></span><span class="min-w-0 flex-1"><strong class="block truncate text-sm">${escapeHtml(marker.name)}</strong><small class="mt-0.5 block truncate text-slate-500">${escapeHtml(marker.group || marker.branch || '-')}</small><small class="mt-1 block truncate text-[11px] text-slate-400">${escapeHtml(locationStatusLabel(marker))} - ${escapeHtml(accuracy)}</small></span><span class="shrink-0 text-right"><small class="block font-bold text-slate-500">${escapeHtml(updated)}</small><small class="mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${meta.tone}">${escapeHtml(meta.label)}</small></span>`;
             item.addEventListener('click', () => {
                 map.flyTo([marker.latitude, marker.longitude], 17);
                 renderDetail(marker);
@@ -414,7 +448,7 @@ if (monitoringMapElement) {
         const [color, label] = markerStyle(marker);
         const icon = L.divIcon({
             className: '',
-            html: `<span class="monitoring-marker ${marker.type === 'checkpoint' ? 'monitoring-marker-square' : ''}" style="background:${color}">${label}</span>`,
+            html: `<span class="monitoring-marker ${marker.type === 'checkpoint' ? 'monitoring-marker-square' : ''} ${marker.status === 'sos' ? 'monitoring-marker-sos' : ''}" style="background:${color}">${label}</span>`,
             iconSize: [marker.type === 'tour-leader' ? 34 : 30, 30],
             iconAnchor: [15, 15],
             popupAnchor: [0, -16],

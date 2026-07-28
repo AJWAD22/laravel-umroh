@@ -35,6 +35,21 @@
     border-radius: 9px;
 }
 
+.monitoring-marker-sos {
+    width: 36px;
+    height: 36px;
+    border-width: 4px;
+    font-size: 14px;
+    box-shadow: 0 0 0 0 rgb(220 38 38 / 55%), 0 10px 22px rgb(127 29 29 / 38%);
+    animation: monitoring-sos-pulse 1.4s ease-out infinite;
+}
+
+@keyframes monitoring-sos-pulse {
+    0% { box-shadow: 0 0 0 0 rgb(220 38 38 / 55%), 0 10px 22px rgb(127 29 29 / 38%); }
+    70% { box-shadow: 0 0 0 14px rgb(220 38 38 / 0%), 0 10px 22px rgb(127 29 29 / 38%); }
+    100% { box-shadow: 0 0 0 0 rgb(220 38 38 / 0%), 0 10px 22px rgb(127 29 29 / 38%); }
+}
+
 @layer components {
     .sidebar-link {
         @apply relative flex min-h-11 items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold text-slate-400 transition duration-200 hover:translate-x-0.5 hover:bg-white/[0.07] hover:text-white;
