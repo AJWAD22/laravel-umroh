@@ -10,6 +10,7 @@ use App\Models\Departure;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\MobileActivationSession;
+use App\Models\MobileDevice;
 use App\Models\Muthawwif;
 use App\Models\Pilgrim;
 use App\Models\PilgrimRegistration;
@@ -679,6 +680,42 @@ class MobileApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.status', 'approved')
             ->assertJsonPath('data.pilgrim_name', $context['pilgrim']->full_name);
+    }
+
+    public function test_activation_pin_cannot_be_claimed_by_second_active_device(): void
+    {
+        $context = $this->scenario();
+        $admin = User::factory()->create(['branch_id' => $context['branch']->id]);
+        $admin->assignRole('admin-cabang');
+        $pin = app(MobileActivationService::class)
+            ->generatePin($admin, $context['pilgrim'], 'PIN aktivasi aplikasi jamaah');
+
+        MobileDevice::create([
+            'user_id' => $context['pilgrimUser']->id,
+            'device_uuid' => 'active-device-001',
+            'device_name' => 'HP Jamaah',
+            'platform' => 'android',
+            'activated_at' => now(),
+            'last_used_at' => now(),
+        ]);
+
+        $this->postJson('/api/mobile/activation/claim', [
+            'registration_number' => $context['pilgrim']->registration_number,
+            'numeric_code' => $pin,
+            'device_uuid' => 'active-device-001',
+            'device_name' => 'HP Jamaah',
+            'platform' => 'android',
+        ])->assertOk();
+
+        $this->postJson('/api/mobile/activation/claim', [
+            'registration_number' => $context['pilgrim']->registration_number,
+            'numeric_code' => $pin,
+            'device_uuid' => 'second-device-001',
+            'device_name' => 'HP Lain',
+            'platform' => 'android',
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('activation');
     }
 
     public function test_wrong_or_old_pin_is_rejected_after_reset(): void

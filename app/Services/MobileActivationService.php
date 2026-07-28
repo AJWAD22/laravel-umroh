@@ -384,6 +384,17 @@ class MobileActivationService
             $this->ensurePilgrimUser($pilgrim);
             $this->ensurePinEligible($pilgrim);
 
+            $activeDevice = MobileDevice::query()
+                ->where('user_id', $pilgrim->user_id)
+                ->whereNull('revoked_at')
+                ->first(['device_uuid']);
+
+            if ($activeDevice && ! hash_equals((string) $activeDevice->device_uuid, (string) $data['device_uuid'])) {
+                throw ValidationException::withMessages([
+                    'activation' => ['PIN ini sudah aktif di perangkat lain. Minta Admin Cabang atau Tour Leader mencabut perangkat lama/reset PIN.'],
+                ]);
+            }
+
             // Aktivasi langsung disetujui otomatis. Tour Leader tidak perlu
             // menekan approve, tetapi relasi rombongan tetap dipakai untuk audit.
             $group = $this->groupAccess->activeGroupForPilgrim($pilgrim);
