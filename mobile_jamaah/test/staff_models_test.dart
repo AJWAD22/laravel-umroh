@@ -38,5 +38,7 @@ void main() {
 
     expect(pilgrim.location?.longitude, 112.7);
     expect(pilgrim.monitoringStatus, 'normal');
+    expect(pilgrim.activationPinAvailable, isFalse);
+    expect(pilgrim.deviceActive, isFalse);
   });
 }

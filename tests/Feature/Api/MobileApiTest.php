@@ -199,6 +199,8 @@ class MobileApiTest extends TestCase
         $this->withToken($leaderToken)
             ->getJson('/api/mobile/group-pilgrims')
             ->assertOk()
+            ->assertJsonPath('data.0.activation_pin_available', false)
+            ->assertJsonPath('data.0.device_active', false)
             ->assertJsonFragment(['full_name' => $context['pilgrim']->full_name])
             ->assertJsonMissing(['full_name' => $context['foreignPilgrim']->full_name]);
 

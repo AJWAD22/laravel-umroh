@@ -17,6 +17,10 @@ class PilgrimResource extends JsonResource
             'photo_url' => $this->photo_path ? asset('storage/'.$this->photo_path) : null,
             'status' => $this->status,
             'monitoring_status' => $this->monitoring_status,
+            'activation_pin_available' => filled($this->activation_pin_ciphertext),
+            'device_active' => $this->relationLoaded('user')
+                && $this->user?->relationLoaded('mobileDevices')
+                && $this->user->mobileDevices->isNotEmpty(),
             'branch' => $this->whenLoaded('branch', fn () => [
                 'id' => $this->branch->id,
                 'name' => $this->branch->name,

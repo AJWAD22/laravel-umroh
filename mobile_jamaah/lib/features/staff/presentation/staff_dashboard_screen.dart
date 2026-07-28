@@ -7,6 +7,7 @@ import '../../checkpoint/presentation/checkpoint_screen.dart';
 import '../../location/presentation/tracking_provider.dart';
 import '../../profile/domain/jamaah_profile.dart';
 import '../../profile/presentation/staff_profile_screen.dart';
+import 'staff_activation_screen.dart';
 import 'staff_locations_screen.dart';
 import 'staff_pilgrims_screen.dart';
 import 'staff_provider.dart';
@@ -110,9 +111,9 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                       lastSentAt: tracking.lastSentAt,
                       error: tracking.error,
                       onRetry:
-                          () => context
-                              .read<TrackingProvider>()
-                              .restart(asStaff: true),
+                          () => context.read<TrackingProvider>().restart(
+                            asStaff: true,
+                          ),
                     ),
                     const SizedBox(height: 24),
                     Text(
@@ -169,6 +170,20 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                                 () =>
                                     _open(context, const StaffPilgrimsScreen()),
                           ),
+                          if (isLeader)
+                            _DashboardMenu(
+                              icon: Icons.key_rounded,
+                              label: 'Aktivasi Jamaah',
+                              description:
+                                  'Lihat PIN dan status perangkat jamaah',
+                              count: staff.pilgrims.length,
+                              accentColor: const Color(0xFF7C3AED),
+                              onTap:
+                                  () => _open(
+                                    context,
+                                    const StaffActivationScreen(),
+                                  ),
+                            ),
                           _DashboardMenu(
                             icon: Icons.location_on_rounded,
                             label: 'Lokasi Jamaah',
@@ -268,7 +283,8 @@ class _StaffJourneyCard extends StatelessWidget {
             : '${dateFormat.format(journey!.departureDate!)} - '
                 '${dateFormat.format(journey!.returnDate!)}';
     final routeLabel =
-        _hasValue(journey!.departureAirport) && _hasValue(journey!.arrivalAirport)
+        _hasValue(journey!.departureAirport) &&
+                _hasValue(journey!.arrivalAirport)
             ? '${journey!.departureAirport} → ${journey!.arrivalAirport}'
             : null;
 
@@ -328,10 +344,7 @@ class _StaffJourneyCard extends StatelessWidget {
                 label: dateRange!,
               ),
             if (_hasValue(routeLabel))
-              _StaffJourneyRow(
-                icon: Icons.route_rounded,
-                label: routeLabel!,
-              ),
+              _StaffJourneyRow(icon: Icons.route_rounded, label: routeLabel!),
           ],
         ),
       ),

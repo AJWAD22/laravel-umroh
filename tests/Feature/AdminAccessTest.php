@@ -94,6 +94,9 @@ class AdminAccessTest extends TestCase
             ->post(route('master-data.pilgrims.regenerate-pin', $pilgrim))
             ->assertForbidden();
         $this->actingAs($superAdmin)
+            ->post(route('master-data.pilgrims.reveal-pin', $pilgrim))
+            ->assertForbidden();
+        $this->actingAs($superAdmin)
             ->post(route('groups.reset-pins', $group))
             ->assertForbidden();
     }

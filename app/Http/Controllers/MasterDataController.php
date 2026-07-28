@@ -166,7 +166,25 @@ class MasterDataController extends Controller
         Gate::authorize('update', $pilgrim);
         $pin = $this->activations->generatePin($request->user(), $pilgrim, $data['reason']);
 
-        return back()->with('success', "PIN aktivasi {$pilgrim->full_name} diperbarui: {$pin}");
+        return back()
+            ->with('success', "PIN aktivasi {$pilgrim->full_name} berhasil diperbarui.")
+            ->with('revealed_pin', [
+                'name' => $pilgrim->full_name,
+                'registration_number' => $pilgrim->registration_number,
+                'pin' => $pin,
+            ]);
+    }
+
+    public function revealPin(Request $request, Pilgrim $pilgrim): RedirectResponse
+    {
+        Gate::authorize('update', $pilgrim);
+        $pin = $this->activations->revealPinForBranchAdmin($request->user(), $pilgrim);
+
+        return back()->with('revealed_pin', [
+            'name' => $pilgrim->full_name,
+            'registration_number' => $pilgrim->registration_number,
+            'pin' => $pin,
+        ]);
     }
 
     public function destroy(Request $request, string $resource, int $record): RedirectResponse

@@ -257,7 +257,11 @@ class StaffGroupController extends Controller
     private function pilgrims(Request $request, MobileRole $role)
     {
         $pilgrims = $this->access->pilgrimsForStaff($request->user(), $role)
-            ->with(['branch:id,name', 'latestLocation'])
+            ->with([
+                'branch:id,name',
+                'latestLocation',
+                'user.mobileDevices' => fn ($query) => $query->whereNull('revoked_at'),
+            ])
             ->orderBy('full_name')
             ->paginate($request->integer('per_page', 30));
 

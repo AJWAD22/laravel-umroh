@@ -60,6 +60,8 @@ Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->
         Route::patch('/monitoring/sos/{sosReport}/resolve', [SosReportController::class, 'resolve'])->name('monitoring.sos.resolve');
         Route::post('/master-data/pilgrims/{pilgrim}/regenerate-pin', [MasterDataController::class, 'regeneratePin'])
             ->name('master-data.pilgrims.regenerate-pin');
+        Route::post('/master-data/pilgrims/{pilgrim}/reveal-pin', [MasterDataController::class, 'revealPin'])
+            ->name('master-data.pilgrims.reveal-pin');
         Route::post('/groups/{group}/reset-pins', [GroupMemberController::class, 'resetPins'])
             ->name('groups.reset-pins');
         Route::post('/departures/{departure}/reset-pins', [GroupMemberController::class, 'resetDeparturePins'])

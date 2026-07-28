@@ -34,10 +34,22 @@
         </span>
     @endif
 @elseif ($column === 'activation_pin')
-    @if ($record->activation_pin_generated_at && ! $record->activation_pin_used_at)
-        <x-status-badge value="pending" label="Sudah dibuat" />
-    @elseif ($record->activation_pin_used_at)
-        <x-status-badge value="completed" label="Sudah digunakan" />
+    @if ($record->activation_pin_generated_at)
+        <div class="flex min-w-28 flex-col items-start gap-1.5">
+            <x-status-badge value="pending" label="Sudah dibuat" />
+            @if ($canManage && $record->activation_pin_ciphertext)
+                <form method="POST" action="{{ route('master-data.pilgrims.reveal-pin', $record) }}">
+                    @csrf
+                    <button class="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-bold text-violet-700 hover:bg-violet-50 dark:text-violet-300 dark:hover:bg-violet-950/40"
+                            title="Lihat PIN aktivasi {{ $record->full_name }}">
+                        <i data-lucide="eye" class="size-3.5"></i>
+                        Lihat PIN
+                    </button>
+                </form>
+            @elseif ($canManage)
+                <span class="text-xs text-amber-700">Perlu reset PIN</span>
+            @endif
+        </div>
     @else
         <span class="text-slate-400">Belum dibuat</span>
     @endif

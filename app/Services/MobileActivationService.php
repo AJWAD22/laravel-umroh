@@ -173,6 +173,32 @@ class MobileActivationService
         return (string) $pilgrim->activation_pin_ciphertext;
     }
 
+    public function revealPinForBranchAdmin(User $actor, Pilgrim $pilgrim): string
+    {
+        if (! $actor->can('pilgrims.manage')
+            || (int) $actor->branch_id !== (int) $pilgrim->branch_id) {
+            throw new AuthorizationException;
+        }
+
+        if (blank($pilgrim->activation_pin_ciphertext)) {
+            throw ValidationException::withMessages([
+                'activation' => ['PIN belum tersedia. Buat atau reset PIN jamaah terlebih dahulu.'],
+            ]);
+        }
+
+        $this->audit->record(
+            $actor,
+            'activation.pin.revealed_by_branch_admin',
+            $pilgrim,
+            metadata: [
+                'branch_id' => $pilgrim->branch_id,
+                'registration_number' => $pilgrim->registration_number,
+            ],
+        );
+
+        return (string) $pilgrim->activation_pin_ciphertext;
+    }
+
     /**
      * @return array{count: int, pins: list<array{pilgrim_id: int, registration_number: string, name: string, pin: string}>}
      */

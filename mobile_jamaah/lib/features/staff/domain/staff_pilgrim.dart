@@ -5,6 +5,8 @@ class StaffPilgrim {
     required this.fullName,
     required this.status,
     required this.monitoringStatus,
+    required this.activationPinAvailable,
+    required this.deviceActive,
     this.phone,
     this.photoUrl,
     this.branchName,
@@ -18,6 +20,8 @@ class StaffPilgrim {
   final String? photoUrl;
   final String status;
   final String monitoringStatus;
+  final bool activationPinAvailable;
+  final bool deviceActive;
   final String? branchName;
   final StaffLocation? location;
 
@@ -30,6 +34,8 @@ class StaffPilgrim {
       photoUrl: json['photo_url']?.toString(),
       status: json['status']?.toString() ?? '-',
       monitoringStatus: json['monitoring_status']?.toString() ?? 'normal',
+      activationPinAvailable: json['activation_pin_available'] == true,
+      deviceActive: json['device_active'] == true,
       branchName:
           (json['branch'] as Map<String, dynamic>?)?['name']?.toString(),
       location:

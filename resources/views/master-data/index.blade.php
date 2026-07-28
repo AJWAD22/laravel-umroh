@@ -116,6 +116,40 @@
         </div>
     </x-slot:header>
 
+    @if ($resource === 'pilgrims' && session('revealed_pin'))
+        @php
+            $revealedPin = session('revealed_pin');
+        @endphp
+        <div id="revealed-pin-dialog" class="fixed inset-0 z-[80] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm">
+            <section role="dialog" aria-modal="true" aria-labelledby="revealed-pin-title"
+                     class="w-full max-w-md rounded-2xl border border-violet-200 bg-white p-6 shadow-2xl dark:border-violet-900 dark:bg-slate-900">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 id="revealed-pin-title" class="text-xl font-extrabold text-slate-950 dark:text-white">PIN Aktivasi Jamaah</h2>
+                        <p class="mt-1 text-sm text-slate-500">{{ $revealedPin['name'] }} &middot; {{ $revealedPin['registration_number'] }}</p>
+                    </div>
+                    <button type="button" class="icon-action" aria-label="Tutup"
+                            onclick="document.getElementById('revealed-pin-dialog').remove()">
+                        <i data-lucide="x" class="size-4"></i>
+                    </button>
+                </div>
+                <div class="mt-6 rounded-2xl bg-violet-50 p-5 text-center dark:bg-violet-950/30">
+                    <p class="text-xs font-bold uppercase text-violet-600">PIN untuk login aplikasi</p>
+                    <p class="mt-2 font-mono text-4xl font-black tracking-[0.22em] text-violet-900 dark:text-violet-100">{{ $revealedPin['pin'] }}</p>
+                </div>
+                <p class="mt-4 text-sm leading-6 text-slate-500">Berikan PIN hanya kepada jamaah terkait atau Tour Leader rombongannya.</p>
+                <div class="mt-5 grid grid-cols-2 gap-2">
+                    <button type="button" class="button-secondary"
+                            onclick="navigator.clipboard.writeText('{{ $revealedPin['pin'] }}'); this.textContent='Tersalin'">
+                        Salin PIN
+                    </button>
+                    <button type="button" class="button-primary"
+                            onclick="document.getElementById('revealed-pin-dialog').remove()">Selesai</button>
+                </div>
+            </section>
+        </div>
+    @endif
+
     @if ($guide)
         <section class="mb-5 grid gap-3 lg:grid-cols-3">
             <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">

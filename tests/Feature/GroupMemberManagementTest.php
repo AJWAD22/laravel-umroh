@@ -168,6 +168,22 @@ class GroupMemberManagementTest extends TestCase
             'subject_type' => Group::class,
             'subject_id' => $group->id,
         ]);
+
+        $pin = $pilgrim->fresh()->activation_pin_ciphertext;
+        $this->actingAs($admin)
+            ->get(route('master-data.index', 'pilgrims'))
+            ->assertOk()
+            ->assertSee('Lihat PIN');
+        $this->actingAs($admin)
+            ->post(route('master-data.pilgrims.reveal-pin', $pilgrim))
+            ->assertRedirect()
+            ->assertSessionHas('revealed_pin', fn (array $value) => $value['pin'] === $pin);
+        $this->assertDatabaseHas('audit_logs', [
+            'actor_id' => $admin->id,
+            'action' => 'activation.pin.revealed_by_branch_admin',
+            'subject_type' => Pilgrim::class,
+            'subject_id' => $pilgrim->id,
+        ]);
     }
 
     public function test_group_member_page_shows_activation_operational_summary(): void
