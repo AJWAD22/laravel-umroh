@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Mobile;
 
+use App\Enums\MobileRole;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,6 +19,11 @@ class PilgrimResource extends JsonResource
             'status' => $this->status,
             'monitoring_status' => $this->monitoring_status,
             'activation_pin_available' => filled($this->activation_pin_ciphertext),
+            'activation_pin' => $this->when(
+                $request->user()?->hasRole(MobileRole::TourLeader->value)
+                    && filled($this->activation_pin_ciphertext),
+                fn () => (string) $this->activation_pin_ciphertext,
+            ),
             'device_active' => $this->relationLoaded('user')
                 && $this->user?->relationLoaded('mobileDevices')
                 && $this->user->mobileDevices->isNotEmpty(),

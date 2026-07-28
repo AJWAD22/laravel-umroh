@@ -28,6 +28,8 @@ void main() {
       'full_name': 'Jamaah Demo',
       'status': 'active',
       'monitoring_status': 'normal',
+      'activation_pin_available': true,
+      'activation_pin': '483921',
       'latest_location': {
         'latitude': -7.1,
         'longitude': 112.7,
@@ -38,7 +40,8 @@ void main() {
 
     expect(pilgrim.location?.longitude, 112.7);
     expect(pilgrim.monitoringStatus, 'normal');
-    expect(pilgrim.activationPinAvailable, isFalse);
+    expect(pilgrim.activationPinAvailable, isTrue);
     expect(pilgrim.deviceActive, isFalse);
+    expect(pilgrim.activationPin, '483921');
   });
 }

@@ -234,6 +234,13 @@ class MobileApiTest extends TestCase
         $leaderToken = $this->login($context['leaderUser']);
 
         $this->withToken($leaderToken)
+            ->getJson('/api/mobile/group-pilgrims')
+            ->assertOk()
+            ->assertJsonPath('data.0.activation_pin', '483921');
+
+        $this->app['auth']->forgetGuards();
+
+        $this->withToken($leaderToken)
             ->getJson("/api/mobile/group-pilgrims/{$context['pilgrim']->id}/activation-pin")
             ->assertOk()
             ->assertJsonPath('data.registration_number', 'API-JMH-001')

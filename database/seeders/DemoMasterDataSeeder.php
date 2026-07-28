@@ -46,6 +46,12 @@ class DemoMasterDataSeeder extends Seeder
 
     public function run(): void
     {
+        if (! app()->environment(['local', 'testing'])) {
+            $this->command?->warn('Seeder demo hanya boleh dijalankan pada environment local atau testing.');
+
+            return;
+        }
+
         DB::transaction(function (): void {
             $this->deleteOldMasterData();
             $this->deleteLegacyBranchAdmins();

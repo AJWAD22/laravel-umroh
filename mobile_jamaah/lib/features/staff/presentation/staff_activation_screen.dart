@@ -221,6 +221,46 @@ class _ActivationCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 14),
+            if (pilgrim.activationPin != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3E8FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.key_rounded, color: Color(0xFF6D28D9)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        pilgrim.activationPin!,
+                        style: const TextStyle(
+                          color: Color(0xFF4C1D95),
+                          fontFamily: 'monospace',
+                          fontSize: 21,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 4,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Salin PIN',
+                      onPressed:
+                          () => Clipboard.setData(
+                            ClipboardData(text: pilgrim.activationPin!),
+                          ),
+                      icon: const Icon(Icons.copy_rounded),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
@@ -235,7 +275,7 @@ class _ActivationCard extends StatelessWidget {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                         : const Icon(Icons.visibility_rounded),
-                label: Text(isLoading ? 'Membuka PIN...' : 'Lihat PIN'),
+                label: Text(isLoading ? 'Membuka PIN...' : 'Lihat PIN besar'),
               ),
             ),
           ],
