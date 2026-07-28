@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -84,13 +85,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final sosRepository = context.read<SosRepository>();
     setState(() => _sendingSos = true);
     try {
-      final position = await locationRepository.currentPosition();
+      Object? locationError;
+      Position? position;
+      try {
+        position = await locationRepository.currentPosition();
+      } catch (error) {
+        locationError = error;
+      }
+
       await sosRepository.send(position: position);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'SOS terkirim. Tetap tenang, petugas sedang diberi tahu.',
+            locationError == null
+                ? 'SOS terkirim. Tetap tenang, petugas sedang diberi tahu.'
+                : 'SOS terkirim tanpa GPS terbaru. Petugas tetap diberi tahu.',
           ),
         ),
       );

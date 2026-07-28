@@ -8,16 +8,18 @@ class SosRepository {
   final ApiClient _api;
 
   Future<void> send({
-    required Position position,
+    Position? position,
     String message = 'Jamaah meminta bantuan.',
   }) async {
     try {
       await _api.dio.post<Map<String, dynamic>>(
         '/api/mobile/sos',
         data: {
-          'latitude': position.latitude,
-          'longitude': position.longitude,
-          'accuracy': position.accuracy,
+          if (position != null) ...{
+            'latitude': position.latitude,
+            'longitude': position.longitude,
+            'accuracy': position.accuracy,
+          },
           'message': message,
         },
       );
