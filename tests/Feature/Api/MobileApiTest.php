@@ -662,6 +662,25 @@ class MobileApiTest extends TestCase
             ->assertJsonPath('data.role', MobileRole::Pilgrim->value);
     }
 
+    public function test_pilgrim_can_claim_activation_with_pin_only(): void
+    {
+        $context = $this->scenario();
+        $admin = User::factory()->create(['branch_id' => $context['branch']->id]);
+        $admin->assignRole('admin-cabang');
+        $pin = app(MobileActivationService::class)
+            ->generatePin($admin, $context['pilgrim'], 'PIN aktivasi aplikasi jamaah');
+
+        $this->postJson('/api/mobile/activation/claim', [
+            'numeric_code' => $pin,
+            'device_uuid' => 'activation-device-pin-only',
+            'device_name' => 'Android Jamaah',
+            'platform' => 'android',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'approved')
+            ->assertJsonPath('data.pilgrim_name', $context['pilgrim']->full_name);
+    }
+
     public function test_wrong_or_old_pin_is_rejected_after_reset(): void
     {
         $context = $this->scenario();

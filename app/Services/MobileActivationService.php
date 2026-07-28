@@ -368,7 +368,10 @@ class MobileActivationService
             // Sistem mencari PIN yang masih aktif, belum dipakai, dan belum kedaluwarsa.
             $pilgrim = Pilgrim::query()
                 ->where('activation_pin_hash', $this->digest($data['numeric_code']))
-                ->where('registration_number', $data['registration_number'])
+                ->when(
+                    filled($data['registration_number'] ?? null),
+                    fn ($query) => $query->where('registration_number', $data['registration_number']),
+                )
                 ->lockForUpdate()
                 ->first();
 
