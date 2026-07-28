@@ -35,6 +35,64 @@ class MobileActivationService
             ]);
         }
 
+        return $this->issuePin($pilgrim, (string) $reason, $actor);
+    }
+
+    /**
+     * Merotasi PIN yang sudah berumur sesuai batas hari.
+     *
+     * @return array{rotated: int, skipped: int}
+     */
+    public function rotateExpiredPins(int $days = 15): array
+    {
+        $days = max(1, $days);
+        $rotated = 0;
+        $skipped = 0;
+
+        Pilgrim::query()
+            ->whereNotNull('activation_pin_hash')
+            ->whereNotNull('activation_pin_generated_at')
+            ->where('activation_pin_generated_at', '<=', now()->subDays($days))
+            ->whereIn('status', ['registered', 'active'])
+            ->whereHas('groupMemberships', fn ($query) => $query
+                ->where('status', 'active')
+                ->whereHas('group', fn ($groupQuery) => $groupQuery
+                    ->where('is_active', true)
+                    ->whereHas('departure', fn ($departureQuery) => $departureQuery
+                        ->whereIn('status', ['scheduled', 'departed'])
+                        ->where(fn ($dateQuery) => $dateQuery
+                            ->whereNull('return_date')
+                            ->orWhereDate('return_date', '>=', today())))))
+            ->orderBy('id')
+            ->chunkById(100, function ($pilgrims) use ($days, &$rotated, &$skipped): void {
+                foreach ($pilgrims as $pilgrim) {
+                    try {
+                        $this->issuePin(
+                            $pilgrim,
+                            "Rotasi PIN otomatis setiap {$days} hari.",
+                        );
+                        $rotated++;
+                    } catch (ValidationException) {
+                        $skipped++;
+                    }
+                }
+            });
+
+        $this->audit->record(
+            null,
+            'activation.pins.auto_rotated',
+            metadata: [
+                'rotation_days' => $days,
+                'rotated_count' => $rotated,
+                'skipped_count' => $skipped,
+            ],
+        );
+
+        return ['rotated' => $rotated, 'skipped' => $skipped];
+    }
+
+    private function issuePin(Pilgrim $pilgrim, string $reason, ?User $actor = null): string
+    {
         return DB::transaction(function () use ($actor, $pilgrim, $reason): string {
             $pilgrim = Pilgrim::query()
                 ->with(['user', 'groupMemberships.group.departure'])
@@ -59,7 +117,7 @@ class MobileActivationService
             $pilgrim->forceFill([
                 'activation_pin_hash' => $this->digest($numericCode),
                 'activation_pin_ciphertext' => $numericCode,
-                'activation_pin_created_by' => $actor->id,
+                'activation_pin_created_by' => $actor?->id,
                 'activation_pin_generated_at' => now(),
                 'activation_pin_used_at' => null,
             ])->save();
@@ -158,6 +216,54 @@ class MobileActivationService
 
         return [
             'count' => count($pins),
+            'pins' => $pins,
+        ];
+    }
+
+    /**
+     * @return array{count: int, groups: int, pins: list<array{pilgrim_id: int, registration_number: string, name: string, pin: string}>}
+     */
+    public function resetPinsForDeparture(User $actor, \App\Models\Departure $departure, ?string $reason = null): array
+    {
+        if (! $actor->can('pilgrims.manage')
+            || (int) $actor->branch_id !== (int) $departure->branch_id) {
+            throw new AuthorizationException;
+        }
+        if (blank($reason)) {
+            throw ValidationException::withMessages([
+                'reason' => ['Alasan reset PIN paket wajib diisi.'],
+            ]);
+        }
+
+        $groups = $departure->groups()
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->get();
+
+        if ($groups->isEmpty()) {
+            throw ValidationException::withMessages([
+                'activation' => ['Paket belum memiliki rombongan aktif.'],
+            ]);
+        }
+
+        $pins = [];
+        foreach ($groups as $group) {
+            $result = $this->resetPinsForGroup($actor, $group, $reason);
+            $pins = [...$pins, ...$result['pins']];
+        }
+
+        $this->audit->record(
+            $actor,
+            'activation.departure_pins.reset',
+            $departure,
+            [],
+            ['reset_count' => count($pins), 'group_count' => $groups->count()],
+            ['branch_id' => $departure->branch_id, 'reason' => $reason],
+        );
+
+        return [
+            'count' => count($pins),
+            'groups' => $groups->count(),
             'pins' => $pins,
         ];
     }

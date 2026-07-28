@@ -137,7 +137,13 @@ class MasterDataRequest extends FormRequest
             ],
             'groups' => [
                 'branch_id' => ['required', 'exists:branches,id'],
-                'departure_id' => ['nullable', Rule::exists('departures', 'id')->where('branch_id', $branchId)],
+                'departure_id' => [
+                    'nullable',
+                    Rule::exists('departures', 'id')->where('branch_id', $branchId),
+                    Rule::unique('groups', 'departure_id')
+                        ->ignore($id)
+                        ->whereNull('deleted_at'),
+                ],
                 'tour_leader_id' => ['nullable', Rule::exists('tour_leaders', 'id')->where('branch_id', $branchId)],
                 'muthawwif_id' => ['nullable', Rule::exists('muthawwifs', 'id')->where('branch_id', $branchId)],
                 'code' => ['exclude'],

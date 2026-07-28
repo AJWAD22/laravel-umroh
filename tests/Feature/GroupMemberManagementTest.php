@@ -14,6 +14,7 @@ use App\Models\Pilgrim;
 use App\Models\PilgrimRegistration;
 use App\Models\TourLeader;
 use App\Models\User;
+use App\Services\MobileActivationService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -300,6 +301,94 @@ class GroupMemberManagementTest extends TestCase
         $this->actingAs($admin)
             ->post(route('groups.reset-pins', $group), ['reason' => ''])
             ->assertSessionHasErrors('reason');
+    }
+
+    public function test_expired_pin_is_rotated_automatically_and_active_device_is_revoked(): void
+    {
+        [$admin, $group, $pilgrim] = $this->scenario();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'pilgrim_id' => $pilgrim->id,
+            'status' => 'active',
+            'joined_at' => now(),
+        ]);
+        $pilgrim->forceFill([
+            'activation_pin_hash' => hash_hmac('sha256', '123456', (string) config('app.key')),
+            'activation_pin_ciphertext' => '123456',
+            'activation_pin_created_by' => $admin->id,
+            'activation_pin_generated_at' => now()->subDays(16),
+        ])->save();
+        $device = MobileDevice::create([
+            'user_id' => $pilgrim->user_id,
+            'device_uuid' => 'auto-rotation-device',
+            'device_name' => 'HP Jamaah Lama',
+            'platform' => 'android',
+            'activated_at' => now()->subDays(16),
+            'last_used_at' => now(),
+        ]);
+        $token = $pilgrim->user->createToken(
+            'activation-auto-rotation-device',
+            [MobileRole::Pilgrim->ability()],
+        );
+        $oldHash = $pilgrim->activation_pin_hash;
+
+        $result = app(MobileActivationService::class)->rotateExpiredPins(15);
+
+        $pilgrim->refresh();
+        $this->assertSame(1, $result['rotated']);
+        $this->assertNotSame($oldHash, $pilgrim->activation_pin_hash);
+        $this->assertNotSame('123456', $pilgrim->activation_pin_ciphertext);
+        $this->assertNull($pilgrim->activation_pin_created_by);
+        $this->assertNotNull($device->fresh()->revoked_at);
+        $this->withToken($token->plainTextToken)
+            ->getJson(route('api.mobile.profile'))
+            ->assertUnauthorized();
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'activation.pins.auto_rotated',
+            'actor_id' => null,
+        ]);
+    }
+
+    public function test_branch_admin_can_reset_all_pins_from_package_scope(): void
+    {
+        [$admin, $group, $pilgrim] = $this->scenario();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'pilgrim_id' => $pilgrim->id,
+            'status' => 'active',
+            'joined_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('departures.reset-pins', $group->departure), [
+                'reason' => 'Rotasi keamanan seluruh paket perjalanan',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('reset_pins', fn (array $pins) => count($pins) === 1);
+
+        $this->assertNotNull($pilgrim->fresh()->activation_pin_hash);
+        $this->assertDatabaseHas('audit_logs', [
+            'actor_id' => $admin->id,
+            'action' => 'activation.departure_pins.reset',
+            'subject_type' => Departure::class,
+            'subject_id' => $group->departure_id,
+        ]);
+    }
+
+    public function test_one_package_cannot_be_assigned_to_two_active_groups(): void
+    {
+        [$admin, $group] = $this->scenario();
+
+        $this->actingAs($admin)
+            ->post(route('master-data.store', 'groups'), [
+                'branch_id' => $group->branch_id,
+                'departure_id' => $group->departure_id,
+                'name' => 'Rombongan Kedua',
+                'capacity' => 20,
+                'is_active' => 1,
+            ])
+            ->assertSessionHasErrors('departure_id');
     }
 
     /**

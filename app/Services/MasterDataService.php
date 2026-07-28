@@ -39,6 +39,7 @@ class MasterDataService
         private readonly PackageCoverService $packageCovers,
         private readonly OperationalCodeGenerator $codes,
         private readonly AuditLogService $audit,
+        private readonly CheckpointNotificationService $checkpointNotifications,
     ) {}
 
     /**
@@ -273,6 +274,12 @@ class MasterDataService
                 $model->fresh()->getAttributes(),
                 ['branch_id' => $model->branch_id ?? null],
             );
+
+            if ($resource === 'checkpoints'
+                && $isNew
+                && $model instanceof Checkpoint) {
+                DB::afterCommit(fn () => $this->checkpointNotifications->created($model));
+            }
 
             return $model;
         });

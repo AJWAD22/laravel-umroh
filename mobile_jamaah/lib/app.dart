@@ -8,6 +8,7 @@ import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/auth_provider.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/dashboard/presentation/dashboard_screen.dart';
+import 'features/checkpoint/presentation/checkpoint_screen.dart';
 import 'features/staff/presentation/staff_dashboard_screen.dart';
 import 'features/staff/presentation/staff_provider.dart';
 import 'features/staff/presentation/staff_sos_map_screen.dart';
@@ -81,9 +82,14 @@ class _UmrahJamaahAppState extends State<UmrahJamaahApp> {
     final auth = context.read<AuthProvider>();
     if (!auth.isAuthenticated) return;
 
-    // Jamaah cukup menerima notifikasi lokal dari FCM.
-    // Auto-refresh khusus petugas karena petugas perlu melihat SOS/lokasi terbaru.
-    if (auth.profile?.role == 'jamaah') return;
+    if (auth.profile?.role == 'jamaah') {
+      if (type == 'checkpoint_created') {
+        _navigatorKey.currentState?.push(
+          MaterialPageRoute(builder: (_) => const CheckpointScreen()),
+        );
+      }
+      return;
+    }
 
     if (!{'sos', 'geofence_exit', 'gps_offline'}.contains(type)) return;
 

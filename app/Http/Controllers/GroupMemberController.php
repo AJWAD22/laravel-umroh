@@ -7,6 +7,7 @@ use App\Http\Requests\AssignGroupMembersRequest;
 use App\Http\Requests\AssignGroupStaffRequest;
 use App\Models\Group;
 use App\Models\GroupMember;
+use App\Models\Departure;
 use App\Models\MobileDevice;
 use App\Models\Muthawwif;
 use App\Models\Pilgrim;
@@ -192,6 +193,26 @@ class GroupMemberController extends Controller
 
         return back()
             ->with('success', "{$result['count']} PIN aktivasi jamaah rombongan berhasil direset.")
+            ->with('reset_pins', $result['pins']);
+    }
+
+    public function resetDeparturePins(Request $request, Departure $departure): RedirectResponse
+    {
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'min:8', 'max:255'],
+        ]);
+
+        $result = $this->activations->resetPinsForDeparture(
+            $request->user(),
+            $departure,
+            $data['reason'],
+        );
+
+        return back()
+            ->with(
+                'success',
+                "{$result['count']} PIN pada {$result['groups']} rombongan dalam paket berhasil direset.",
+            )
             ->with('reset_pins', $result['pins']);
     }
 

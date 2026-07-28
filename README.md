@@ -392,7 +392,8 @@ php artisan db:seed --class=DemoMasterDataSeeder
 
 Jangan menjalankan `DemoMasterDataSeeder` pada production karena seeder tersebut mengganti data operasional contoh.
 
-Tambahkan Cron Job Hostinger berikut agar retensi histori tracking berjalan:
+Tambahkan Cron Job Hostinger berikut agar retensi histori tracking dan rotasi
+PIN aktivasi otomatis setiap 15 hari berjalan:
 
 ```cron
 * * * * * cd /home/u799496565/domains/mantauumroh.web.id/public_html && php artisan schedule:run

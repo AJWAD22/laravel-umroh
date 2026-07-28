@@ -17,6 +17,7 @@ use App\Models\Group;
 use App\Models\SosReport;
 use App\Models\StaffLocation;
 use App\Services\AdminNotificationService;
+use App\Services\CheckpointNotificationService;
 use App\Services\MobileActivationService;
 use App\Services\MobileGroupAccessService;
 use App\Models\Pilgrim;
@@ -31,6 +32,7 @@ class StaffGroupController extends Controller
         private readonly MobileGroupAccessService $access,
         private readonly AdminNotificationService $notifications,
         private readonly MobileActivationService $activation,
+        private readonly CheckpointNotificationService $checkpointNotifications,
     ) {}
 
     public function leaderPilgrims(StaffListRequest $request)
@@ -146,6 +148,7 @@ class StaffGroupController extends Controller
             'description' => $data['description'] ?? 'Dibuat oleh petugas melalui aplikasi.',
             'is_active' => true,
         ]);
+        $this->checkpointNotifications->created($checkpoint);
 
         return (new CheckpointResource($checkpoint->load(['branch', 'departure', 'group'])))
             ->additional(['message' => 'Titik kumpul berhasil dibuat.'])

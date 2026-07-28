@@ -17,10 +17,13 @@ use App\Models\SosReport;
 use App\Models\TourLeader;
 use App\Models\User;
 use App\Services\MobileActivationService;
+use App\Services\FcmPushService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Mockery;
 use Tests\TestCase;
 
 class MobileApiTest extends TestCase
@@ -294,6 +297,18 @@ class MobileApiTest extends TestCase
     public function test_only_tour_leader_can_manage_mobile_meeting_points(): void
     {
         $context = $this->scenario();
+        $push = Mockery::mock(FcmPushService::class);
+        $push->shouldReceive('sendToUsers')
+            ->once()
+            ->withArgs(fn (
+                Collection $users,
+                string $title,
+                string $body,
+                array $data,
+            ) => $users->pluck('id')->contains($context['pilgrimUser']->id)
+                && $title === 'Titik Kumpul Baru'
+                && $data['type'] === 'checkpoint_created');
+        $this->app->instance(FcmPushService::class, $push);
         $leaderToken = $this->login($context['leaderUser']);
 
         $this->withToken($leaderToken)

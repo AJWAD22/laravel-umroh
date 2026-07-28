@@ -62,6 +62,8 @@ Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->
             ->name('master-data.pilgrims.regenerate-pin');
         Route::post('/groups/{group}/reset-pins', [GroupMemberController::class, 'resetPins'])
             ->name('groups.reset-pins');
+        Route::post('/departures/{departure}/reset-pins', [GroupMemberController::class, 'resetDeparturePins'])
+            ->name('departures.reset-pins');
         Route::post('/groups/{group}/generate-missing-pins', [GroupMemberController::class, 'generateMissingPins'])
             ->name('groups.generate-missing-pins');
         Route::post('/groups/{group}/pilgrims/{pilgrim}/reset-pin', [GroupMemberController::class, 'resetPilgrimPin'])
