@@ -116,61 +116,6 @@
         </div>
     </x-slot:header>
 
-    @if ($resource === 'pilgrims' && session('revealed_pin'))
-        @php
-            $revealedPin = session('revealed_pin');
-        @endphp
-        <div id="revealed-pin-dialog" class="fixed inset-0 z-[80] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm">
-            <section role="dialog" aria-modal="true" aria-labelledby="revealed-pin-title"
-                     class="w-full max-w-md rounded-2xl border border-violet-200 bg-white p-6 shadow-2xl dark:border-violet-900 dark:bg-slate-900">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <h2 id="revealed-pin-title" class="text-xl font-extrabold text-slate-950 dark:text-white">PIN Aktivasi Jamaah</h2>
-                        <p class="mt-1 text-sm text-slate-500">{{ $revealedPin['name'] }} &middot; {{ $revealedPin['registration_number'] }}</p>
-                    </div>
-                    <button type="button" class="icon-action" aria-label="Tutup"
-                            onclick="document.getElementById('revealed-pin-dialog').remove()">
-                        <i data-lucide="x" class="size-4"></i>
-                    </button>
-                </div>
-                <div class="mt-6 rounded-2xl bg-violet-50 p-5 text-center dark:bg-violet-950/30">
-                    <p class="text-xs font-bold uppercase text-violet-600">PIN untuk login aplikasi</p>
-                    <p class="mt-2 font-mono text-4xl font-black tracking-[0.22em] text-violet-900 dark:text-violet-100">{{ $revealedPin['pin'] }}</p>
-                </div>
-                <p class="mt-4 text-sm leading-6 text-slate-500">Berikan PIN hanya kepada jamaah terkait atau Tour Leader rombongannya.</p>
-                <div class="mt-5 grid grid-cols-2 gap-2">
-                    <button type="button" class="button-secondary"
-                            onclick="navigator.clipboard.writeText('{{ $revealedPin['pin'] }}'); this.textContent='Tersalin'">
-                        Salin PIN
-                    </button>
-                    <button type="button" class="button-primary"
-                            onclick="document.getElementById('revealed-pin-dialog').remove()">Selesai</button>
-                </div>
-            </section>
-        </div>
-    @endif
-
-    @if ($resource === 'pilgrims' && $legacyPinCount > 0)
-        <section class="mb-5 flex flex-col gap-4 rounded-2xl border border-amber-300 bg-amber-50 p-5 dark:border-amber-900 dark:bg-amber-950/30 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex items-start gap-3">
-                <i data-lucide="key-round" class="mt-0.5 size-5 shrink-0 text-amber-700 dark:text-amber-300"></i>
-                <div>
-                    <h2 class="font-extrabold text-amber-950 dark:text-amber-100">{{ $legacyPinCount }} PIN lama belum dapat ditampilkan</h2>
-                    <p class="mt-1 text-sm leading-6 text-amber-800 dark:text-amber-200">Buat ulang satu kali agar PIN tampil sebagai angka 6 digit. Perangkat lama akan dicabut dan jamaah perlu aktivasi ulang.</p>
-                </div>
-            </div>
-            <form method="POST" action="{{ route('master-data.pilgrims.reissue-legacy-pins') }}"
-                  data-confirm-title="Buat Ulang Semua PIN Lama"
-                  data-confirm="{{ $legacyPinCount }} PIN akan dibuat ulang dan perangkat aktif terkait akan dicabut. Lanjutkan?">
-                @csrf
-                <button class="button-primary whitespace-nowrap">
-                    <i data-lucide="refresh-cw" class="size-4"></i>
-                    Buat Ulang Semua PIN Lama
-                </button>
-            </form>
-        </section>
-    @endif
-
     @if ($guide)
         <section class="mb-5 grid gap-3 lg:grid-cols-3">
             <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -234,28 +179,6 @@
                     <p class="mt-2 text-xs leading-5 text-slate-500">{{ $scope[1] }}</p>
                 </article>
             @endforeach
-        </section>
-    @endif
-
-    @if (in_array($resource, ['groups', 'pilgrims'], true) && session('reset_pins'))
-        <section class="mb-5 rounded-2xl border border-violet-200 bg-violet-50 p-5 dark:border-violet-900 dark:bg-violet-950/30">
-            <div class="flex items-start gap-3">
-                <i data-lucide="key-round" class="mt-0.5 size-5 shrink-0 text-violet-700"></i>
-                <div class="min-w-0 flex-1">
-                    <h2 class="font-bold text-violet-950 dark:text-violet-100">{{ $resource === 'pilgrims' ? 'PIN baru jamaah' : 'PIN baru rombongan' }}</h2>
-                    <p class="mt-1 text-sm text-violet-700 dark:text-violet-300">Salin dan bagikan PIN kepada jamaah terkait. Daftar ini hanya ditampilkan setelah proses reset.</p>
-                    <div class="mt-4 overflow-x-auto rounded-xl border border-violet-200 bg-white dark:border-violet-900 dark:bg-slate-900">
-                        <table class="w-full min-w-[560px] text-sm">
-                            <thead class="bg-violet-100/70 text-left text-xs uppercase text-violet-800 dark:bg-violet-950"><tr><th class="px-4 py-2.5">Nomor</th><th class="px-4 py-2.5">Nama Jamaah</th><th class="px-4 py-2.5">PIN Baru</th></tr></thead>
-                            <tbody class="divide-y divide-violet-100 dark:divide-violet-900">
-                                @foreach (session('reset_pins') as $item)
-                                    <tr><td class="px-4 py-2.5 font-mono">{{ $item['registration_number'] }}</td><td class="px-4 py-2.5">{{ $item['name'] }}</td><td class="px-4 py-2.5 font-mono text-lg font-bold tracking-[0.2em]">{{ $item['pin'] }}</td></tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
         </section>
     @endif
 

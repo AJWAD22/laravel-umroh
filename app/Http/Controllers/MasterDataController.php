@@ -4,11 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
 use App\Http\Requests\MasterDataRequest;
-use App\Models\Pilgrim;
 use App\Exports\MasterDataTemplateExport;
 use App\Services\MasterDataImportService;
 use App\Services\MasterDataService;
-use App\Services\MobileActivationService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,7 +23,6 @@ class MasterDataController extends Controller
      */
     public function __construct(
         private readonly MasterDataService $masterData,
-        private readonly MobileActivationService $activations,
         private readonly MasterDataImportService $imports,
     ) {}
 
@@ -64,14 +61,6 @@ class MasterDataController extends Controller
             'options' => $this->masterData->options($resource, $request->user()),
             'sort' => $sort,
             'direction' => $direction,
-            'legacyPinCount' => $resource === 'pilgrims'
-                && $request->user()->hasRole(UserRole::BranchAdmin->value)
-                ? Pilgrim::query()
-                    ->where('branch_id', $request->user()->branch_id)
-                    ->whereNotNull('activation_pin_hash')
-                    ->whereNull('activation_pin_ciphertext')
-                    ->count()
-                : 0,
         ]);
     }
 
@@ -134,10 +123,6 @@ class MasterDataController extends Controller
         $message = "{$definition['label']} berhasil diimport. "
             ."Data baru: {$result['created']}, diperbarui: {$result['updated']}.";
 
-        if ($result['pins'] > 0) {
-            $message .= " PIN jamaah dibuat: {$result['pins']}.";
-        }
-
         return back()->with('success', $message);
     }
 
@@ -163,50 +148,6 @@ class MasterDataController extends Controller
 
         return redirect()->route('master-data.index', $resource)
             ->with('success', "{$this->masterData->definitionFor($resource)['label']} berhasil diperbarui.");
-    }
-
-    public function regeneratePin(Request $request, Pilgrim $pilgrim): RedirectResponse
-    {
-        $data = $request->validate([
-            'reason' => ['required', 'string', 'min:8', 'max:255'],
-        ]);
-
-        Gate::authorize('update', $pilgrim);
-        $pin = $this->activations->generatePin($request->user(), $pilgrim, $data['reason']);
-
-        return back()
-            ->with('success', "PIN aktivasi {$pilgrim->full_name} berhasil diperbarui.")
-            ->with('revealed_pin', [
-                'name' => $pilgrim->full_name,
-                'registration_number' => $pilgrim->registration_number,
-                'pin' => $pin,
-            ]);
-    }
-
-    public function revealPin(Request $request, Pilgrim $pilgrim): RedirectResponse
-    {
-        Gate::authorize('update', $pilgrim);
-        $pin = $this->activations->revealPinForBranchAdmin($request->user(), $pilgrim);
-
-        return back()->with('revealed_pin', [
-            'name' => $pilgrim->full_name,
-            'registration_number' => $pilgrim->registration_number,
-            'pin' => $pin,
-        ]);
-    }
-
-    public function reissueLegacyPins(Request $request): RedirectResponse
-    {
-        $result = $this->activations->reissueLegacyPinsForBranch($request->user());
-
-        $message = "{$result['count']} PIN lama berhasil dibuat ulang dan sekarang dapat dilihat.";
-        if ($result['skipped'] > 0) {
-            $message .= " {$result['skipped']} jamaah dilewati karena belum memenuhi syarat aktivasi.";
-        }
-
-        return back()
-            ->with($result['count'] > 0 ? 'success' : 'error', $message)
-            ->with('reset_pins', $result['pins']);
     }
 
     public function destroy(Request $request, string $resource, int $record): RedirectResponse

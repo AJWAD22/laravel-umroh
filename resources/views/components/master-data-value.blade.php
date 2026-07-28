@@ -2,7 +2,6 @@
 
 @php
     $value = match ($column) {
-        'activation_pin' => null,
         'active_group' => $record->groupMemberships?->firstWhere('status', 'active')?->group?->name,
         default => data_get($record, $column),
     };
@@ -32,28 +31,6 @@
         <span class="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-slate-100 to-slate-50 text-sm font-bold text-slate-500 ring-1 ring-slate-200/70 dark:from-slate-800 dark:to-slate-900 dark:text-slate-300 dark:ring-slate-700">
             {{ str($displayName)->substr(0, 2)->upper() }}
         </span>
-    @endif
-@elseif ($column === 'activation_pin')
-    @if ($record->activation_pin_generated_at)
-        <div class="flex min-w-28 flex-col items-start gap-1.5">
-            <x-status-badge value="pending" label="Sudah dibuat" />
-            @if ($canManage && $record->activation_pin_ciphertext)
-                <div class="flex items-center gap-1">
-                    <code class="rounded-lg bg-violet-50 px-2.5 py-1.5 text-base font-black tracking-[0.16em] text-violet-800 dark:bg-violet-950/40 dark:text-violet-200">{{ $record->activation_pin_ciphertext }}</code>
-                    <button type="button"
-                            class="icon-action size-9"
-                            title="Salin PIN {{ $record->full_name }}"
-                            aria-label="Salin PIN {{ $record->full_name }}"
-                            onclick="navigator.clipboard.writeText('{{ $record->activation_pin_ciphertext }}'); this.dataset.copied='true'">
-                        <i data-lucide="copy" class="size-3.5"></i>
-                    </button>
-                </div>
-            @elseif ($canManage)
-                <span class="text-xs text-amber-700">Perlu reset PIN</span>
-            @endif
-        </div>
-    @else
-        <span class="text-slate-400">Belum dibuat</span>
     @endif
 @elseif (str_starts_with($column, 'is_'))
     <x-status-badge :value="$value ? 'yes' : 'no'" />

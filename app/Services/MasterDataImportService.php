@@ -91,7 +91,6 @@ class MasterDataImportService
         $result = [
             'created' => 0,
             'updated' => 0,
-            'pins' => 0,
         ];
 
         DB::transaction(function () use ($rows, $actor, &$result): void {

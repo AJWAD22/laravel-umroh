@@ -230,26 +230,6 @@ class GroupMemberController extends Controller
             ->with('reset_pins', $result['pins']);
     }
 
-    public function resetPilgrimPin(Request $request, Group $group, Pilgrim $pilgrim): RedirectResponse
-    {
-        $data = $request->validate([
-            'reason' => ['required', 'string', 'min:8', 'max:255'],
-        ]);
-
-        $this->authorizeGroup($request, $group);
-        $this->authorizeGroupPilgrim($group, $pilgrim);
-        $pin = $this->activations->generatePin($request->user(), $pilgrim, $data['reason']);
-
-        return back()
-            ->with('success', "PIN aktivasi {$pilgrim->full_name} berhasil dibuat.")
-            ->with('reset_pins', [[
-                'pilgrim_id' => $pilgrim->id,
-                'registration_number' => $pilgrim->registration_number,
-                'name' => $pilgrim->full_name,
-                'pin' => $pin,
-            ]]);
-    }
-
     public function revokePilgrimDevices(Request $request, Group $group, Pilgrim $pilgrim): RedirectResponse
     {
         $data = $request->validate([
@@ -280,7 +260,7 @@ class GroupMemberController extends Controller
                 fputcsv($output, [
                     $pilgrim->full_name,
                     $pilgrim->registration_number,
-                    $pilgrim->activation_pin_generated_at ? 'Sudah dibuat' : 'Belum dibuat',
+                    $pilgrim->activation_pin_ciphertext ?: 'Belum dibuat',
                     $activeDevice ? 'Aktif' : 'Belum aktif',
                     $activeDevice?->last_used_at?->toDateTimeString() ?: '',
                 ]);

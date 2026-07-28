@@ -55,7 +55,7 @@ class MasterDataService
                 ['photo_path' => 'Foto', 'name' => 'Nama', 'email' => 'Email', 'branch.name' => 'Cabang', 'is_active' => 'Aktif'],
                 ['name', 'email', 'phone_number'], ['name', 'email', 'is_active'], ['branch']),
             'pilgrims' => $this->definition(Pilgrim::class, 'Jamaah', 'pilgrims.manage',
-                ['photo_path' => 'Foto', 'registration_number' => 'No. Registrasi', 'full_name' => 'Nama', 'active_group' => 'Rombongan', 'branch.name' => 'Cabang', 'phone' => 'Telepon', 'activation_pin' => 'PIN Aktivasi', 'status' => 'Status'],
+                ['photo_path' => 'Foto', 'registration_number' => 'No. Registrasi', 'full_name' => 'Nama', 'active_group' => 'Rombongan', 'branch.name' => 'Cabang', 'phone' => 'Telepon', 'status' => 'Status'],
                 ['registration_number', 'full_name', 'phone'],
                 ['registration_number', 'full_name', 'phone', 'status'], ['branch', 'groupMemberships.group']),
             'tour-leaders' => $this->definition(TourLeader::class, 'Tour Leader', 'tour-leaders.manage',

@@ -58,20 +58,12 @@ Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->
         Route::get('/monitoring/sos', [SosReportController::class, 'index'])->name('monitoring.sos.index');
         Route::get('/monitoring/sos/{sosReport}', [SosReportController::class, 'show'])->name('monitoring.sos.show');
         Route::patch('/monitoring/sos/{sosReport}/resolve', [SosReportController::class, 'resolve'])->name('monitoring.sos.resolve');
-        Route::post('/master-data/pilgrims/{pilgrim}/regenerate-pin', [MasterDataController::class, 'regeneratePin'])
-            ->name('master-data.pilgrims.regenerate-pin');
-        Route::post('/master-data/pilgrims/{pilgrim}/reveal-pin', [MasterDataController::class, 'revealPin'])
-            ->name('master-data.pilgrims.reveal-pin');
-        Route::post('/master-data/pilgrims/reissue-legacy-pins', [MasterDataController::class, 'reissueLegacyPins'])
-            ->name('master-data.pilgrims.reissue-legacy-pins');
         Route::post('/groups/{group}/reset-pins', [GroupMemberController::class, 'resetPins'])
             ->name('groups.reset-pins');
         Route::post('/departures/{departure}/reset-pins', [GroupMemberController::class, 'resetDeparturePins'])
             ->name('departures.reset-pins');
         Route::post('/groups/{group}/generate-missing-pins', [GroupMemberController::class, 'generateMissingPins'])
             ->name('groups.generate-missing-pins');
-        Route::post('/groups/{group}/pilgrims/{pilgrim}/reset-pin', [GroupMemberController::class, 'resetPilgrimPin'])
-            ->name('groups.pilgrims.reset-pin');
         Route::post('/groups/{group}/pilgrims/{pilgrim}/revoke-devices', [GroupMemberController::class, 'revokePilgrimDevices'])
             ->name('groups.pilgrims.revoke-devices');
         Route::get('/groups/{group}/activation-list', [GroupMemberController::class, 'activationList'])

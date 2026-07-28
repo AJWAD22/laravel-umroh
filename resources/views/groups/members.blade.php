@@ -134,13 +134,13 @@
             <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div>
                     <h2 class="font-semibold">Aktivasi Aplikasi Jamaah</h2>
-                    <p class="mt-1 text-sm text-slate-500">PIN baru hanya tampil setelah dibuat atau direset. Reset PIN akan mencabut perangkat aktif agar aktivasi lama berhenti.</p>
+                    <p class="mt-1 text-sm text-slate-500">PIN dikelola per rombongan. Reset rombongan atau paket akan mencabut perangkat aktif agar aktivasi lama berhenti.</p>
                 </div>
                 <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                     <form method="POST" action="{{ route('groups.generate-missing-pins', $group) }}" class="grid gap-2">
                         @csrf
                         <input name="reason" class="control-field min-h-10 text-xs" placeholder="Alasan buat PIN" required>
-                        <button class="button-secondary min-h-10 text-xs">Buat PIN yang Belum Tersedia</button>
+                        <button class="button-secondary min-h-10 text-xs">Generate PIN Rombongan</button>
                     </form>
                     <form method="POST" action="{{ route('groups.reset-pins', $group) }}" class="grid gap-2">
                         @csrf
@@ -159,7 +159,7 @@
             </div>
         </div>
         <div class="overflow-x-auto">
-            <table class="w-full min-w-[980px] text-left text-sm">
+            <table class="w-full min-w-[860px] text-left text-sm">
                 <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-800/50">
                     <tr>
                         <th class="px-5 py-3">Jamaah</th>
@@ -193,9 +193,15 @@
                                 <span class="rounded-full px-2.5 py-1 text-xs font-bold {{ $paymentTone }}">{{ $paymentLabel }}</span>
                             </td>
                             <td class="px-5 py-4">
-                                @if ($pilgrim->activation_pin_generated_at)
-                                    <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">Sudah dibuat</span>
-                                    <p class="mt-1 text-xs text-slate-500">{{ $pilgrim->activation_pin_generated_at->translatedFormat('d M Y H:i') }}</p>
+                                @if ($pilgrim->activation_pin_ciphertext)
+                                    <div class="flex items-center gap-2">
+                                        <code class="rounded-lg bg-violet-50 px-2.5 py-1.5 text-base font-black tracking-[0.16em] text-violet-800 dark:bg-violet-950/40 dark:text-violet-200">{{ $pilgrim->activation_pin_ciphertext }}</code>
+                                        <button type="button" class="icon-action size-9" title="Salin PIN {{ $pilgrim->full_name }}"
+                                                onclick="navigator.clipboard.writeText('{{ $pilgrim->activation_pin_ciphertext }}')">
+                                            <i data-lucide="copy" class="size-3.5"></i>
+                                        </button>
+                                    </div>
+                                    <p class="mt-1 text-xs text-slate-500">{{ $pilgrim->activation_pin_generated_at?->translatedFormat('d M Y H:i') }}</p>
                                 @else
                                     <span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">Belum dibuat</span>
                                 @endif
@@ -209,13 +215,8 @@
                             </td>
                             <td class="px-5 py-4">{{ $activeDevice?->last_used_at?->diffForHumans() ?: '-' }}</td>
                             <td class="px-5 py-4">
-                                <div class="grid min-w-56 gap-2">
-                                    <form method="POST" action="{{ route('groups.pilgrims.reset-pin', [$group, $pilgrim]) }}" class="grid gap-2">
-                                        @csrf
-                                        <input name="reason" class="control-field min-h-10 text-xs" placeholder="{{ $pilgrim->activation_pin_generated_at ? 'Alasan reset PIN' : 'Alasan buat PIN' }}" required>
-                                        <button class="button-primary min-h-10 py-2 text-xs">{{ $pilgrim->activation_pin_generated_at ? 'Reset PIN' : 'Buat PIN' }}</button>
-                                    </form>
-                                    @if ($activeDevice)
+                                @if ($activeDevice)
+                                    <div class="grid min-w-56 gap-2">
                                         <form method="POST" action="{{ route('groups.pilgrims.revoke-devices', [$group, $pilgrim]) }}" class="grid gap-2"
                                               data-confirm-title="Cabut Perangkat"
                                               data-confirm="Perangkat aktif jamaah akan keluar dari aplikasi. Lanjutkan?">
@@ -223,8 +224,10 @@
                                             <input name="reason" class="control-field min-h-10 text-xs" placeholder="Alasan cabut perangkat" required>
                                             <button class="button-secondary min-h-10 py-2 text-xs text-red-700">Cabut Perangkat</button>
                                         </form>
-                                    @endif
-                                </div>
+                                    </div>
+                                @else
+                                    <span class="text-sm text-slate-400">-</span>
+                                @endif
                             </td>
                         </tr>
                     @empty

@@ -99,10 +99,6 @@ class RegistrationManagementController extends Controller
         if ($result['pilgrim']) {
             $message = 'Registrasi disetujui dan jamaah sudah masuk ke operasional perjalanan.';
         }
-        if ($result['pin']) {
-            $message .= " PIN aktivasi: {$result['pin']}";
-        }
-
         return back()->with('success', $message);
     }
 

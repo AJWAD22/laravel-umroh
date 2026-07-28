@@ -173,20 +173,14 @@ class GroupMemberManagementTest extends TestCase
         $this->actingAs($admin)
             ->get(route('master-data.index', 'pilgrims'))
             ->assertOk()
-            ->assertSee($pin);
+            ->assertDontSee($pin);
         $this->actingAs($admin)
-            ->post(route('master-data.pilgrims.reveal-pin', $pilgrim))
-            ->assertRedirect()
-            ->assertSessionHas('revealed_pin', fn (array $value) => $value['pin'] === $pin);
-        $this->assertDatabaseHas('audit_logs', [
-            'actor_id' => $admin->id,
-            'action' => 'activation.pin.revealed_by_branch_admin',
-            'subject_type' => Pilgrim::class,
-            'subject_id' => $pilgrim->id,
-        ]);
+            ->get(route('groups.members.index', $group))
+            ->assertOk()
+            ->assertSee($pin);
     }
 
-    public function test_branch_admin_can_reissue_legacy_pins_and_see_the_values(): void
+    public function test_branch_admin_can_generate_missing_pins_for_a_group_and_see_the_values(): void
     {
         [$admin, $group, $pilgrim] = $this->scenario();
         GroupMember::create([
@@ -202,12 +196,9 @@ class GroupMemberManagementTest extends TestCase
         ])->save();
 
         $this->actingAs($admin)
-            ->get(route('master-data.index', 'pilgrims'))
-            ->assertOk()
-            ->assertSee('Buat Ulang Semua PIN Lama');
-
-        $this->actingAs($admin)
-            ->post(route('master-data.pilgrims.reissue-legacy-pins'))
+            ->post(route('groups.generate-missing-pins', $group), [
+                'reason' => 'Menerbitkan PIN untuk seluruh rombongan',
+            ])
             ->assertRedirect()
             ->assertSessionHasNoErrors()
             ->assertSessionHas('reset_pins', fn (array $pins) => count($pins) === 1);
@@ -215,12 +206,12 @@ class GroupMemberManagementTest extends TestCase
         $pilgrim->refresh();
         $this->assertNotNull($pilgrim->activation_pin_ciphertext);
         $this->actingAs($admin)
-            ->get(route('master-data.index', 'pilgrims'))
+            ->get(route('groups.members.index', $group))
             ->assertOk()
             ->assertSee($pilgrim->activation_pin_ciphertext);
         $this->assertDatabaseHas('audit_logs', [
             'actor_id' => $admin->id,
-            'action' => 'activation.legacy_pins.reissued',
+            'action' => 'activation.group_missing_pins.generated',
         ]);
     }
 
@@ -235,6 +226,7 @@ class GroupMemberManagementTest extends TestCase
         ]);
         $pilgrim->forceFill([
             'activation_pin_hash' => hash('sha256', '123456'),
+            'activation_pin_ciphertext' => '123456',
             'activation_pin_generated_at' => now(),
         ])->save();
         MobileDevice::create([
@@ -253,7 +245,8 @@ class GroupMemberManagementTest extends TestCase
             ->assertSee('PIN Dibuat')
             ->assertSee('Aplikasi Aktif')
             ->assertSee('Alur sampai tracking muncul')
-            ->assertSee('Reset PIN akan mencabut perangkat aktif');
+            ->assertSee('Reset rombongan atau paket akan mencabut perangkat aktif')
+            ->assertSee('123456');
     }
 
     public function test_reset_pin_revokes_active_device_and_token(): void
@@ -276,7 +269,7 @@ class GroupMemberManagementTest extends TestCase
         $token = $pilgrim->user->createToken('activation-active-device-001', [MobileRole::Pilgrim->ability()]);
 
         $this->actingAs($admin)
-            ->post(route('groups.pilgrims.reset-pin', [$group, $pilgrim]), [
+            ->post(route('groups.reset-pins', $group), [
                 'reason' => 'Jamaah membutuhkan PIN cadangan',
             ])
             ->assertRedirect()
@@ -340,7 +333,7 @@ class GroupMemberManagementTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->post(route('groups.pilgrims.reset-pin', [$group, $pilgrim]), [
+            ->post(route('groups.reset-pins', $group), [
                 'reason' => 'Mencoba membuat PIN sebelum lunas',
             ])
             ->assertSessionHasErrors('activation');

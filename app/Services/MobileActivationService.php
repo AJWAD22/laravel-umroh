@@ -173,87 +173,6 @@ class MobileActivationService
         return (string) $pilgrim->activation_pin_ciphertext;
     }
 
-    public function revealPinForBranchAdmin(User $actor, Pilgrim $pilgrim): string
-    {
-        if (! $actor->can('pilgrims.manage')
-            || (int) $actor->branch_id !== (int) $pilgrim->branch_id) {
-            throw new AuthorizationException;
-        }
-
-        if (blank($pilgrim->activation_pin_ciphertext)) {
-            throw ValidationException::withMessages([
-                'activation' => ['PIN belum tersedia. Buat atau reset PIN jamaah terlebih dahulu.'],
-            ]);
-        }
-
-        $this->audit->record(
-            $actor,
-            'activation.pin.revealed_by_branch_admin',
-            $pilgrim,
-            metadata: [
-                'branch_id' => $pilgrim->branch_id,
-                'registration_number' => $pilgrim->registration_number,
-            ],
-        );
-
-        return (string) $pilgrim->activation_pin_ciphertext;
-    }
-
-    /**
-     * Mengganti PIN lama yang hanya memiliki hash agar dapat dibagikan kembali.
-     *
-     * @return array{count: int, skipped: int, pins: list<array{pilgrim_id: int, registration_number: string, name: string, pin: string}>}
-     */
-    public function reissueLegacyPinsForBranch(User $actor): array
-    {
-        if (! $actor->can('pilgrims.manage') || ! $actor->branch_id) {
-            throw new AuthorizationException;
-        }
-
-        $pins = [];
-        $skipped = 0;
-        $pilgrims = Pilgrim::query()
-            ->where('branch_id', $actor->branch_id)
-            ->whereNotNull('activation_pin_hash')
-            ->whereNull('activation_pin_ciphertext')
-            ->whereIn('status', ['registered', 'active'])
-            ->orderBy('full_name')
-            ->get();
-
-        foreach ($pilgrims as $pilgrim) {
-            try {
-                $pins[] = [
-                    'pilgrim_id' => $pilgrim->id,
-                    'registration_number' => $pilgrim->registration_number,
-                    'name' => $pilgrim->full_name,
-                    'pin' => $this->generatePin(
-                        $actor,
-                        $pilgrim,
-                        'Penerbitan ulang PIN lama agar dapat ditampilkan.',
-                    ),
-                ];
-            } catch (ValidationException) {
-                $skipped++;
-            }
-        }
-
-        $this->audit->record(
-            $actor,
-            'activation.legacy_pins.reissued',
-            metadata: [
-                'branch_id' => $actor->branch_id,
-                'reissued_count' => count($pins),
-                'skipped_count' => $skipped,
-            ],
-        );
-
-        return [
-            'count' => count($pins),
-            'skipped' => $skipped,
-            'pins' => $pins,
-        ];
-    }
-
     /**
      * @return array{count: int, pins: list<array{pilgrim_id: int, registration_number: string, name: string, pin: string}>}
      */
@@ -362,7 +281,9 @@ class MobileActivationService
         $pins = [];
         $group->pilgrims()
             ->wherePivot('status', 'active')
-            ->whereNull('activation_pin_hash')
+            ->where(fn ($query) => $query
+                ->whereNull('activation_pin_hash')
+                ->orWhereNull('activation_pin_ciphertext'))
             ->orderBy('full_name')
             ->get()
             ->each(function (Pilgrim $pilgrim) use ($actor, $reason, &$pins): void {

@@ -16,13 +16,12 @@ class RegistrationApprovalService
 {
     public function __construct(
         private readonly MasterDataService $masterData,
-        private readonly MobileActivationService $activations,
         private readonly AuditLogService $audit,
     ) {}
 
     /**
      * @param  array{status: string, payment_status: string, group_id?: int|null, revision_notes?: string|null}  $data
-     * @return array{registration: PilgrimRegistration, pilgrim: Pilgrim|null, pin: string|null}
+     * @return array{registration: PilgrimRegistration, pilgrim: Pilgrim|null}
      */
     public function update(User $actor, PilgrimRegistration $registration, array $data): array
     {
@@ -39,7 +38,6 @@ class RegistrationApprovalService
 
             $pilgrim = $registration->user?->pilgrim;
             $before = $registration->getOriginal();
-            $pin = null;
             $isOperationallyApproved = $data['status'] === 'in_group'
                 && in_array($data['payment_status'], ['paid', 'verified'], true);
 
@@ -102,7 +100,6 @@ class RegistrationApprovalService
             return [
                 'registration' => $registration,
                 'pilgrim' => $pilgrim,
-                'pin' => $pin,
             ];
         });
     }
