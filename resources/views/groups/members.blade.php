@@ -136,19 +136,12 @@
                     <h2 class="font-semibold">Aktivasi Aplikasi Jamaah</h2>
                     <p class="mt-1 text-sm text-slate-500">PIN otomatis tersedia untuk jamaah lunas yang sudah masuk rombongan. Reset PIN akan mencabut perangkat aktif agar aktivasi lama berhenti.</p>
                 </div>
-                <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                <div class="grid gap-2 sm:grid-cols-[minmax(240px,1fr)_auto] xl:min-w-[520px]">
                     <form method="POST" action="{{ route('groups.reset-pins', $group) }}" class="grid gap-2">
                         @csrf
-                        <input name="reason" class="control-field min-h-10 text-xs" placeholder="Alasan reset rombongan" required>
-                        <button class="button-secondary min-h-10 text-xs">Reset PIN Rombongan Ini</button>
+                        <input name="reason" class="control-field min-h-10 text-xs" placeholder="Alasan reset seluruh PIN rombongan/paket" required>
+                        <button class="button-secondary min-h-10 text-xs">Reset Seluruh PIN Rombongan/Paket</button>
                     </form>
-                    @if ($group->departure)
-                        <form method="POST" action="{{ route('departures.reset-pins', $group->departure) }}" class="grid gap-2">
-                            @csrf
-                            <input name="reason" class="control-field min-h-10 text-xs" placeholder="Alasan reset paket" required>
-                            <button class="button-secondary min-h-10 text-xs">Reset Semua PIN Paket</button>
-                        </form>
-                    @endif
                     <a href="{{ route('groups.activation-list', $group) }}" class="button-secondary min-h-10 text-xs">Unduh Daftar PIN</a>
                 </div>
             </div>
