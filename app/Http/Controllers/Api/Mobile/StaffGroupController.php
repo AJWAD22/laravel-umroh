@@ -17,7 +17,9 @@ use App\Models\Group;
 use App\Models\SosReport;
 use App\Models\StaffLocation;
 use App\Services\AdminNotificationService;
+use App\Services\MobileActivationService;
 use App\Services\MobileGroupAccessService;
+use App\Models\Pilgrim;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -28,6 +30,7 @@ class StaffGroupController extends Controller
     public function __construct(
         private readonly MobileGroupAccessService $access,
         private readonly AdminNotificationService $notifications,
+        private readonly MobileActivationService $activation,
     ) {}
 
     public function leaderPilgrims(StaffListRequest $request)
@@ -38,6 +41,22 @@ class StaffGroupController extends Controller
     public function leaderLocations(StaffListRequest $request)
     {
         return $this->locations($request, MobileRole::TourLeader);
+    }
+
+    public function revealActivationPin(Request $request, Pilgrim $pilgrim): JsonResponse
+    {
+        $pin = $this->activation->revealPinForTourLeader($request->user(), $pilgrim);
+
+        return response()->json([
+            'message' => 'PIN aktivasi berhasil dibuka.',
+            'data' => [
+                'pilgrim_id' => $pilgrim->id,
+                'registration_number' => $pilgrim->registration_number,
+                'full_name' => $pilgrim->full_name,
+                'pin' => $pin,
+                'generated_at' => $pilgrim->activation_pin_generated_at?->toIso8601String(),
+            ],
+        ]);
     }
 
     public function muthawwifPilgrims(StaffListRequest $request)

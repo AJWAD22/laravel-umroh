@@ -34,11 +34,17 @@ class Pilgrim extends Model
         'monitoring_status',
     ];
 
+    protected $hidden = [
+        'activation_pin_hash',
+        'activation_pin_ciphertext',
+    ];
+
     protected function casts(): array
     {
         return [
             'passport_expired_at' => 'date',
             'birth_date' => 'date',
+            'activation_pin_ciphertext' => 'encrypted',
             'activation_pin_generated_at' => 'datetime',
             'activation_pin_used_at' => 'datetime',
         ];

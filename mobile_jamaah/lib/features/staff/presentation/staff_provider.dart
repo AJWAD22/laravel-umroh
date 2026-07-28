@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../data/staff_repository.dart';
+import '../domain/activation_pin_info.dart';
 import '../domain/staff_pilgrim.dart';
 import '../domain/staff_sos_report.dart';
 
@@ -66,6 +67,10 @@ class StaffProvider extends ChangeNotifier {
     // Status resolve berarti kondisi jamaah sudah selesai/aman.
     final updated = await _repository.resolveSos(id);
     _replaceSos(updated);
+  }
+
+  Future<ActivationPinInfo> revealActivationPin(int pilgrimId) {
+    return _repository.revealActivationPin(pilgrimId);
   }
 
   StaffSosReport? findSosById(int id) {

@@ -38,6 +38,7 @@ class AuditLogService
             'activation_pin',
             'activation_pin_hash',
             'activation_pin_encrypted',
+            'activation_pin_ciphertext',
             'pin',
             'token',
             'access_token',

@@ -22,19 +22,46 @@
     @endif
 
     @if (session('reset_pins'))
-        <section class="mb-5 rounded-2xl border border-violet-200 bg-violet-50 p-5 dark:border-violet-900 dark:bg-violet-950/30">
-            <h2 class="font-bold text-violet-950 dark:text-violet-100">PIN baru rombongan</h2>
-            <p class="mt-1 text-sm text-violet-700 dark:text-violet-300">Daftar ini hanya ditampilkan setelah reset. Salin PIN sebelum meninggalkan halaman.</p>
-            <div class="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                @foreach (session('reset_pins') as $item)
-                    <div class="rounded-xl border border-violet-200 bg-white p-3 dark:border-violet-900 dark:bg-slate-900">
-                        <p class="truncate text-sm font-semibold">{{ $item['name'] }}</p>
-                        <p class="text-xs text-slate-500">{{ $item['registration_number'] }}</p>
-                        <p class="mt-2 font-mono text-xl font-bold tracking-[0.2em] text-violet-800 dark:text-violet-200">{{ $item['pin'] }}</p>
+        <div id="generated-pin-dialog" class="fixed inset-0 z-[80] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm">
+            <section role="dialog" aria-modal="true" aria-labelledby="generated-pin-title"
+                     class="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-violet-200 bg-white p-5 shadow-2xl dark:border-violet-900 dark:bg-slate-900 sm:p-6">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 id="generated-pin-title" class="text-xl font-bold text-violet-950 dark:text-violet-100">PIN aktivasi berhasil dibuat</h2>
+                        <p class="mt-1 text-sm text-violet-700 dark:text-violet-300">Berikan PIN hanya kepada jamaah terkait. Tour Leader rombongan juga dapat membukanya melalui aplikasi.</p>
                     </div>
-                @endforeach
-            </div>
-        </section>
+                    <button type="button" class="button-secondary shrink-0 px-3" aria-label="Tutup"
+                            onclick="document.getElementById('generated-pin-dialog').remove()">
+                        <i data-lucide="x" class="size-4"></i>
+                    </button>
+                </div>
+                <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    @foreach (session('reset_pins') as $item)
+                        <div class="rounded-xl border border-violet-200 bg-violet-50/50 p-4 dark:border-violet-900 dark:bg-violet-950/20">
+                            <p class="truncate text-sm font-semibold">{{ $item['name'] }}</p>
+                            <p class="text-xs text-slate-500">{{ $item['registration_number'] }}</p>
+                            <div class="mt-3 flex items-center justify-between gap-3">
+                                <p class="font-mono text-2xl font-bold tracking-[0.2em] text-violet-800 dark:text-violet-200">{{ $item['pin'] }}</p>
+                                <button type="button" class="button-secondary px-3 py-2 text-xs"
+                                        data-copy-pin="{{ $item['pin'] }}">Salin</button>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="mt-5 flex justify-end">
+                    <button type="button" class="button-primary"
+                            onclick="document.getElementById('generated-pin-dialog').remove()">Selesai</button>
+                </div>
+            </section>
+        </div>
+        <script>
+            document.querySelectorAll('[data-copy-pin]').forEach((button) => {
+                button.addEventListener('click', async () => {
+                    await navigator.clipboard.writeText(button.dataset.copyPin);
+                    button.textContent = 'Tersalin';
+                });
+            });
+        </script>
     @endif
 
     <section class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

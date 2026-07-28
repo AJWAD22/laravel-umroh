@@ -44,6 +44,7 @@ class MobileActivationService
             $this->ensurePilgrimUser($pilgrim);
             $before = $pilgrim->only([
                 'activation_pin_hash',
+                'activation_pin_ciphertext',
                 'activation_pin_generated_at',
                 'activation_pin_used_at',
             ]);
@@ -57,6 +58,7 @@ class MobileActivationService
             $numericCode = $this->uniqueNumericCode();
             $pilgrim->forceFill([
                 'activation_pin_hash' => $this->digest($numericCode),
+                'activation_pin_ciphertext' => $numericCode,
                 'activation_pin_created_by' => $actor->id,
                 'activation_pin_generated_at' => now(),
                 'activation_pin_used_at' => null,
@@ -69,6 +71,7 @@ class MobileActivationService
                 $before,
                 $pilgrim->only([
                     'activation_pin_hash',
+                    'activation_pin_ciphertext',
                     'activation_pin_generated_at',
                     'activation_pin_used_at',
                 ]),
@@ -82,6 +85,34 @@ class MobileActivationService
 
             return $numericCode;
         });
+    }
+
+    public function revealPinForTourLeader(User $actor, Pilgrim $pilgrim): string
+    {
+        if (! $actor->hasRole(MobileRole::TourLeader->value)
+            || ! $this->groupAccess->pilgrimsForStaff($actor, MobileRole::TourLeader)
+                ->whereKey($pilgrim->id)
+                ->exists()) {
+            throw new AuthorizationException;
+        }
+
+        if (blank($pilgrim->activation_pin_ciphertext)) {
+            throw ValidationException::withMessages([
+                'activation' => ['PIN belum tersedia atau dibuat sebelum fitur ini aktif. Minta Admin Cabang membuat ulang PIN.'],
+            ]);
+        }
+
+        $this->audit->record(
+            $actor,
+            'activation.pin.revealed_by_tour_leader',
+            $pilgrim,
+            metadata: [
+                'branch_id' => $pilgrim->branch_id,
+                'registration_number' => $pilgrim->registration_number,
+            ],
+        );
+
+        return (string) $pilgrim->activation_pin_ciphertext;
     }
 
     /**

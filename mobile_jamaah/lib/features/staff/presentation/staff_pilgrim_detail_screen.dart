@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
+import '../../auth/presentation/auth_provider.dart';
 import '../domain/staff_pilgrim.dart';
 import 'staff_pilgrim_map_screen.dart';
+import 'staff_provider.dart';
 
 class StaffPilgrimDetailScreen extends StatelessWidget {
   const StaffPilgrimDetailScreen({super.key, required this.pilgrim});
@@ -13,6 +16,8 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final location = pilgrim.location;
+    final isTourLeader =
+        context.read<AuthProvider>().profile?.role == 'tour-leader';
 
     return Scaffold(
       appBar: AppBar(
@@ -127,6 +132,37 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  if (isTourLeader) ...[
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Aktivasi Aplikasi',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Buka PIN hanya saat membantu jamaah terkait melakukan aktivasi.',
+                            ),
+                            const SizedBox(height: 14),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.icon(
+                                onPressed: () => _revealPin(context),
+                                icon: const Icon(Icons.key_rounded),
+                                label: const Text('Lihat PIN Aktivasi'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   Card(
                     child: Padding(
                       padding: const EdgeInsets.all(20),
@@ -243,6 +279,89 @@ class StaffPilgrimDetailScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Nomor WhatsApp berhasil disalin.')),
       );
+    }
+  }
+
+  Future<void> _revealPin(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text('Buka PIN aktivasi?'),
+            content: Text(
+              'PIN hanya boleh diberikan kepada ${pilgrim.fullName}. Tindakan ini dicatat dalam audit log.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Batal'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('Buka PIN'),
+              ),
+            ],
+          ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      final info = await context.read<StaffProvider>().revealActivationPin(
+        pilgrim.id,
+      );
+      if (!context.mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder:
+            (dialogContext) => AlertDialog(
+              title: const Text('PIN Aktivasi Jamaah'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${info.fullName} (${info.registrationNumber})'),
+                  const SizedBox(height: 16),
+                  SelectableText(
+                    info.pin,
+                    style: Theme.of(
+                      dialogContext,
+                    ).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 6,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Jangan kirim PIN ke grup atau menyimpannya di tempat umum.',
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton.icon(
+                  onPressed: () async {
+                    await Clipboard.setData(ClipboardData(text: info.pin));
+                    if (dialogContext.mounted) {
+                      ScaffoldMessenger.of(dialogContext).showSnackBar(
+                        const SnackBar(content: Text('PIN berhasil disalin.')),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.copy_rounded),
+                  label: const Text('Salin'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Selesai'),
+                ),
+              ],
+            ),
+      );
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
+      }
     }
   }
 }

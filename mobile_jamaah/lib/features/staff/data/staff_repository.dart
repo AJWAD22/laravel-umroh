@@ -1,4 +1,5 @@
 import '../../../core/network/api_client.dart';
+import '../domain/activation_pin_info.dart';
 import '../domain/staff_pilgrim.dart';
 import '../domain/staff_sos_report.dart';
 
@@ -42,6 +43,19 @@ class StaffRepository {
         pilgrim['latest_location'] = item['location'];
         return StaffPilgrim.fromJson(pilgrim);
       }).toList();
+    } catch (error) {
+      throw _api.errorFrom(error);
+    }
+  }
+
+  Future<ActivationPinInfo> revealActivationPin(int pilgrimId) async {
+    try {
+      final response = await _api.dio.get<Map<String, dynamic>>(
+        '/api/mobile/group-pilgrims/$pilgrimId/activation-pin',
+      );
+      return ActivationPinInfo.fromJson(
+        Map<String, dynamic>.from(response.data?['data'] as Map? ?? {}),
+      );
     } catch (error) {
       throw _api.errorFrom(error);
     }

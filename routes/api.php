@@ -56,6 +56,9 @@ Route::prefix('mobile')->group(function () {
         Route::delete('/staff-checkpoints/{checkpoint}', [StaffGroupController::class, 'deactivateCheckpoint'])->name('api.mobile.staff.checkpoints.deactivate');
         Route::get('/group-pilgrims', [StaffGroupController::class, 'leaderPilgrims'])->name('api.mobile.leader.pilgrims');
         Route::get('/group-locations', [StaffGroupController::class, 'leaderLocations'])->name('api.mobile.leader.locations');
+        Route::get('/group-pilgrims/{pilgrim}/activation-pin', [StaffGroupController::class, 'revealActivationPin'])
+            ->middleware('throttle:20,1')
+            ->name('api.mobile.leader.pilgrims.activation-pin');
     });
 
     Route::middleware(['auth:sanctum', 'mobile.role:muthawwif'])->group(function () {

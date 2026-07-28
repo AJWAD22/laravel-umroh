@@ -218,6 +218,60 @@ class MobileApiTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_tour_leader_can_reveal_pin_only_for_assigned_pilgrim_and_action_is_audited(): void
+    {
+        $context = $this->scenario();
+        $context['pilgrim']->forceFill([
+            'activation_pin_hash' => $this->digest('483921'),
+            'activation_pin_ciphertext' => '483921',
+            'activation_pin_generated_at' => now(),
+        ])->save();
+        $leaderToken = $this->login($context['leaderUser']);
+
+        $this->withToken($leaderToken)
+            ->getJson("/api/mobile/group-pilgrims/{$context['pilgrim']->id}/activation-pin")
+            ->assertOk()
+            ->assertJsonPath('data.registration_number', 'API-JMH-001')
+            ->assertJsonPath('data.pin', '483921');
+
+        $this->assertDatabaseHas('audit_logs', [
+            'actor_id' => $context['leaderUser']->id,
+            'action' => 'activation.pin.revealed_by_tour_leader',
+            'subject_type' => Pilgrim::class,
+            'subject_id' => $context['pilgrim']->id,
+        ]);
+
+        $this->withToken($leaderToken)
+            ->getJson("/api/mobile/group-pilgrims/{$context['foreignPilgrim']->id}/activation-pin")
+            ->assertForbidden();
+    }
+
+    public function test_muthawwif_cannot_reveal_activation_pin(): void
+    {
+        $context = $this->scenario();
+        $muthawwifToken = $this->login($context['muthawwifUser']);
+
+        $this->withToken($muthawwifToken)
+            ->getJson("/api/mobile/group-pilgrims/{$context['pilgrim']->id}/activation-pin")
+            ->assertForbidden();
+    }
+
+    public function test_legacy_pin_must_be_reset_before_tour_leader_can_reveal_it(): void
+    {
+        $context = $this->scenario();
+        $context['pilgrim']->forceFill([
+            'activation_pin_hash' => $this->digest('123456'),
+            'activation_pin_ciphertext' => null,
+            'activation_pin_generated_at' => now(),
+        ])->save();
+        $leaderToken = $this->login($context['leaderUser']);
+
+        $this->withToken($leaderToken)
+            ->getJson("/api/mobile/group-pilgrims/{$context['pilgrim']->id}/activation-pin")
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('activation');
+    }
+
     public function test_staff_location_is_rejected_when_assigned_journey_is_not_active(): void
     {
         $context = $this->scenario();

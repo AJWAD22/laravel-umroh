@@ -159,6 +159,7 @@ class GroupMemberManagementTest extends TestCase
             ->assertSessionHas('reset_pins', fn (array $pins) => count($pins) === 1);
 
         $this->assertNotNull($pilgrim->fresh()->activation_pin_hash);
+        $this->assertNotNull($pilgrim->fresh()->activation_pin_ciphertext);
         $this->assertSame($admin->id, $pilgrim->fresh()->activation_pin_created_by);
         $this->assertDatabaseHas('audit_logs', [
             'actor_id' => $admin->id,
