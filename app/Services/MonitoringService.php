@@ -110,15 +110,16 @@ class MonitoringService
                 // 1. SOS selalu ditandai merah.
                 // 2. Online hanya jika GPS masih online dan waktu lokasinya masih baru.
                 // 3. Selain itu dianggap offline.
+                $freshAt = $location->server_received_at ?? $location->recorded_at;
                 $status = $activeSos || $location->pilgrim->monitoring_status === 'sos'
                     ? 'sos'
-                    : ($location->gps_status === 'online' && $location->recorded_at->gte($offlineThreshold)
+                    : ($location->gps_status === 'online' && $freshAt->gte($offlineThreshold)
                         ? 'online'
                         : 'offline');
                 $latitude = $activeSos?->latitude ?? $location->latitude;
                 $longitude = $activeSos?->longitude ?? $location->longitude;
                 $accuracy = $activeSos?->accuracy ?? $location->accuracy;
-                $updatedAt = $activeSos?->reported_at ?? $location->recorded_at;
+                $updatedAt = $activeSos?->reported_at ?? $freshAt;
 
                 return [
                     'id' => "pilgrim-{$location->pilgrim_id}",
@@ -182,6 +183,7 @@ class MonitoringService
             ->limit(self::MAX_STAFF_MARKERS)
             ->get()
             ->map(function (StaffLocation $location) use ($offlineThreshold, $scopeGroups): array {
+                $freshAt = $location->server_received_at ?? $location->recorded_at;
                 $isTourLeader = $location->user->tourLeader !== null;
                 $staffId = $isTourLeader ? $location->user->tourLeader->id : $location->user->muthawwif?->id;
                 $groups = $scopeGroups->filter(fn (Group $group) => $isTourLeader
@@ -197,12 +199,12 @@ class MonitoringService
                     'branch_id' => $location->branch_id,
                     'branch' => $location->user->branch?->name,
                     'group' => $groups->pluck('name')->join(', '),
-                    'status' => $location->recorded_at->gte($offlineThreshold) ? 'online' : 'offline',
+                    'status' => $freshAt->gte($offlineThreshold) ? 'online' : 'offline',
                     'battery' => $location->battery_level,
                     'accuracy' => $location->accuracy !== null ? (float) $location->accuracy : null,
                     'latitude' => (float) $location->latitude,
                     'longitude' => (float) $location->longitude,
-                    'updated_at' => $location->recorded_at->toIso8601String(),
+                    'updated_at' => $freshAt->toIso8601String(),
                 ];
             })->values();
 
