@@ -20,54 +20,6 @@
             $resource === 'branches' => 'Organisasi',
             default => 'Data',
         };
-        $resourceGuides = [
-            'branches' => [
-                'purpose' => 'Cabang menentukan ruang kerja Admin Cabang, paket, jamaah, petugas, dan laporan.',
-                'next' => 'Setelah cabang dibuat, buat Akun Admin Cabang untuk mengelola operasional cabang tersebut.',
-                'empty' => 'Buat cabang pertama agar Admin Cabang, paket perjalanan, dan pendaftaran jamaah bisa digunakan.',
-            ],
-            'branch-admins' => [
-                'purpose' => 'Akun ini dipakai pengelola cabang untuk input paket, verifikasi pendaftaran, pembayaran, rombongan, PIN, dan monitoring.',
-                'next' => 'Pastikan setiap cabang aktif memiliki minimal satu Admin Cabang.',
-                'empty' => 'Buat akun Admin Cabang setelah data cabang tersedia.',
-            ],
-            'pilgrims' => [
-                'purpose' => 'Data jamaah operasional berasal dari pendaftaran yang disetujui atau input cabang.',
-                'next' => 'Jamaah yang sudah lunas dan masuk rombongan dapat dibuatkan PIN aktivasi aplikasi.',
-                'empty' => 'Jamaah akan muncul setelah pendaftaran disetujui atau setelah Admin Cabang menambahkan data jamaah.',
-            ],
-            'tour-leaders' => [
-                'purpose' => 'Tour Leader memakai aplikasi mobile untuk melihat rombongan, tracking, dan merespons SOS.',
-                'next' => 'Setelah akun dibuat, tempatkan Tour Leader ke rombongan.',
-                'empty' => 'Buat Tour Leader sebelum membentuk rombongan perjalanan.',
-            ],
-            'muthawwifs' => [
-                'purpose' => 'Muthawwif membantu pendampingan ibadah dan melihat data rombongan dari aplikasi mobile.',
-                'next' => 'Setelah akun dibuat, tempatkan Muthawwif ke rombongan.',
-                'empty' => 'Buat Muthawwif sebelum keberangkatan agar data petugas rombongan lengkap.',
-            ],
-            'hotels' => [
-                'purpose' => 'Hotel dipilih saat membuat paket perjalanan dan tampil di landing page, portal jamaah, serta detail rombongan.',
-                'next' => 'Input hotel Makkah dan Madinah terlebih dahulu, lalu pilih hotel tersebut di Paket Perjalanan.',
-                'empty' => 'Buat minimal satu hotel Makkah dan satu hotel Madinah sebelum membuat paket lengkap.',
-            ],
-            'checkpoints' => [
-                'purpose' => 'Titik tujuan dan titik kumpul dikirim ke mobile, muncul di Live Map, dan menjadi acuan geofence.',
-                'next' => 'Gunakan peta untuk memilih koordinat, lalu tentukan apakah titik berlaku umum, khusus paket, atau khusus rombongan.',
-                'empty' => 'Buat titik kumpul dan tujuan perjalanan agar jamaah dan petugas bisa melihat lokasi di aplikasi.',
-            ],
-            'departures' => [
-                'purpose' => 'Paket Perjalanan adalah sumber data landing page, pilihan jamaah, jadwal, hotel, pesawat, harga, dan kuota.',
-                'next' => 'Paket dapat dipublikasikan setelah tanggal, hotel, pesawat, fasilitas, persyaratan, dan jadwal harian lengkap.',
-                'empty' => 'Buat Paket Perjalanan agar calon jamaah bisa melihat dan memilih paket dari landing page.',
-            ],
-            'groups' => [
-                'purpose' => 'Rombongan mengikat paket, jamaah, Tour Leader, Muthawwif, PIN aktivasi, dan tracking perjalanan.',
-                'next' => 'Masukkan jamaah yang sudah memenuhi syarat pembayaran, lalu generate PIN aktivasi.',
-                'empty' => 'Buat rombongan setelah paket dipublikasikan dan jamaah mulai disetujui.',
-            ],
-        ];
-        $guide = $resourceGuides[$resource] ?? null;
     @endphp
 
     <x-slot:title>{{ $definition['label'] }}</x-slot:title>
@@ -116,74 +68,14 @@
         </div>
     </x-slot:header>
 
-    @if ($guide)
-        <section class="mb-5 grid gap-3 lg:grid-cols-3">
-            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <p class="text-xs font-bold uppercase tracking-wide text-blue-600">Dipakai Untuk</p>
-                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{{ $guide['purpose'] }}</p>
-            </article>
-            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <p class="text-xs font-bold uppercase tracking-wide text-teal-600">Langkah Berikutnya</p>
-                <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{{ $guide['next'] }}</p>
-            </article>
-            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Jumlah Data</p>
-                <p class="mt-2 text-2xl font-extrabold text-slate-950 dark:text-white">{{ number_format($records->total()) }}</p>
-                <p class="mt-1 text-xs text-slate-500">{{ $hasFilters ? 'Sesuai filter aktif' : 'Total dalam akses Anda' }}</p>
-            </article>
-        </section>
-    @endif
-
-    @if ($resource === 'departures')
-        <section class="mb-5 rounded-2xl border border-blue-200 bg-blue-50 p-5 text-sm leading-6 text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
-            <div class="flex items-start gap-3">
-                <i data-lucide="plane" class="mt-0.5 size-5 shrink-0 text-blue-700 dark:text-blue-300"></i>
-                <div>
-                    <p class="font-bold">Paket Perjalanan dikelola oleh Admin Cabang.</p>
-                    <p class="mt-1">Isi paket meliputi tanggal berangkat-pulang, hotel, pesawat, harga, kuota, fasilitas, persyaratan, dan jadwal harian. Super Admin dapat memantau seluruh paket, sedangkan input dan perubahan operasional dilakukan oleh cabang.</p>
-                </div>
-            </div>
-        </section>
-    @endif
-
-    @if ($resource === 'hotels')
-        <section class="mb-5 rounded-2xl border border-teal-200 bg-teal-50 p-5 text-sm leading-6 text-teal-950 dark:border-teal-900 dark:bg-teal-950/30 dark:text-teal-100">
-            <div class="flex items-start gap-3">
-                <i data-lucide="hotel" class="mt-0.5 size-5 shrink-0 text-teal-700 dark:text-teal-300"></i>
-                <div>
-                    <p class="font-bold">Hotel disiapkan sebagai data pilihan paket.</p>
-                    <p class="mt-1">Admin Cabang cukup input hotel Makkah dan Madinah sekali, lalu memilih hotel tersebut saat membuat Paket Perjalanan. Data hotel yang dipilih akan terlihat pada landing page dan portal jamaah.</p>
-                </div>
-            </div>
-        </section>
-    @endif
-
-    @if ($resource === 'checkpoints')
-        <section class="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
-            <div class="flex items-start gap-3">
-                <i data-lucide="map-pinned" class="mt-0.5 size-5 shrink-0 text-amber-700 dark:text-amber-300"></i>
-                <div>
-                    <p class="font-bold">Titik Tujuan & Kumpul dipakai oleh aplikasi dan monitoring.</p>
-                    <p class="mt-1">Gunakan kategori Titik Kumpul untuk lokasi kumpul jamaah, dan kategori lain untuk hotel, bandara, tempat ibadah, atau tujuan perjalanan. Koordinat dipilih lewat peta, bukan diketik manual.</p>
-                </div>
-            </div>
-        </section>
-        <section class="mb-5 grid gap-3 md:grid-cols-3">
-            @foreach ([
-                ['Umum Cabang', 'Kosongkan paket dan rombongan jika titik berlaku untuk semua perjalanan cabang.'],
-                ['Khusus Paket', 'Pilih paket jika titik harus terlihat untuk semua jamaah yang mengambil paket tersebut.'],
-                ['Khusus Rombongan', 'Pilih rombongan jika titik hanya dipakai oleh satu rombongan, misalnya titik kumpul harian.'],
-            ] as $scope)
-                <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                    <h2 class="text-sm font-extrabold text-slate-950 dark:text-white">{{ $scope[0] }}</h2>
-                    <p class="mt-2 text-xs leading-5 text-slate-500">{{ $scope[1] }}</p>
-                </article>
-            @endforeach
-        </section>
-    @endif
-
     <section class="surface-card overflow-hidden">
         <div class="border-b border-slate-200/80 p-4 dark:border-slate-800 sm:p-5">
+            <div class="mb-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                <span class="travel-chip">{{ number_format($records->total()) }} data</span>
+                @if ($hasFilters)
+                    <span>Filter aktif</span>
+                @endif
+            </div>
             <form method="GET" class="flex flex-col gap-3 lg:flex-row lg:items-center">
                 <label class="relative min-w-0 flex-1">
                     <span class="sr-only">Cari {{ str($definition['label'])->lower() }}</span>

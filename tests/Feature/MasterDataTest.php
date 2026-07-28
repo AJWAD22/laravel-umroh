@@ -98,12 +98,13 @@ class MasterDataTest extends TestCase
             ->get(route('master-data.create', 'checkpoints'))
             ->assertOk()
             ->assertSee('Pilih Lokasi dari Peta')
-            ->assertSee('Titik ini muncul di mobile sesuai paket atau rombongan')
-            ->assertSee('Umum Cabang')
-            ->assertSee('Khusus Paket')
+            ->assertSee('Khusus Paket Perjalanan')
             ->assertSee('Khusus Rombongan')
-            ->assertSee('Kategori Titik Kumpul dan Hotel dipakai sebagai radius aman tracking')
+            ->assertSee('Hasil Pilihan Peta')
             ->assertSee('data-location-picker', false)
+            ->assertSee('name="departure_id"', false)
+            ->assertSee('name="group_id"', false)
+            ->assertSee('name="category"', false)
             ->assertSee('name="latitude"', false)
             ->assertSee('name="longitude"', false);
     }
@@ -115,14 +116,9 @@ class MasterDataTest extends TestCase
         $this->actingAs($admin)
             ->get(route('master-data.index', 'checkpoints'))
             ->assertOk()
-            ->assertSee('Dipakai Untuk')
-            ->assertSee('Langkah Berikutnya')
-            ->assertSeeText('Titik Tujuan & Kumpul dipakai oleh aplikasi dan monitoring')
-            ->assertSee('Titik tujuan dan titik kumpul dikirim ke mobile')
-            ->assertSee('Umum Cabang')
-            ->assertSee('Khusus Paket')
-            ->assertSee('Khusus Rombongan')
-            ->assertSee('Koordinat dipilih lewat peta');
+            ->assertSee('Titik Tujuan &amp; Kumpul', false)
+            ->assertSee('Tambah Titik Tujuan &amp; Kumpul', false)
+            ->assertSee('0 data');
     }
 
     public function test_branch_admin_manages_package_departures_from_supporting_data(): void
@@ -133,10 +129,9 @@ class MasterDataTest extends TestCase
             ->get(route('master-data.index', 'departures'))
             ->assertOk()
             ->assertSee('Paket Perjalanan')
-            ->assertSee('Paket Perjalanan dikelola oleh Admin Cabang')
-            ->assertSee('Paket Perjalanan adalah sumber data landing page')
-            ->assertSee('Paket dapat dipublikasikan setelah tanggal')
-            ->assertSee('Tambah Paket Perjalanan');
+            ->assertSee('Tambah Paket Perjalanan')
+            ->assertSee('Semua status')
+            ->assertSee('0 data');
     }
 
     public function test_master_data_empty_states_explain_operational_next_steps(): void
@@ -146,14 +141,16 @@ class MasterDataTest extends TestCase
         $this->actingAs($admin)
             ->get(route('master-data.index', 'hotels'))
             ->assertOk()
-            ->assertSee('Hotel dipilih saat membuat paket perjalanan')
-            ->assertSee('Buat minimal satu hotel Makkah dan satu hotel Madinah');
+            ->assertSee('Hotel')
+            ->assertSee('Tambah Hotel')
+            ->assertSee('0 data');
 
         $this->actingAs($admin)
             ->get(route('master-data.index', 'groups'))
             ->assertOk()
-            ->assertSee('Rombongan mengikat paket, jamaah, Tour Leader, Muthawwif, PIN aktivasi, dan tracking perjalanan')
-            ->assertSee('Buat rombongan setelah paket dipublikasikan');
+            ->assertSee('Rombongan &amp; PIN', false)
+            ->assertSee('Tambah Rombongan')
+            ->assertSee('0 data');
     }
 
     public function test_package_departure_form_guides_branch_admin_through_operational_input(): void
@@ -163,16 +160,12 @@ class MasterDataTest extends TestCase
         $this->actingAs($admin)
             ->get(route('master-data.create', 'departures'))
             ->assertOk()
-            ->assertSee('Paket ini menjadi sumber data landing page dan pilihan jamaah')
-            ->assertSee('1. Data dasar')
-            ->assertSee('2. Hotel &amp; pesawat', false)
-            ->assertSee('3. Jadwal harian')
-            ->assertSee('4. Publikasi')
-            ->assertSee('Jika daftar kosong, buat data hotel terlebih dahulu')
-            ->assertSee('Nomor hari tidak boleh melebihi durasi paket')
-            ->assertSee('Nama ini tampil di landing page, portal jamaah, pendaftaran, dan rombongan')
-            ->assertSee('Kuota dipakai untuk menghitung sisa kursi di landing page dan portal jamaah')
-            ->assertSee('Gunakan Draft untuk persiapan, Terjadwal agar paket siap dipilih');
+            ->assertSee('Nama Paket')
+            ->assertSee('Hotel Makkah/Madinah')
+            ->assertSee('Jadwal Perjalanan per Hari')
+            ->assertSee('Tampil di Landing Page')
+            ->assertSee('Status')
+            ->assertSee('Format: hari|judul|kota|keterangan');
     }
 
     public function test_hotel_form_guides_location_and_package_usage(): void
@@ -182,10 +175,10 @@ class MasterDataTest extends TestCase
         $this->actingAs($admin)
             ->get(route('master-data.create', 'hotels'))
             ->assertOk()
-            ->assertSee('Pilih lokasi hotel dari peta')
-            ->assertSee('1. Nama &amp; kota', false)
-            ->assertSee('Nama hotel akan tampil pada paket, portal jamaah, dan detail rombongan')
-            ->assertSee('Radius aman awal untuk area hotel')
+            ->assertSee('Pilih Lokasi dari Peta')
+            ->assertSee('Nama Hotel')
+            ->assertSee('Radius Geofence')
+            ->assertSee('Hasil Pilihan Peta')
             ->assertSee('data-location-picker', false);
     }
 

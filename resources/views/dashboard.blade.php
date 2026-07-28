@@ -23,54 +23,6 @@
         ];
     @endphp
 
-    <section class="mb-6 surface-card p-5 sm:p-6">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div class="max-w-2xl">
-                <p class="text-xs font-bold uppercase tracking-[.14em] text-teal-600">Panduan Operasional</p>
-                <h2 class="mt-1 text-xl font-extrabold">{{ $isNational ? 'Urutan kerja Super Admin' : 'Urutan kerja Admin Cabang' }}</h2>
-                <p class="mt-2 text-sm leading-6 text-slate-500">
-                    {{ $isNational
-                        ? 'Gunakan urutan ini untuk menyiapkan fondasi organisasi, cabang, admin, dan profil travel.'
-                        : 'Gunakan urutan ini untuk menjalankan proses harian dari paket sampai monitoring jamaah.' }}
-                </p>
-            </div>
-            <a href="{{ $isNational ? route('settings.system.edit') : route('master-data.index', 'departures') }}" class="button-secondary shrink-0">
-                <i data-lucide="{{ $isNational ? 'settings' : 'plane' }}" class="size-4"></i>
-                {{ $isNational ? 'Atur Profil Travel' : 'Mulai dari Paket' }}
-            </a>
-        </div>
-
-        @php
-            $workflowSteps = $isNational ? [
-                ['label' => 'Data Cabang', 'help' => 'Buat dan aktifkan cabang travel.', 'route' => route('master-data.index', 'branches'), 'icon' => 'building-2'],
-                ['label' => 'Admin Cabang', 'help' => 'Buat akun pengelola cabang.', 'route' => route('master-data.index', 'branch-admins'), 'icon' => 'shield-check'],
-                ['label' => 'Profil Travel', 'help' => 'Isi legalitas, kontak, dan WhatsApp landing page.', 'route' => route('settings.system.edit'), 'icon' => 'settings'],
-                ['label' => 'Audit & Laporan', 'help' => 'Pantau aktivitas dan rekap nasional.', 'route' => route('audit-logs.index'), 'icon' => 'history'],
-            ] : [
-                ['label' => 'Paket Perjalanan', 'help' => 'Isi jadwal, harga, kuota, hotel, dan pesawat.', 'route' => route('master-data.index', 'departures'), 'icon' => 'plane'],
-                ['label' => 'Titik Tujuan & Kumpul', 'help' => 'Tentukan lokasi untuk aplikasi dan geofence.', 'route' => route('master-data.index', 'checkpoints'), 'icon' => 'map-pinned'],
-                ['label' => 'Pendaftaran Jamaah', 'help' => 'Verifikasi biodata, dokumen, dan pembayaran.', 'route' => route('registrations.index'), 'icon' => 'clipboard-list'],
-                ['label' => 'Rombongan & PIN', 'help' => 'Masukkan jamaah, petugas, lalu buat PIN aktivasi.', 'route' => route('master-data.index', 'groups'), 'icon' => 'key-round'],
-                ['label' => 'Monitoring', 'help' => 'Pantau GPS, titik tujuan, dan SOS perjalanan.', 'route' => route('monitoring.map.index'), 'icon' => 'map'],
-            ];
-        @endphp
-
-        <div class="mt-5 grid gap-3 md:grid-cols-2 {{ $isNational ? 'xl:grid-cols-4' : 'xl:grid-cols-5' }}">
-            @foreach ($workflowSteps as $index => $step)
-                <a href="{{ $step['route'] }}" class="group rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-teal-50/40 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800">
-                    <div class="flex items-center gap-3">
-                        <span class="grid size-10 shrink-0 place-items-center rounded-2xl bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300">
-                            <i data-lucide="{{ $step['icon'] }}" class="size-4.5"></i>
-                        </span>
-                        <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-extrabold text-slate-500 dark:bg-slate-800">Langkah {{ $index + 1 }}</span>
-                    </div>
-                    <h3 class="mt-4 text-sm font-extrabold text-slate-950 dark:text-white">{{ $step['label'] }}</h3>
-                    <p class="mt-1 text-xs leading-5 text-slate-500">{{ $step['help'] }}</p>
-                </a>
-            @endforeach
-        </div>
-    </section>
-
     <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6" aria-label="Ringkasan operasional">
         @foreach ($cards as $card)
             <article class="surface-card relative overflow-hidden p-5 transition duration-200 hover:-translate-y-1 hover:shadow-xl"><div class="absolute inset-x-0 top-0 h-1 {{ $colorClasses[$card['color']]['accent'] }}"></div><div class="flex items-start justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-[.08em] text-slate-500">{{ $card['label'] }}</p><p class="mt-3 text-3xl font-black tracking-tight">{{ number_format($card['value']) }}</p></div><span class="grid size-11 place-items-center rounded-2xl {{ $colorClasses[$card['color']]['icon'] }}"><i data-lucide="{{ $card['icon'] }}" class="size-5"></i></span></div></article>

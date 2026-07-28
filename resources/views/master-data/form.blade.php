@@ -31,54 +31,20 @@
         default => 'Data',
     };
     $hasLocationPicker = in_array($resource, ['hotels', 'checkpoints'], true);
-    $departureGuide = [
-        ['title' => '1. Data dasar', 'description' => 'Isi nama paket, tanggal berangkat-pulang, harga, kuota, dan kota/bandara keberangkatan.'],
-        ['title' => '2. Hotel & pesawat', 'description' => 'Pilih hotel Makkah/Madinah yang sudah dibuat, lalu isi maskapai dan nomor penerbangan.'],
-        ['title' => '3. Jadwal harian', 'description' => 'Tulis agenda per hari agar jamaah melihat rencana perjalanan di landing dan portal.'],
-        ['title' => '4. Publikasi', 'description' => 'Gunakan status Terjadwal dan Tampil di Landing Page jika paket sudah siap dipilih.'],
-    ];
-    $checkpointGuide = [
-        ['title' => 'Umum Cabang', 'description' => 'Kosongkan paket dan rombongan untuk titik umum cabang.'],
-        ['title' => 'Khusus Paket', 'description' => 'Pilih paket agar titik terlihat untuk semua jamaah paket tersebut.'],
-        ['title' => 'Khusus Rombongan', 'description' => 'Pilih rombongan untuk titik kumpul khusus satu rombongan.'],
-        ['title' => 'Geofence', 'description' => 'Kategori Titik Kumpul dan Hotel dipakai sebagai radius aman tracking.'],
-    ];
-    $hotelGuide = [
-        ['title' => '1. Nama & kota', 'description' => 'Pisahkan hotel Makkah dan Madinah agar paket mudah dibaca jamaah.'],
-        ['title' => '2. Alamat', 'description' => 'Isi alamat singkat yang mudah dikenali petugas dan jamaah.'],
-        ['title' => '3. Lokasi peta', 'description' => 'Pilih titik dari peta agar koordinat tidak perlu dibuat manual.'],
-    ];
     $fieldHelp = [
         'departures' => [
-            'program_name' => 'Nama ini tampil di landing page, portal jamaah, pendaftaran, dan rombongan.',
             'cover_image' => 'Gunakan foto paket yang jelas dan relevan. Foto tampil di landing page dan halaman detail paket.',
-            'description' => 'Gunakan bahasa singkat yang menjelaskan kelas paket, durasi, dan keunggulan utama.',
-            'facilities' => 'Tulis satu fasilitas per baris, misalnya visa umroh, hotel, transportasi, manasik, dan pendamping.',
-            'requirements' => 'Tulis satu persyaratan per baris, misalnya paspor, KTP, KK, buku nikah, dan vaksin jika diperlukan.',
-            'departure_date' => 'Tanggal ini menjadi acuan paket tampil sebagai keberangkatan aktif.',
-            'return_date' => 'Durasi paket dihitung otomatis dari tanggal berangkat sampai tanggal pulang.',
-            'departure_airport' => 'Contoh: Jakarta CGK, Surabaya SUB, Makassar UPG, atau Banjarmasin BDJ.',
-            'arrival_airport' => 'Contoh: Jeddah JED atau Madinah MED.',
-            'airline' => 'Nama maskapai tampil di landing page dan detail paket.',
-            'flight_number' => 'Isi jika nomor penerbangan sudah diketahui. Bisa dikosongkan saat paket masih draft.',
-            'price' => 'Harga ini tampil sebagai harga paket. Kosongkan jika harga masih harus menghubungi cabang.',
-            'quota' => 'Kuota dipakai untuk menghitung sisa kursi di landing page dan portal jamaah.',
-            'is_public' => 'Aktifkan hanya jika paket sudah layak dilihat calon jamaah.',
-            'status' => 'Gunakan Draft untuk persiapan, Terjadwal agar paket siap dipilih, dan Selesai setelah perjalanan ditutup.',
+            'departure_airport' => 'Contoh: Banjarmasin BDJ.',
+            'flight_number' => 'Isi jika nomor penerbangan sudah diketahui.',
+            'is_public' => 'Tampil di landing page jika status paket Terjadwal.',
+            'status' => 'Gunakan Terjadwal saat paket sudah siap dipilih.',
         ],
         'hotels' => [
-            'name' => 'Nama hotel akan tampil pada paket, portal jamaah, dan detail rombongan.',
-            'city' => 'Pilih kota hotel agar sistem bisa membedakan hotel Makkah dan Madinah.',
-            'address' => 'Alamat membantu petugas memastikan titik peta sesuai lokasi sebenarnya.',
-            'geofence_radius_meters' => 'Radius aman awal untuk area hotel. Umumnya 100-300 meter, sesuaikan kondisi sekitar.',
+            'geofence_radius_meters' => 'Umumnya 100-300 meter.',
         ],
         'checkpoints' => [
             'name' => 'Gunakan nama yang mudah dipahami jamaah, misalnya Lobi Hotel, Gate 79, atau Titik Kumpul Bus.',
-            'city' => 'Kota membantu mobile dan monitoring mengelompokkan titik tujuan.',
-            'address' => 'Alamat boleh singkat; koordinat utama tetap dipilih dari peta.',
-            'geofence_radius_meters' => 'Radius dipakai untuk membaca apakah jamaah berada di sekitar titik kumpul atau tujuan.',
-            'description' => 'Isi petunjuk praktis, misalnya bertemu di lobi 15 menit sebelum jadwal berangkat.',
-            'is_active' => 'Nonaktifkan titik yang sudah tidak dipakai agar tidak muncul di mobile.',
+            'geofence_radius_meters' => 'Umumnya 100-300 meter.',
         ],
     ];
     $fields = match ($resource) {
@@ -174,78 +140,9 @@
 
         <div class="p-5 sm:p-7">
         @if (in_array($resource, ['tour-leaders', 'muthawwifs'], true))
-            <div class="mb-7 flex gap-3 rounded-2xl border border-blue-200/80 bg-blue-50/70 p-4 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
-                <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-white text-blue-600 shadow-sm dark:bg-blue-950 dark:text-blue-300">
-                    <i data-lucide="shield-check" class="size-4.5"></i>
-                </span>
-                <div>
-                    <p class="font-semibold">Akun login aplikasi dibuat bersama data staf</p>
-                    <p class="mt-1 leading-5 text-blue-700 dark:text-blue-300">
-                        Email dan password digunakan untuk masuk ke aplikasi Mantau Umroh.
-                        @if ($editing && $record->user_id)
-                            Kosongkan password jika tidak ingin menggantinya.
-                        @elseif ($editing)
-                            Data lama ini belum mempunyai akun, sehingga password wajib diisi.
-                        @endif
-                    </p>
-                </div>
-            </div>
-        @endif
-
-        @if ($resource === 'departures')
-            <section class="mb-7 rounded-2xl border border-blue-200 bg-blue-50/80 p-4 text-sm leading-6 text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
-                <div class="flex gap-3">
-                    <i data-lucide="plane" class="mt-0.5 size-5 shrink-0 text-blue-700 dark:text-blue-300"></i>
-                    <div>
-                        <p class="font-bold">Paket ini menjadi sumber data landing page dan pilihan jamaah.</p>
-                        <p class="mt-1">Aktifkan <strong>Tampil di Landing Page</strong> dan pilih status <strong>Terjadwal</strong> jika paket sudah siap dipilih calon jamaah. Hotel, pesawat, harga, kuota, dan jadwal harian akan dibaca dari data ini.</p>
-                    </div>
-                </div>
-            </section>
-            <section class="mb-7 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                @foreach ($departureGuide as $guide)
-                    <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                        <h2 class="text-sm font-extrabold text-slate-950 dark:text-white">{{ $guide['title'] }}</h2>
-                        <p class="mt-2 text-xs leading-5 text-slate-500">{{ $guide['description'] }}</p>
-                    </article>
-                @endforeach
-            </section>
-        @elseif ($resource === 'hotels')
-            <section class="mb-7 rounded-2xl border border-teal-200 bg-teal-50/80 p-4 text-sm leading-6 text-teal-950 dark:border-teal-900 dark:bg-teal-950/30 dark:text-teal-100">
-                <div class="flex gap-3">
-                    <i data-lucide="hotel" class="mt-0.5 size-5 shrink-0 text-teal-700 dark:text-teal-300"></i>
-                    <div>
-                        <p class="font-bold">Pilih lokasi hotel dari peta.</p>
-                        <p class="mt-1">Koordinat hotel dipakai untuk marker monitoring dan dapat dipakai sebagai titik geofence. Admin tidak perlu mengarang latitude atau longitude.</p>
-                    </div>
-                </div>
-            </section>
-            <section class="mb-7 grid gap-3 md:grid-cols-3">
-                @foreach ($hotelGuide as $guide)
-                    <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                        <h2 class="text-sm font-extrabold text-slate-950 dark:text-white">{{ $guide['title'] }}</h2>
-                        <p class="mt-2 text-xs leading-5 text-slate-500">{{ $guide['description'] }}</p>
-                    </article>
-                @endforeach
-            </section>
-        @elseif ($resource === 'checkpoints')
-            <section class="mb-7 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-sm leading-6 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
-                <div class="flex gap-3">
-                    <i data-lucide="map-pinned" class="mt-0.5 size-5 shrink-0 text-amber-700 dark:text-amber-300"></i>
-                    <div>
-                        <p class="font-bold">Titik ini muncul di mobile sesuai paket atau rombongan.</p>
-                        <p class="mt-1">Isi paket jika titik berlaku untuk semua jamaah paket tersebut. Isi rombongan jika titik hanya berlaku untuk rombongan tertentu, misalnya titik kumpul sebelum ziarah.</p>
-                    </div>
-                </div>
-            </section>
-            <section class="mb-7 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                @foreach ($checkpointGuide as $guide)
-                    <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                        <h2 class="text-sm font-extrabold text-slate-950 dark:text-white">{{ $guide['title'] }}</h2>
-                        <p class="mt-2 text-xs leading-5 text-slate-500">{{ $guide['description'] }}</p>
-                    </article>
-                @endforeach
-            </section>
+            <p class="mb-5 rounded-xl bg-blue-50 px-4 py-3 text-xs font-semibold text-blue-800 dark:bg-blue-950/30 dark:text-blue-200">
+                Email dan password dipakai untuk login aplikasi. Kosongkan password saat edit jika tidak diganti.
+            </p>
         @endif
 
         <div class="grid gap-x-6 gap-y-5 md:grid-cols-2">
@@ -296,19 +193,6 @@
                             @if ($editing && $storedImagePath) Kosongkan jika tidak ingin mengganti gambar. @endif
                         </span>
                     @elseif ($type === 'select')
-                        @if ($resource === 'checkpoints' && $name === 'departure_id')
-                            <div class="mb-2 rounded-xl bg-blue-50 p-3 text-xs leading-5 text-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
-                                Pilih paket jika titik ini harus dikirim ke semua jamaah dalam paket perjalanan tersebut.
-                            </div>
-                        @elseif ($resource === 'checkpoints' && $name === 'group_id')
-                            <div class="mb-2 rounded-xl bg-violet-50 p-3 text-xs leading-5 text-violet-900 dark:bg-violet-950/30 dark:text-violet-100">
-                                Pilih rombongan jika titik ini hanya dipakai oleh rombongan tertentu. Rombongan harus berasal dari paket yang sama.
-                            </div>
-                        @elseif ($resource === 'checkpoints' && $name === 'category')
-                            <div class="mb-2 rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
-                                Kategori Titik Kumpul dan Hotel dipakai oleh geofence. Kategori lain tetap tampil sebagai tujuan/navigasi.
-                            </div>
-                        @endif
                         <select name="{{ $name }}" class="control-field w-full">
                             <option value="">Pilih {{ str($label)->lower() }}</option>
                             @foreach ($choices as $optionValue => $optionLabel)
@@ -317,11 +201,6 @@
                         </select>
                     @elseif ($type === 'multiselect')
                         @php $selectedValues = collect($current ?? [])->map(fn ($item) => (string) $item)->all(); @endphp
-                        @if ($resource === 'departures' && $name === 'hotel_ids')
-                            <div class="mb-2 rounded-xl bg-teal-50 p-3 text-xs leading-5 text-teal-900 dark:bg-teal-950/30 dark:text-teal-100">
-                                Pilih minimal satu hotel Makkah dan satu hotel Madinah jika tersedia. Jika daftar kosong, buat data hotel terlebih dahulu di menu Hotel.
-                            </div>
-                        @endif
                         <select name="{{ $name }}[]" multiple class="control-field min-h-32 w-full">
                             @foreach ($choices as $optionValue => $optionLabel)
                                 <option value="{{ $optionValue }}" @selected(in_array((string) $optionValue, $selectedValues, true))>{{ $optionLabel }}</option>
@@ -329,19 +208,14 @@
                         </select>
                         <span class="mt-1.5 block text-xs leading-5 text-slate-500">
                             {{ $resource === 'departures' && $name === 'hotel_ids'
-                                ? 'Pilih hotel yang dipakai paket ini, minimal hotel Makkah dan Madinah. Tahan Ctrl untuk memilih lebih dari satu hotel.'
+                                ? 'Pilih hotel paket. Tahan Ctrl untuk memilih lebih dari satu hotel.'
                                 : 'Tahan Ctrl untuk memilih lebih dari satu data.' }}
                         </span>
                     @elseif ($type === 'textarea')
                         <textarea name="{{ $name }}" rows="4" class="control-field w-full">{{ $current }}</textarea>
                     @elseif ($type === 'itinerary')
-                        @if ($resource === 'departures')
-                            <div class="mb-2 rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
-                                Jadwal harian boleh diisi bertahap. Nomor hari tidak boleh melebihi durasi paket dari tanggal berangkat sampai pulang.
-                            </div>
-                        @endif
                         <textarea name="{{ $name }}" rows="7" class="control-field w-full" placeholder="1|Berangkat dari Indonesia|Jeddah|Penerbangan dan proses imigrasi.&#10;2|Umroh pertama|Makkah|Thawaf, sai, dan tahallul.">{{ $current }}</textarea>
-                        <span class="mt-1.5 block text-xs leading-5 text-slate-500">Format per baris: hari|judul kegiatan|kota|keterangan singkat. Contoh: 1|Berangkat dari Indonesia|Jeddah|Penerbangan dan proses imigrasi.</span>
+                        <span class="mt-1.5 block text-xs leading-5 text-slate-500">Format: hari|judul|kota|keterangan.</span>
                     @elseif ($type === 'boolean')
                         @php
                             $booleanCurrent = filter_var($current, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
@@ -391,7 +265,7 @@
                                 <i data-lucide="map-pinned" class="size-5 text-blue-600"></i>
                                 Pilih Lokasi dari Peta
                             </h2>
-                            <p class="mt-1 max-w-2xl text-sm leading-6 text-slate-500">Cari nama tempat, geser peta, lalu klik lokasi yang tepat. Admin tidak perlu mengetik latitude atau longitude.</p>
+                            <p class="mt-1 max-w-2xl text-sm leading-6 text-slate-500">Cari lokasi atau klik peta untuk menentukan titik.</p>
                         </div>
                         <div class="flex flex-wrap gap-2">
                             <button type="button" class="button-secondary min-h-10 px-3 text-xs" data-location-preset="makkah">Pusat Makkah</button>
