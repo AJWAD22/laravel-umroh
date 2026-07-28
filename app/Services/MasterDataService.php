@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class MasterDataService
 {
@@ -40,6 +41,7 @@ class MasterDataService
         private readonly OperationalCodeGenerator $codes,
         private readonly AuditLogService $audit,
         private readonly CheckpointNotificationService $checkpointNotifications,
+        private readonly MobileActivationService $activations,
     ) {}
 
     /**
@@ -57,7 +59,7 @@ class MasterDataService
             'pilgrims' => $this->definition(Pilgrim::class, 'Jamaah', 'pilgrims.manage',
                 ['photo_path' => 'Foto', 'registration_number' => 'No. Registrasi', 'full_name' => 'Nama', 'active_group' => 'Rombongan', 'branch.name' => 'Cabang', 'phone' => 'Telepon', 'status' => 'Status'],
                 ['registration_number', 'full_name', 'phone'],
-                ['registration_number', 'full_name', 'phone', 'status'], ['branch', 'groupMemberships.group']),
+                ['registration_number', 'full_name', 'phone', 'status'], ['branch', 'groupMemberships.group', 'user.portalRegistrations']),
             'tour-leaders' => $this->definition(TourLeader::class, 'Tour Leader', 'tour-leaders.manage',
                 ['photo_path' => 'Foto', 'employee_number' => 'No. Pegawai', 'full_name' => 'Nama', 'user.email' => 'Email Login', 'branch.name' => 'Cabang', 'phone' => 'Telepon', 'is_active' => 'Aktif'],
                 ['employee_number', 'full_name', 'phone'], ['employee_number', 'full_name', 'phone', 'is_active'], ['branch', 'user']),
@@ -72,7 +74,7 @@ class MasterDataService
                 ['name', 'address', 'description'], ['name', 'category', 'city', 'is_active'], ['branch', 'departure', 'group']),
             'departures' => $this->definition(Departure::class, 'Paket Perjalanan', 'departures.manage',
                 ['code' => 'Kode', 'program_name' => 'Nama Paket', 'branch.name' => 'Cabang', 'duration_days' => 'Durasi', 'airline' => 'Pesawat', 'departure_date' => 'Tanggal Berangkat', 'status' => 'Status'],
-                ['code', 'program_name', 'departure_airport', 'airline', 'flight_number'], ['code', 'program_name', 'departure_date', 'status'], ['branch', 'hotels', 'itineraries']),
+                ['code', 'program_name', 'departure_airport', 'airline', 'flight_number'], ['code', 'program_name', 'departure_date', 'status'], ['branch', 'hotels', 'itineraries', 'groups']),
             'groups' => $this->definition(Group::class, 'Rombongan', 'groups.manage',
                 ['code' => 'Kode', 'name' => 'Nama Rombongan', 'branch.name' => 'Cabang', 'departure.program_name' => 'Paket Perjalanan', 'is_active' => 'Aktif'],
                 ['code', 'name'], ['code', 'name', 'is_active'], ['branch', 'departure']),
@@ -217,9 +219,11 @@ class MasterDataService
             $isNew = ! $record;
             $before = $record?->getOriginal() ?? [];
             $groupId = null;
+            $paymentStatus = null;
             if ($resource === 'pilgrims') {
                 $groupId = $data['group_id'] ?? null;
-                unset($data['group_id']);
+                $paymentStatus = $data['payment_status'] ?? 'unpaid';
+                unset($data['group_id'], $data['payment_status']);
             }
 
             $hotelIds = [];
@@ -255,6 +259,7 @@ class MasterDataService
 
             if ($resource === 'pilgrims') {
                 $this->syncPilgrimGroup($model, $groupId);
+                $this->syncManualPilgrimRegistration($model, $groupId, $paymentStatus, $actor);
             }
 
             if ($resource === 'departures' && $model instanceof Departure) {
@@ -355,6 +360,88 @@ class MasterDataService
                 'status' => 'active',
             ],
         );
+    }
+
+    private function syncManualPilgrimRegistration(
+        Model $pilgrim,
+        int|string|null $groupId,
+        ?string $paymentStatus,
+        User $actor,
+    ): void {
+        if (! $pilgrim instanceof Pilgrim || ! $groupId) {
+            return;
+        }
+
+        $group = Group::query()
+            ->with('departure')
+            ->where('branch_id', $pilgrim->branch_id)
+            ->whereKey((int) $groupId)
+            ->first();
+
+        if (! $group?->departure_id) {
+            return;
+        }
+
+        $user = $this->ensurePilgrimAccount($pilgrim);
+        $paymentStatus = in_array($paymentStatus, ['unpaid', 'pending_branch_payment', 'down_payment', 'paid', 'verified', 'cancelled'], true)
+            ? $paymentStatus
+            : 'unpaid';
+        $isPaid = in_array($paymentStatus, ['paid', 'verified'], true);
+
+        PilgrimRegistration::query()->updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'departure_id' => $group->departure_id,
+            ],
+            [
+                'branch_id' => $pilgrim->branch_id,
+                'full_name' => $pilgrim->full_name,
+                'nik' => $pilgrim->nik,
+                'passport_number' => $pilgrim->passport_number,
+                'passport_expired_at' => $pilgrim->passport_expired_at,
+                'gender' => $pilgrim->gender,
+                'phone' => $pilgrim->phone,
+                'birth_date' => $pilgrim->birth_date,
+                'address' => $pilgrim->address,
+                'photo_path' => $pilgrim->photo_path,
+                'status' => $isPaid ? 'in_group' : 'approved',
+                'payment_status' => $paymentStatus,
+                'submitted_at' => now(),
+            ],
+        );
+
+        if ($isPaid) {
+            $this->activations->ensureAutomaticPin($pilgrim, $actor);
+        }
+    }
+
+    private function ensurePilgrimAccount(Pilgrim $pilgrim): User
+    {
+        if ($pilgrim->user) {
+            $pilgrim->user->forceFill([
+                'branch_id' => $pilgrim->branch_id,
+                'name' => $pilgrim->full_name,
+                'phone_number' => $pilgrim->phone,
+                'is_active' => true,
+            ])->save();
+            $pilgrim->user->syncRoles(MobileRole::Pilgrim->value);
+
+            return $pilgrim->user;
+        }
+
+        $user = User::create([
+            'branch_id' => $pilgrim->branch_id,
+            'name' => $pilgrim->full_name,
+            'email' => "jamaah-{$pilgrim->id}@activation.umrah.local",
+            'phone_number' => $pilgrim->phone,
+            'password' => Str::password(32),
+            'is_active' => true,
+        ]);
+        $user->syncRoles(MobileRole::Pilgrim->value);
+        $pilgrim->forceFill(['user_id' => $user->id])->save();
+        $pilgrim->setRelation('user', $user);
+
+        return $user;
     }
 
     /**

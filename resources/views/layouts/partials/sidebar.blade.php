@@ -47,7 +47,6 @@
                 ['label' => 'Paket Perjalanan', 'resource' => 'departures', 'permission' => 'departures.manage', 'view' => 'departures.view'],
                 ['label' => 'Hotel', 'resource' => 'hotels', 'permission' => 'hotels.manage', 'view' => 'hotels.view'],
                 ['label' => 'Titik Tujuan & Kumpul', 'resource' => 'checkpoints', 'permission' => 'checkpoints.manage', 'view' => 'checkpoints.view'],
-                ['label' => 'Rombongan & PIN', 'resource' => 'groups', 'permission' => 'groups.manage', 'view' => 'groups.view'],
             ];
             $organizationMenus = [
                 ['label' => 'Data Cabang', 'resource' => 'branches', 'permission' => 'branches.manage', 'view' => 'branches.manage'],

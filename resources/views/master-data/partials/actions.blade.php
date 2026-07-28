@@ -8,6 +8,16 @@
         </a>
     @endif
 
+    @if ($canManage && $resource === 'departures' && auth()->user()->hasRole('admin-cabang'))
+        <form method="POST" action="{{ route('departures.prepare-group', $record) }}">
+            @csrf
+            <button class="icon-action text-emerald-600 hover:text-emerald-700"
+                    title="Rombongan & PIN" aria-label="Kelola rombongan dan PIN {{ $record->program_name }}">
+                <i data-lucide="key-round" class="size-4"></i>
+            </button>
+        </form>
+    @endif
+
     @if ($canManage)
         <a href="{{ route('master-data.edit', [$resource, $record->id]) }}"
            class="icon-action text-blue-600 hover:text-blue-700" title="Edit"

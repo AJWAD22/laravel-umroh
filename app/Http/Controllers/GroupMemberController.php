@@ -15,6 +15,7 @@ use App\Models\PilgrimRegistration;
 use App\Models\TourLeader;
 use App\Services\MobileActivationService;
 use App\Services\AuditLogService;
+use App\Services\MasterDataService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,6 +29,7 @@ class GroupMemberController extends Controller
     public function __construct(
         private readonly MobileActivationService $activations,
         private readonly AuditLogService $audit,
+        private readonly MasterDataService $masterData,
     ) {}
 
     public function index(Request $request, Group $group): View
@@ -148,6 +150,16 @@ class GroupMemberController extends Controller
                 );
             }
         });
+
+        Pilgrim::query()
+            ->whereIn('id', $request->validated('pilgrim_ids'))
+            ->get()
+            ->each(fn (Pilgrim $pilgrim) => $this->activations->ensureAutomaticPin(
+                $pilgrim,
+                $request->user(),
+                'PIN otomatis dibuat setelah jamaah dimasukkan ke rombongan.',
+            ));
+
         $this->audit->record(
             $request->user(),
             'groups.members.assigned',
@@ -158,6 +170,33 @@ class GroupMemberController extends Controller
         );
 
         return back()->with('success', 'Jamaah berhasil ditambahkan ke group.');
+    }
+
+    public function prepareDepartureGroup(Request $request, Departure $departure): RedirectResponse
+    {
+        Gate::authorize('update', $departure);
+        if (! $request->user()->hasRole(UserRole::SuperAdmin->value)) {
+            abort_unless((int) $departure->branch_id === (int) $request->user()->branch_id, 404);
+        }
+
+        $group = $departure->groups()
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->first();
+
+        if (! $group) {
+            $group = $this->masterData->save('groups', [
+                'branch_id' => $departure->branch_id,
+                'departure_id' => $departure->id,
+                'name' => 'Rombongan '.$departure->program_name,
+                'capacity' => $departure->quota,
+                'is_active' => true,
+            ], $request->user());
+        }
+
+        return redirect()
+            ->route('groups.members.index', $group)
+            ->with('success', 'Rombongan dan PIN paket siap dikelola dari halaman ini.');
     }
 
     public function destroy(Request $request, Group $group, GroupMember $member): RedirectResponse

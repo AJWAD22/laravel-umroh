@@ -90,6 +90,59 @@ class MasterDataTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_manual_pilgrim_entry_syncs_registration_payment_and_auto_pin(): void
+    {
+        [$admin, $branch] = $this->branchAdmin('MAN');
+        $departure = Departure::create([
+            'branch_id' => $branch->id,
+            'code' => 'MAN-DEP-001',
+            'program_name' => 'Paket Manual',
+            'departure_date' => today()->addMonth(),
+            'return_date' => today()->addMonth()->addDays(9),
+            'status' => 'scheduled',
+        ]);
+        $group = Group::create([
+            'branch_id' => $branch->id,
+            'departure_id' => $departure->id,
+            'code' => 'MAN-GRP-001',
+            'name' => 'Rombongan Manual',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('master-data.store', 'pilgrims'), [
+                'branch_id' => $branch->id,
+                'group_id' => $group->id,
+                'payment_status' => 'paid',
+                'full_name' => 'Jamaah Manual',
+                'nik' => '6371010101010789',
+                'gender' => 'male',
+                'phone' => '081234567890',
+                'birth_date' => '1990-01-01',
+                'address' => 'Banjarmasin',
+                'status' => 'registered',
+            ])
+            ->assertRedirect(route('master-data.index', 'pilgrims'))
+            ->assertSessionHasNoErrors();
+
+        $pilgrim = Pilgrim::where('full_name', 'Jamaah Manual')->firstOrFail();
+        $this->assertNotNull($pilgrim->user_id);
+        $this->assertNotNull($pilgrim->activation_pin_hash);
+        $this->assertNotNull($pilgrim->activation_pin_ciphertext);
+        $this->assertDatabaseHas('pilgrim_registrations', [
+            'user_id' => $pilgrim->user_id,
+            'branch_id' => $branch->id,
+            'departure_id' => $departure->id,
+            'status' => 'in_group',
+            'payment_status' => 'paid',
+        ]);
+        $this->assertDatabaseHas('group_members', [
+            'group_id' => $group->id,
+            'pilgrim_id' => $pilgrim->id,
+            'status' => 'active',
+        ]);
+    }
+
     public function test_checkpoint_form_uses_map_location_picker_instead_of_manual_coordinate_fields(): void
     {
         [$admin] = $this->branchAdmin('LOC');
@@ -148,7 +201,7 @@ class MasterDataTest extends TestCase
         $this->actingAs($admin)
             ->get(route('master-data.index', 'groups'))
             ->assertOk()
-            ->assertSee('Rombongan &amp; PIN', false)
+            ->assertSee('Rombongan')
             ->assertSee('Tambah Rombongan')
             ->assertSee('0 data');
     }

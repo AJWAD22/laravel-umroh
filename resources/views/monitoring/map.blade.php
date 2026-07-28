@@ -144,15 +144,15 @@
                         <p class="font-bold text-slate-800 dark:text-slate-100">Checklist sebelum tracking tampil:</p>
                         <ul class="mt-2 space-y-1.5">
                             <li class="flex gap-2"><i data-lucide="circle-check" class="mt-0.5 size-3.5 shrink-0 text-emerald-600"></i> Jamaah sudah lunas dan masuk rombongan.</li>
-                            <li class="flex gap-2"><i data-lucide="circle-check" class="mt-0.5 size-3.5 shrink-0 text-emerald-600"></i> PIN aktivasi sudah dibuat oleh Admin Cabang.</li>
+                            <li class="flex gap-2"><i data-lucide="circle-check" class="mt-0.5 size-3.5 shrink-0 text-emerald-600"></i> PIN aktivasi otomatis tersedia untuk jamaah lunas.</li>
                             <li class="flex gap-2"><i data-lucide="circle-check" class="mt-0.5 size-3.5 shrink-0 text-emerald-600"></i> Jamaah sudah login aplikasi dan mengizinkan lokasi.</li>
                             <li class="flex gap-2"><i data-lucide="circle-check" class="mt-0.5 size-3.5 shrink-0 text-emerald-600"></i> Filter paket atau rombongan sesuai data jamaah.</li>
                         </ul>
                     </div>
                     <div class="mt-4 grid gap-2">
-                        <a href="{{ route('master-data.index', 'groups') }}" class="button-secondary min-h-10 justify-center text-xs">
+                        <a href="{{ route('master-data.index', 'departures') }}" class="button-secondary min-h-10 justify-center text-xs">
                             <i data-lucide="key-round" class="size-4"></i>
-                            Cek Rombongan & PIN
+                            Cek Paket & PIN
                         </a>
                         <a href="{{ route('master-data.index', 'checkpoints') }}" class="button-secondary min-h-10 justify-center text-xs">
                             <i data-lucide="map-pinned" class="size-4"></i>

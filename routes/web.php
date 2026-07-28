@@ -64,6 +64,8 @@ Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->
             ->name('departures.reset-pins');
         Route::post('/groups/{group}/generate-missing-pins', [GroupMemberController::class, 'generateMissingPins'])
             ->name('groups.generate-missing-pins');
+        Route::post('/departures/{departure}/prepare-group', [GroupMemberController::class, 'prepareDepartureGroup'])
+            ->name('departures.prepare-group');
         Route::post('/groups/{group}/pilgrims/{pilgrim}/revoke-devices', [GroupMemberController::class, 'revokePilgrimDevices'])
             ->name('groups.pilgrims.revoke-devices');
         Route::get('/groups/{group}/activation-list', [GroupMemberController::class, 'activationList'])

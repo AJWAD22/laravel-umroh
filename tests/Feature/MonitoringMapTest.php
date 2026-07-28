@@ -33,7 +33,7 @@ class MonitoringMapTest extends TestCase
             ->assertSee('Pilih paket')
             ->assertSee('Pastikan aktivasi')
             ->assertSeeText('Titik tujuan & geofence')
-            ->assertSeeText('Cek Rombongan & PIN')
+            ->assertSeeText('Cek Paket & PIN')
             ->assertSee('Radius geofence')
             ->assertSee('monitoring-detail', false)
             ->assertSee('monitoring-list', false)

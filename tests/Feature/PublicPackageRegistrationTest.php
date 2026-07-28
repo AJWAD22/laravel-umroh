@@ -473,7 +473,8 @@ class PublicPackageRegistrationTest extends TestCase
         $pilgrim = Pilgrim::query()->where('user_id', $portalUser->id)->firstOrFail();
         $this->assertSame($branch->id, $portalUser->fresh()->branch_id);
         $this->assertMatchesRegularExpression('/^OPS-JMH-\d{5}$/', $pilgrim->registration_number);
-        $this->assertNull($pilgrim->activation_pin_hash);
+        $this->assertNotNull($pilgrim->activation_pin_hash);
+        $this->assertNotNull($pilgrim->activation_pin_ciphertext);
         $this->assertDatabaseHas('group_members', [
             'group_id' => $group->id,
             'pilgrim_id' => $pilgrim->id,

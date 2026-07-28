@@ -242,10 +242,10 @@ class GroupMemberManagementTest extends TestCase
             ->get(route('groups.members.index', $group))
             ->assertOk()
             ->assertSee('Pembayaran Lunas')
-            ->assertSee('PIN Dibuat')
+            ->assertSee('PIN Tersedia')
             ->assertSee('Aplikasi Aktif')
             ->assertSee('Alur sampai tracking muncul')
-            ->assertSee('PIN dibuat dan dibagikan dari rombongan ini')
+            ->assertSee('PIN otomatis tersedia untuk jamaah lunas')
             ->assertSee('123456');
     }
 

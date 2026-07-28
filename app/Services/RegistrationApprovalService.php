@@ -17,6 +17,7 @@ class RegistrationApprovalService
     public function __construct(
         private readonly MasterDataService $masterData,
         private readonly AuditLogService $audit,
+        private readonly MobileActivationService $activations,
     ) {}
 
     /**
@@ -67,6 +68,7 @@ class RegistrationApprovalService
                     'status' => 'registered',
                     'monitoring_status' => 'normal',
                     'group_id' => $group->id,
+                    'payment_status' => $data['payment_status'],
                 ], $actor, $pilgrim);
 
                 $registration->user?->forceFill([
@@ -83,6 +85,10 @@ class RegistrationApprovalService
                     ? ($data['revision_notes'] ?? null)
                     : null,
             ])->save();
+
+            if ($isOperationallyApproved && $pilgrim) {
+                $this->activations->ensureAutomaticPin($pilgrim, $actor);
+            }
 
             $this->audit->record(
                 $actor,

@@ -3,7 +3,7 @@
     <x-slot:header>
         <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <nav class="mb-2 text-sm text-slate-500">Operasional Perjalanan / Rombongan / Aktivasi Jamaah</nav>
+                <nav class="mb-2 text-sm text-slate-500">Operasional Perjalanan / Paket / Rombongan & PIN</nav>
                 <h1 class="text-2xl font-bold">{{ $group->name }}</h1>
                 <p class="mt-1 text-sm text-slate-500">{{ $group->branch->name }}</p>
             </div>
@@ -12,7 +12,7 @@
                     <i data-lucide="user-round-cog" class="size-4"></i>
                     Atur Petugas
                 </button>
-                <a href="{{ route('master-data.index', 'groups') }}" class="button-secondary">Kembali</a>
+                <a href="{{ route('master-data.index', 'departures') }}" class="button-secondary">Kembali ke Paket</a>
             </div>
         </div>
     </x-slot:header>
@@ -67,8 +67,8 @@
     <section class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         @foreach ([
             ['label' => 'Anggota Aktif', 'value' => $activationStats['members'], 'help' => 'Jamaah dalam rombongan'],
-            ['label' => 'Pembayaran Lunas', 'value' => $activationStats['paid'], 'help' => 'Syarat membuat PIN'],
-            ['label' => 'PIN Dibuat', 'value' => $activationStats['pins'], 'help' => 'Siap dibagikan ke jamaah'],
+            ['label' => 'Pembayaran Lunas', 'value' => $activationStats['paid'], 'help' => 'Syarat PIN otomatis'],
+            ['label' => 'PIN Tersedia', 'value' => $activationStats['pins'], 'help' => 'Siap dipakai aktivasi'],
             ['label' => 'Aplikasi Aktif', 'value' => $activationStats['devices'], 'help' => 'Perangkat sudah aktivasi'],
         ] as $summary)
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -83,10 +83,10 @@
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <p class="font-bold">Alur sampai tracking muncul</p>
-                <p class="mt-1">Jamaah lunas dan masuk rombongan, Admin Cabang membuat PIN, jamaah aktivasi aplikasi, lalu GPS tampil di Live Map.</p>
+                <p class="mt-1">Jamaah lunas dan masuk rombongan, PIN otomatis tersedia, jamaah aktivasi aplikasi, lalu GPS tampil di Live Map.</p>
             </div>
             <div class="grid gap-2 text-xs font-bold sm:grid-cols-5">
-                @foreach (['Lunas', 'Masuk Rombongan', 'Buat PIN', 'Aktivasi Aplikasi', 'Tracking'] as $step)
+                @foreach (['Lunas', 'Masuk Rombongan', 'PIN Otomatis', 'Aktivasi Aplikasi', 'Tracking'] as $step)
                     <span class="rounded-full bg-white px-3 py-2 text-center text-emerald-800 shadow-sm dark:bg-slate-900 dark:text-emerald-200">{{ $step }}</span>
                 @endforeach
             </div>
@@ -134,14 +134,9 @@
             <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div>
                     <h2 class="font-semibold">Aktivasi Aplikasi Jamaah</h2>
-                    <p class="mt-1 text-sm text-slate-500">PIN dibuat dan dibagikan dari rombongan ini. Reset PIN akan mencabut perangkat aktif agar aktivasi lama berhenti.</p>
+                    <p class="mt-1 text-sm text-slate-500">PIN otomatis tersedia untuk jamaah lunas yang sudah masuk rombongan. Reset PIN akan mencabut perangkat aktif agar aktivasi lama berhenti.</p>
                 </div>
-                <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                    <form method="POST" action="{{ route('groups.generate-missing-pins', $group) }}" class="grid gap-2">
-                        @csrf
-                        <input name="reason" class="control-field min-h-10 text-xs" placeholder="Alasan buat PIN" required>
-                        <button class="button-secondary min-h-10 text-xs">Buat PIN Semua Jamaah</button>
-                    </form>
+                <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                     <form method="POST" action="{{ route('groups.reset-pins', $group) }}" class="grid gap-2">
                         @csrf
                         <input name="reason" class="control-field min-h-10 text-xs" placeholder="Alasan reset rombongan" required>

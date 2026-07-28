@@ -10,6 +10,8 @@
                 => $record?->itineraries?->map(fn ($item) => "{$item->day_number}|{$item->title}|{$item->city}|{$item->description}")->implode("\n") ?? $default,
             $resource === 'pilgrims' && $key === 'group_id'
                 => data_get($record?->groupMemberships?->firstWhere('status', 'active'), 'group_id', $default),
+            $resource === 'pilgrims' && $key === 'payment_status'
+                => optional($record?->user?->portalRegistrations?->sortByDesc('updated_at')?->first())->payment_status ?? $default,
             default => data_get($record, $key, $default),
         };
 
@@ -58,7 +60,8 @@
             ['password','Password','password'], ['password_confirmation','Konfirmasi Password','password'], ['is_active','Status','boolean'],
         ],
         'pilgrims' => [...$commonBranch,
-            ['group_id','Rombongan','select',$options['groups']],
+            ['group_id','Paket/Rombongan','select',$options['groups']],
+            ['payment_status','Status Pembayaran','select',['unpaid'=>'Belum bayar','down_payment'=>'DP','paid'=>'Lunas','verified'=>'Terverifikasi']],
             ['registration_number','Nomor Registrasi','text'], ['full_name','Nama Lengkap','text'], ['nik','NIK','text'],
             ['passport_number','Nomor Paspor','text'], ['passport_expired_at','Masa Berlaku Paspor','date'],
             ['gender','Jenis Kelamin','select',['male'=>'Laki-laki','female'=>'Perempuan']], ['phone','Telepon','text'],

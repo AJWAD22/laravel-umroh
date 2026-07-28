@@ -38,6 +38,21 @@ class MobileActivationService
         return $this->issuePin($pilgrim, (string) $reason, $actor);
     }
 
+    public function ensureAutomaticPin(Pilgrim $pilgrim, ?User $actor = null, string $reason = 'PIN otomatis dibuat karena jamaah sudah lunas dan masuk rombongan.'): ?string
+    {
+        $pilgrim->refresh();
+
+        if (filled($pilgrim->activation_pin_hash) && filled($pilgrim->activation_pin_ciphertext)) {
+            return null;
+        }
+
+        try {
+            return $this->issuePin($pilgrim, $reason, $actor);
+        } catch (ValidationException) {
+            return null;
+        }
+    }
+
     /**
      * Merotasi PIN yang sudah berumur sesuai batas hari.
      *
@@ -98,8 +113,8 @@ class MobileActivationService
                 ->with(['user', 'groupMemberships.group.departure'])
                 ->lockForUpdate()
                 ->findOrFail($pilgrim->id);
-            $this->ensurePinEligible($pilgrim);
             $this->ensurePilgrimUser($pilgrim);
+            $this->ensurePinEligible($pilgrim);
             $before = $pilgrim->only([
                 'activation_pin_hash',
                 'activation_pin_ciphertext',
