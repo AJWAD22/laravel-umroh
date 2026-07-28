@@ -150,6 +150,27 @@
         </div>
     @endif
 
+    @if ($resource === 'pilgrims' && $legacyPinCount > 0)
+        <section class="mb-5 flex flex-col gap-4 rounded-2xl border border-amber-300 bg-amber-50 p-5 dark:border-amber-900 dark:bg-amber-950/30 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex items-start gap-3">
+                <i data-lucide="key-round" class="mt-0.5 size-5 shrink-0 text-amber-700 dark:text-amber-300"></i>
+                <div>
+                    <h2 class="font-extrabold text-amber-950 dark:text-amber-100">{{ $legacyPinCount }} PIN lama belum dapat ditampilkan</h2>
+                    <p class="mt-1 text-sm leading-6 text-amber-800 dark:text-amber-200">Buat ulang satu kali agar PIN tampil sebagai angka 6 digit. Perangkat lama akan dicabut dan jamaah perlu aktivasi ulang.</p>
+                </div>
+            </div>
+            <form method="POST" action="{{ route('master-data.pilgrims.reissue-legacy-pins') }}"
+                  data-confirm-title="Buat Ulang Semua PIN Lama"
+                  data-confirm="{{ $legacyPinCount }} PIN akan dibuat ulang dan perangkat aktif terkait akan dicabut. Lanjutkan?">
+                @csrf
+                <button class="button-primary whitespace-nowrap">
+                    <i data-lucide="refresh-cw" class="size-4"></i>
+                    Buat Ulang Semua PIN Lama
+                </button>
+            </form>
+        </section>
+    @endif
+
     @if ($guide)
         <section class="mb-5 grid gap-3 lg:grid-cols-3">
             <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -216,12 +237,12 @@
         </section>
     @endif
 
-    @if ($resource === 'groups' && session('reset_pins'))
+    @if (in_array($resource, ['groups', 'pilgrims'], true) && session('reset_pins'))
         <section class="mb-5 rounded-2xl border border-violet-200 bg-violet-50 p-5 dark:border-violet-900 dark:bg-violet-950/30">
             <div class="flex items-start gap-3">
                 <i data-lucide="key-round" class="mt-0.5 size-5 shrink-0 text-violet-700"></i>
                 <div class="min-w-0 flex-1">
-                    <h2 class="font-bold text-violet-950 dark:text-violet-100">PIN baru rombongan</h2>
+                    <h2 class="font-bold text-violet-950 dark:text-violet-100">{{ $resource === 'pilgrims' ? 'PIN baru jamaah' : 'PIN baru rombongan' }}</h2>
                     <p class="mt-1 text-sm text-violet-700 dark:text-violet-300">Salin dan bagikan PIN kepada jamaah terkait. Daftar ini hanya ditampilkan setelah proses reset.</p>
                     <div class="mt-4 overflow-x-auto rounded-xl border border-violet-200 bg-white dark:border-violet-900 dark:bg-slate-900">
                         <table class="w-full min-w-[560px] text-sm">

@@ -173,7 +173,7 @@ class GroupMemberManagementTest extends TestCase
         $this->actingAs($admin)
             ->get(route('master-data.index', 'pilgrims'))
             ->assertOk()
-            ->assertSee('Lihat PIN');
+            ->assertSee($pin);
         $this->actingAs($admin)
             ->post(route('master-data.pilgrims.reveal-pin', $pilgrim))
             ->assertRedirect()
@@ -183,6 +183,44 @@ class GroupMemberManagementTest extends TestCase
             'action' => 'activation.pin.revealed_by_branch_admin',
             'subject_type' => Pilgrim::class,
             'subject_id' => $pilgrim->id,
+        ]);
+    }
+
+    public function test_branch_admin_can_reissue_legacy_pins_and_see_the_values(): void
+    {
+        [$admin, $group, $pilgrim] = $this->scenario();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'pilgrim_id' => $pilgrim->id,
+            'status' => 'active',
+            'joined_at' => now(),
+        ]);
+        $pilgrim->forceFill([
+            'activation_pin_hash' => hash('sha256', '123456'),
+            'activation_pin_ciphertext' => null,
+            'activation_pin_generated_at' => now(),
+        ])->save();
+
+        $this->actingAs($admin)
+            ->get(route('master-data.index', 'pilgrims'))
+            ->assertOk()
+            ->assertSee('Buat Ulang Semua PIN Lama');
+
+        $this->actingAs($admin)
+            ->post(route('master-data.pilgrims.reissue-legacy-pins'))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('reset_pins', fn (array $pins) => count($pins) === 1);
+
+        $pilgrim->refresh();
+        $this->assertNotNull($pilgrim->activation_pin_ciphertext);
+        $this->actingAs($admin)
+            ->get(route('master-data.index', 'pilgrims'))
+            ->assertOk()
+            ->assertSee($pilgrim->activation_pin_ciphertext);
+        $this->assertDatabaseHas('audit_logs', [
+            'actor_id' => $admin->id,
+            'action' => 'activation.legacy_pins.reissued',
         ]);
     }
 

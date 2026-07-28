@@ -38,14 +38,16 @@
         <div class="flex min-w-28 flex-col items-start gap-1.5">
             <x-status-badge value="pending" label="Sudah dibuat" />
             @if ($canManage && $record->activation_pin_ciphertext)
-                <form method="POST" action="{{ route('master-data.pilgrims.reveal-pin', $record) }}">
-                    @csrf
-                    <button class="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-bold text-violet-700 hover:bg-violet-50 dark:text-violet-300 dark:hover:bg-violet-950/40"
-                            title="Lihat PIN aktivasi {{ $record->full_name }}">
-                        <i data-lucide="eye" class="size-3.5"></i>
-                        Lihat PIN
+                <div class="flex items-center gap-1">
+                    <code class="rounded-lg bg-violet-50 px-2.5 py-1.5 text-base font-black tracking-[0.16em] text-violet-800 dark:bg-violet-950/40 dark:text-violet-200">{{ $record->activation_pin_ciphertext }}</code>
+                    <button type="button"
+                            class="icon-action size-9"
+                            title="Salin PIN {{ $record->full_name }}"
+                            aria-label="Salin PIN {{ $record->full_name }}"
+                            onclick="navigator.clipboard.writeText('{{ $record->activation_pin_ciphertext }}'); this.dataset.copied='true'">
+                        <i data-lucide="copy" class="size-3.5"></i>
                     </button>
-                </form>
+                </div>
             @elseif ($canManage)
                 <span class="text-xs text-amber-700">Perlu reset PIN</span>
             @endif

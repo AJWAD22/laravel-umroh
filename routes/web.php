@@ -62,6 +62,8 @@ Route::middleware(['auth', 'active.account', 'role:super-admin|admin-cabang'])->
             ->name('master-data.pilgrims.regenerate-pin');
         Route::post('/master-data/pilgrims/{pilgrim}/reveal-pin', [MasterDataController::class, 'revealPin'])
             ->name('master-data.pilgrims.reveal-pin');
+        Route::post('/master-data/pilgrims/reissue-legacy-pins', [MasterDataController::class, 'reissueLegacyPins'])
+            ->name('master-data.pilgrims.reissue-legacy-pins');
         Route::post('/groups/{group}/reset-pins', [GroupMemberController::class, 'resetPins'])
             ->name('groups.reset-pins');
         Route::post('/departures/{departure}/reset-pins', [GroupMemberController::class, 'resetDeparturePins'])

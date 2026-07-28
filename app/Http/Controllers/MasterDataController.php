@@ -64,6 +64,14 @@ class MasterDataController extends Controller
             'options' => $this->masterData->options($resource, $request->user()),
             'sort' => $sort,
             'direction' => $direction,
+            'legacyPinCount' => $resource === 'pilgrims'
+                && $request->user()->hasRole(UserRole::BranchAdmin->value)
+                ? Pilgrim::query()
+                    ->where('branch_id', $request->user()->branch_id)
+                    ->whereNotNull('activation_pin_hash')
+                    ->whereNull('activation_pin_ciphertext')
+                    ->count()
+                : 0,
         ]);
     }
 
@@ -185,6 +193,20 @@ class MasterDataController extends Controller
             'registration_number' => $pilgrim->registration_number,
             'pin' => $pin,
         ]);
+    }
+
+    public function reissueLegacyPins(Request $request): RedirectResponse
+    {
+        $result = $this->activations->reissueLegacyPinsForBranch($request->user());
+
+        $message = "{$result['count']} PIN lama berhasil dibuat ulang dan sekarang dapat dilihat.";
+        if ($result['skipped'] > 0) {
+            $message .= " {$result['skipped']} jamaah dilewati karena belum memenuhi syarat aktivasi.";
+        }
+
+        return back()
+            ->with($result['count'] > 0 ? 'success' : 'error', $message)
+            ->with('reset_pins', $result['pins']);
     }
 
     public function destroy(Request $request, string $resource, int $record): RedirectResponse

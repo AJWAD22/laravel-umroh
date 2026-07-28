@@ -200,6 +200,61 @@ class MobileActivationService
     }
 
     /**
+     * Mengganti PIN lama yang hanya memiliki hash agar dapat dibagikan kembali.
+     *
+     * @return array{count: int, skipped: int, pins: list<array{pilgrim_id: int, registration_number: string, name: string, pin: string}>}
+     */
+    public function reissueLegacyPinsForBranch(User $actor): array
+    {
+        if (! $actor->can('pilgrims.manage') || ! $actor->branch_id) {
+            throw new AuthorizationException;
+        }
+
+        $pins = [];
+        $skipped = 0;
+        $pilgrims = Pilgrim::query()
+            ->where('branch_id', $actor->branch_id)
+            ->whereNotNull('activation_pin_hash')
+            ->whereNull('activation_pin_ciphertext')
+            ->whereIn('status', ['registered', 'active'])
+            ->orderBy('full_name')
+            ->get();
+
+        foreach ($pilgrims as $pilgrim) {
+            try {
+                $pins[] = [
+                    'pilgrim_id' => $pilgrim->id,
+                    'registration_number' => $pilgrim->registration_number,
+                    'name' => $pilgrim->full_name,
+                    'pin' => $this->generatePin(
+                        $actor,
+                        $pilgrim,
+                        'Penerbitan ulang PIN lama agar dapat ditampilkan.',
+                    ),
+                ];
+            } catch (ValidationException) {
+                $skipped++;
+            }
+        }
+
+        $this->audit->record(
+            $actor,
+            'activation.legacy_pins.reissued',
+            metadata: [
+                'branch_id' => $actor->branch_id,
+                'reissued_count' => count($pins),
+                'skipped_count' => $skipped,
+            ],
+        );
+
+        return [
+            'count' => count($pins),
+            'skipped' => $skipped,
+            'pins' => $pins,
+        ];
+    }
+
+    /**
      * @return array{count: int, pins: list<array{pilgrim_id: int, registration_number: string, name: string, pin: string}>}
      */
     public function resetPinsForGroup(User $actor, Group $group, ?string $reason = null): array
