@@ -179,6 +179,17 @@ class MasterDataRequest extends FormRequest
                 }
             }
 
+            if (in_array($this->route('resource'), ['hotels', 'checkpoints'], true)
+                && $this->filled('latitude')
+                && $this->filled('longitude')
+                && (float) $this->input('latitude') === 0.0
+                && (float) $this->input('longitude') === 0.0) {
+                $validator->errors()->add(
+                    'latitude',
+                    'Pilih lokasi dari peta. Koordinat 0,0 tidak boleh disimpan sebagai lokasi operasional.',
+                );
+            }
+
             if ($this->route('resource') === 'pilgrims') {
                 $id = (int) ($this->route('record') ?? 0);
 

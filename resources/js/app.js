@@ -6,7 +6,7 @@ import L from 'leaflet';
 import {
     ArrowDown, ArrowRight, ArrowUp, ArrowUpDown, BadgeCheck, Bell, BookOpen, Building2, ChevronDown, ChevronRight,
     CalendarDays, CalendarRange, CheckCircle2, CircleAlert, CircleCheck, ClipboardList, Clock, createIcons, Database, FileCheck2, HeartHandshake, History, Hotel, Inbox, KeyRound, LayoutDashboard,
-    Eye, EyeOff, ListFilter, LockKeyhole, LogOut, Mail, Map, MapPin, MapPinned, Menu, Moon,
+    Copy, Eye, EyeOff, ListFilter, LockKeyhole, LogOut, Mail, Map, MapPin, MapPinned, Menu, Moon,
     PanelLeftClose, PanelLeftOpen, Pencil, Plane, Plus, RotateCcw, Save, Search, Settings,
     ShieldCheck, Siren, Sun, Trash2, TriangleAlert, UserRound, UserRoundCog, Wallet,
     UserRoundCheck, Users, UsersRound, X,
@@ -20,7 +20,7 @@ createIcons({
     icons: {
         ArrowDown, ArrowRight, ArrowUp, ArrowUpDown, BadgeCheck, Bell, BookOpen, Building2, CalendarDays, CalendarRange, CheckCircle2, ChevronDown,
         ChevronRight, CircleAlert, CircleCheck, ClipboardList, Clock, Database, Eye, EyeOff, FileCheck2, HeartHandshake, History, Hotel, Inbox, KeyRound,
-        LayoutDashboard, ListFilter, LockKeyhole, LogOut, Mail, Map, MapPin, MapPinned, Menu, Moon,
+        LayoutDashboard, ListFilter, LockKeyhole, LogOut, Mail, Map, MapPin, MapPinned, Menu, Moon, Copy,
         PanelLeftClose, PanelLeftOpen, Pencil, Plane, Plus, RotateCcw,
         Save, Search, Settings, ShieldCheck, Siren, Sun, Trash2, TriangleAlert, UserRound, UserRoundCog,
         UserRoundCheck, Users, UsersRound, Wallet, X,
@@ -111,8 +111,11 @@ document.querySelectorAll('[data-location-picker]').forEach((picker) => {
     };
     const initialLat = parseCoordinate(picker.dataset.lat);
     const initialLng = parseCoordinate(picker.dataset.lng);
+    const hasInitialCoordinate = initialLat !== null
+        && initialLng !== null
+        && !(initialLat === 0 && initialLng === 0);
     const initialPreset = presets[picker.dataset.city] || presets.makkah;
-    const initialPosition = initialLat !== null && initialLng !== null
+    const initialPosition = hasInitialCoordinate
         ? { lat: initialLat, lng: initialLng, zoom: 16 }
         : initialPreset;
     const map = L.map(mapElement, { zoomControl: true }).setView([initialPosition.lat, initialPosition.lng], initialPosition.zoom);
@@ -246,12 +249,12 @@ document.querySelectorAll('[data-location-picker]').forEach((picker) => {
         }
     });
 
-    if (initialLat !== null && initialLng !== null) {
+    if (hasInitialCoordinate) {
         setLocation(initialLat, initialLng, 'Lokasi tersimpan', 16);
     } else {
         latDisplay.value = 'Belum dipilih';
         lngDisplay.value = 'Belum dipilih';
-        setMessage('Peta sudah diarahkan ke kota default. Klik titik tujuan yang benar.', 'neutral');
+        setMessage('Peta sudah diarahkan ke kota default. Cari lokasi atau klik titik yang benar sebelum menyimpan.', 'neutral');
     }
 
     setTimeout(() => map.invalidateSize(), 150);

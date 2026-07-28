@@ -30,8 +30,8 @@
                 <h2 class="mt-1 text-xl font-extrabold">{{ $isNational ? 'Urutan kerja Super Admin' : 'Urutan kerja Admin Cabang' }}</h2>
                 <p class="mt-2 text-sm leading-6 text-slate-500">
                     {{ $isNational
-                        ? 'Gunakan alur ini saat demo untuk menjelaskan bahwa pusat menyiapkan fondasi organisasi dan profil travel.'
-                        : 'Gunakan alur ini saat demo untuk menjelaskan proses dari paket sampai monitoring jamaah.' }}
+                        ? 'Gunakan urutan ini untuk menyiapkan fondasi organisasi, cabang, admin, dan profil travel.'
+                        : 'Gunakan urutan ini untuk menjalankan proses harian dari paket sampai monitoring jamaah.' }}
                 </p>
             </div>
             <a href="{{ $isNational ? route('settings.system.edit') : route('master-data.index', 'departures') }}" class="button-secondary shrink-0">

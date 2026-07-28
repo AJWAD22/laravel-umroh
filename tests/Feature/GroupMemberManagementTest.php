@@ -245,7 +245,7 @@ class GroupMemberManagementTest extends TestCase
             ->assertSee('PIN Dibuat')
             ->assertSee('Aplikasi Aktif')
             ->assertSee('Alur sampai tracking muncul')
-            ->assertSee('Reset rombongan atau paket akan mencabut perangkat aktif')
+            ->assertSee('PIN dibuat dan dibagikan dari rombongan ini')
             ->assertSee('123456');
     }
 

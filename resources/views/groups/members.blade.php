@@ -3,14 +3,14 @@
     <x-slot:header>
         <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <nav class="mb-2 text-sm text-slate-500">Data Master / Rombongan / Aktivasi Jamaah</nav>
+                <nav class="mb-2 text-sm text-slate-500">Operasional Perjalanan / Rombongan / Aktivasi Jamaah</nav>
                 <h1 class="text-2xl font-bold">{{ $group->name }}</h1>
                 <p class="mt-1 text-sm text-slate-500">{{ $group->branch->name }}</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 <button type="button" data-group-staff-open class="button-primary">
                     <i data-lucide="user-round-cog" class="size-4"></i>
-                    Tentukan Petugas
+                    Atur Petugas
                 </button>
                 <a href="{{ route('master-data.index', 'groups') }}" class="button-secondary">Kembali</a>
             </div>
@@ -134,27 +134,27 @@
             <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div>
                     <h2 class="font-semibold">Aktivasi Aplikasi Jamaah</h2>
-                    <p class="mt-1 text-sm text-slate-500">PIN dikelola per rombongan. Reset rombongan atau paket akan mencabut perangkat aktif agar aktivasi lama berhenti.</p>
+                    <p class="mt-1 text-sm text-slate-500">PIN dibuat dan dibagikan dari rombongan ini. Reset PIN akan mencabut perangkat aktif agar aktivasi lama berhenti.</p>
                 </div>
                 <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                     <form method="POST" action="{{ route('groups.generate-missing-pins', $group) }}" class="grid gap-2">
                         @csrf
                         <input name="reason" class="control-field min-h-10 text-xs" placeholder="Alasan buat PIN" required>
-                        <button class="button-secondary min-h-10 text-xs">Generate PIN Rombongan</button>
+                        <button class="button-secondary min-h-10 text-xs">Buat PIN Semua Jamaah</button>
                     </form>
                     <form method="POST" action="{{ route('groups.reset-pins', $group) }}" class="grid gap-2">
                         @csrf
                         <input name="reason" class="control-field min-h-10 text-xs" placeholder="Alasan reset rombongan" required>
-                        <button class="button-secondary min-h-10 text-xs">Reset PIN Rombongan</button>
+                        <button class="button-secondary min-h-10 text-xs">Reset PIN Rombongan Ini</button>
                     </form>
                     @if ($group->departure)
                         <form method="POST" action="{{ route('departures.reset-pins', $group->departure) }}" class="grid gap-2">
                             @csrf
                             <input name="reason" class="control-field min-h-10 text-xs" placeholder="Alasan reset paket" required>
-                            <button class="button-secondary min-h-10 text-xs">Reset PIN Paket</button>
+                            <button class="button-secondary min-h-10 text-xs">Reset Semua PIN Paket</button>
                         </form>
                     @endif
-                    <a href="{{ route('groups.activation-list', $group) }}" class="button-secondary min-h-10 text-xs">Unduh Daftar Aktivasi</a>
+                    <a href="{{ route('groups.activation-list', $group) }}" class="button-secondary min-h-10 text-xs">Unduh Daftar PIN</a>
                 </div>
             </div>
         </div>

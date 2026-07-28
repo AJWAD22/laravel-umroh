@@ -8,7 +8,7 @@ class DatabaseSeeder extends Seeder
 {
     /**
      * Seeder utama yang dipanggil oleh `php artisan db:seed`.
-     * Seeder utama aman dijalankan ulang di production. Data demo hanya
+     * Seeder utama aman dijalankan ulang di production. Data contoh hanya
      * boleh dibuat secara eksplisit pada environment local/testing.
      */
     public function run(): void

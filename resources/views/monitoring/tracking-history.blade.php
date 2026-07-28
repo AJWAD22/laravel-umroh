@@ -19,7 +19,7 @@
             ['Pilih jamaah', 'Daftar jamaah mengikuti cabang Admin Cabang yang sedang login.'],
             ['Pilih tanggal', 'Histori hanya bisa dibuka sampai tanggal hari ini.'],
             ['Tampilkan histori', 'Jalur GPS, total titik, jarak, dan timeline dihitung dari data tersimpan.'],
-            ['Evaluasi perjalanan', 'Gunakan timeline untuk menjelaskan pergerakan jamaah saat demo.'],
+            ['Evaluasi perjalanan', 'Gunakan timeline untuk meninjau pergerakan jamaah selama operasional.'],
         ] as $guide)
             <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <h2 class="text-sm font-extrabold text-slate-950 dark:text-white">{{ $guide[0] }}</h2>

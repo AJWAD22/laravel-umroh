@@ -25,8 +25,8 @@
         default => null,
     };
     $sectionLabel = match (true) {
-        in_array($resource, ['branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs', 'groups'], true) => 'Data Master',
-        in_array($resource, ['departures', 'hotels', 'checkpoints'], true) => 'Operasional Perjalanan',
+        in_array($resource, ['branch-admins', 'pilgrims', 'tour-leaders', 'muthawwifs'], true) => 'Data Master',
+        in_array($resource, ['departures', 'hotels', 'checkpoints', 'groups'], true) => 'Operasional Perjalanan',
         $resource === 'branches' => 'Organisasi',
         default => 'Data',
     };
@@ -366,8 +366,13 @@
 
         @if ($hasLocationPicker)
             @php
-                $latitudeValue = filled($value('latitude')) ? $value('latitude') : '';
-                $longitudeValue = filled($value('longitude')) ? $value('longitude') : '';
+                $rawLatitudeValue = $value('latitude');
+                $rawLongitudeValue = $value('longitude');
+                $hasRealCoordinate = filled($rawLatitudeValue)
+                    && filled($rawLongitudeValue)
+                    && ! ((float) $rawLatitudeValue === 0.0 && (float) $rawLongitudeValue === 0.0);
+                $latitudeValue = $hasRealCoordinate ? $rawLatitudeValue : '';
+                $longitudeValue = $hasRealCoordinate ? $rawLongitudeValue : '';
                 $pickerCity = $value('city', 'makkah');
             @endphp
             <section class="mt-7 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
@@ -386,7 +391,7 @@
                                 <i data-lucide="map-pinned" class="size-5 text-blue-600"></i>
                                 Pilih Lokasi dari Peta
                             </h2>
-                            <p class="mt-1 max-w-2xl text-sm leading-6 text-slate-500">Klik titik pada peta atau cari nama tempat. Latitude dan longitude akan terisi otomatis dari pilihan peta.</p>
+                            <p class="mt-1 max-w-2xl text-sm leading-6 text-slate-500">Cari nama tempat, geser peta, lalu klik lokasi yang tepat. Admin tidak perlu mengetik latitude atau longitude.</p>
                         </div>
                         <div class="flex flex-wrap gap-2">
                             <button type="button" class="button-secondary min-h-10 px-3 text-xs" data-location-preset="makkah">Pusat Makkah</button>
@@ -416,20 +421,20 @@
                 <div class="grid lg:grid-cols-[minmax(0,1fr)_280px]">
                     <div data-location-map class="h-[420px] min-h-[320px] bg-slate-100 dark:bg-slate-950"></div>
                     <aside class="border-t border-slate-200 p-5 dark:border-slate-800 lg:border-l lg:border-t-0">
-                        <h3 class="text-sm font-bold text-slate-950 dark:text-white">Koordinat Terpilih</h3>
+                        <h3 class="text-sm font-bold text-slate-950 dark:text-white">Hasil Pilihan Peta</h3>
                         <div class="mt-4 space-y-3">
                             <label class="block">
-                                <span class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">Latitude</span>
+                                <span class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">Latitude otomatis</span>
                                 <input readonly data-location-lat-display value="{{ $latitudeValue }}" class="control-field w-full bg-slate-50 font-mono text-sm dark:bg-slate-800">
                             </label>
                             <label class="block">
-                                <span class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">Longitude</span>
+                                <span class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">Longitude otomatis</span>
                                 <input readonly data-location-lng-display value="{{ $longitudeValue }}" class="control-field w-full bg-slate-50 font-mono text-sm dark:bg-slate-800">
                             </label>
                         </div>
                         @error('latitude')<span class="mt-3 block text-xs text-red-600">{{ $message }}</span>@enderror
                         @error('longitude')<span class="mt-1 block text-xs text-red-600">{{ $message }}</span>@enderror
-                        <p class="mt-4 rounded-xl bg-blue-50 p-3 text-xs leading-5 text-blue-800 dark:bg-blue-950/40 dark:text-blue-200">Koordinat ini dipakai untuk titik tujuan di aplikasi jamaah, radius geofence, dan marker pada Live Map.</p>
+                        <p class="mt-4 rounded-xl bg-blue-50 p-3 text-xs leading-5 text-blue-800 dark:bg-blue-950/40 dark:text-blue-200">Lokasi ini dipakai untuk titik tujuan di aplikasi jamaah, radius geofence, dan marker pada Live Map.</p>
                     </aside>
                 </div>
             </section>
