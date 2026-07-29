@@ -30,6 +30,9 @@ class SystemSettingSeeder extends Seeder
             ['key' => 'gps_offline_threshold_minutes', 'value' => '10', 'type' => 'integer', 'group' => 'monitoring', 'label' => 'Batas GPS Offline (menit)', 'description' => 'Perangkat dianggap offline setelah tidak mengirim lokasi selama durasi ini.'],
             ['key' => 'monitoring_refresh_seconds', 'value' => '30', 'type' => 'integer', 'group' => 'monitoring', 'label' => 'Refresh Monitoring (detik)', 'description' => 'Interval refresh standar dashboard monitoring.'],
             ['key' => 'default_geofence_radius_meters', 'value' => '250', 'type' => 'integer', 'group' => 'monitoring', 'label' => 'Radius Geofence Default (meter)', 'description' => 'Radius awal ketika membuat area aman.'],
+            ['key' => 'staff_geofence_enabled', 'value' => '1', 'type' => 'boolean', 'group' => 'monitoring', 'label' => 'Geofence Mengikuti Petugas', 'description' => 'Aktifkan pemantauan jarak jamaah terhadap Tour Leader/Muthawwif yang sedang mengirim GPS.'],
+            ['key' => 'staff_geofence_radius_meters', 'value' => '150', 'type' => 'integer', 'group' => 'monitoring', 'label' => 'Radius Aman dari Petugas (meter)', 'description' => 'Jamaah dianggap keluar radius jika lebih jauh dari petugas aktif pada rombongannya.'],
+            ['key' => 'staff_geofence_fresh_minutes', 'value' => '5', 'type' => 'integer', 'group' => 'monitoring', 'label' => 'Batas GPS Petugas Aktif (menit)', 'description' => 'Lokasi petugas hanya dipakai geofence jika masih diperbarui dalam durasi ini.'],
             ['key' => 'audit_log_retention_days', 'value' => '365', 'type' => 'integer', 'group' => 'audit_security', 'label' => 'Masa Simpan Audit Log (hari)', 'description' => 'Log lebih lama dari durasi ini dapat dibersihkan oleh Super Admin. Default 365 hari.'],
         ];
     }

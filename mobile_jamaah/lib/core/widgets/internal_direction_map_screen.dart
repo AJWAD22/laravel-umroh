@@ -105,7 +105,10 @@ class _InternalDirectionMapScreenState
             options: MapOptions(initialCenter: widget.target, initialZoom: 17),
             children: [
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate:
+                    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+                subdomains: const ['a', 'b', 'c', 'd'],
+                maxZoom: 20,
                 userAgentPackageName: 'id.umrahmonitor.umrah_jamaah',
               ),
               if (myPoint != null)
@@ -146,6 +149,7 @@ class _InternalDirectionMapScreenState
               RichAttributionWidget(
                 attributions: const [
                   TextSourceAttribution('OpenStreetMap contributors'),
+                  TextSourceAttribution('CARTO'),
                 ],
               ),
             ],

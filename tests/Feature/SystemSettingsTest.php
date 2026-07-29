@@ -32,6 +32,9 @@ class SystemSettingsTest extends TestCase
                 'gps_offline_threshold_minutes' => 15,
                 'monitoring_refresh_seconds' => 20,
                 'default_geofence_radius_meters' => 500,
+                'staff_geofence_enabled' => 1,
+                'staff_geofence_radius_meters' => 180,
+                'staff_geofence_fresh_minutes' => 7,
                 'audit_log_retention_days' => 730,
             ])
             ->assertSessionHasNoErrors()
@@ -46,6 +49,10 @@ class SystemSettingsTest extends TestCase
         $this->assertDatabaseHas('system_settings', [
             'key' => 'audit_log_retention_days',
             'value' => '730',
+        ]);
+        $this->assertDatabaseHas('system_settings', [
+            'key' => 'staff_geofence_radius_meters',
+            'value' => '180',
         ]);
     }
 

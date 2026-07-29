@@ -13,8 +13,10 @@ use App\Models\MobileActivationSession;
 use App\Models\MobileDevice;
 use App\Models\Muthawwif;
 use App\Models\Pilgrim;
+use App\Models\PilgrimLocation;
 use App\Models\PilgrimRegistration;
 use App\Models\SosReport;
+use App\Models\StaffLocation;
 use App\Models\TourLeader;
 use App\Models\User;
 use App\Services\MobileActivationService;
@@ -189,6 +191,35 @@ class MobileApiTest extends TestCase
             AdminNotificationCreated::class,
             fn (AdminNotificationCreated $event) => $event->type === 'geofence_exit'
                 && $event->data['geofence_name'] === 'Titik Kumpul Uji',
+        );
+    }
+
+    public function test_staff_position_can_be_used_as_dynamic_geofence(): void
+    {
+        Event::fake([AdminNotificationCreated::class]);
+        $context = $this->scenario();
+        $token = $this->login($context['pilgrimUser']);
+
+        StaffLocation::create([
+            'user_id' => $context['leaderUser']->id,
+            'branch_id' => $context['branch']->id,
+            'role' => MobileRole::TourLeader->value,
+            'latitude' => 21.422487,
+            'longitude' => 39.826206,
+            'recorded_at' => now(),
+            'device_recorded_at' => now(),
+            'server_received_at' => now(),
+        ]);
+
+        $this->withToken($token)->postJson('/api/mobile/send-location', [
+            'latitude' => 21.428487,
+            'longitude' => 39.826206,
+        ])->assertCreated();
+
+        Event::assertDispatched(
+            AdminNotificationCreated::class,
+            fn (AdminNotificationCreated $event) => $event->type === 'geofence_exit'
+                && str_contains($event->data['geofence_name'], 'Tour Leader'),
         );
     }
 
@@ -579,6 +610,50 @@ class MobileApiTest extends TestCase
             'fcm_token' => 'fcm-token-terbaru',
             'revoked_at' => null,
         ]);
+    }
+
+    public function test_pilgrim_logout_removes_latest_location_and_revokes_current_device(): void
+    {
+        $context = $this->scenario();
+        $admin = User::factory()->create(['branch_id' => $context['branch']->id]);
+        $admin->assignRole('admin-cabang');
+        $pin = app(MobileActivationService::class)
+            ->generatePin($admin, $context['pilgrim'], 'PIN aktivasi aplikasi jamaah');
+
+        $claim = $this->postJson('/api/mobile/activation/claim', [
+            'registration_number' => $context['pilgrim']->registration_number,
+            'numeric_code' => $pin,
+            'device_uuid' => 'logout-device-001',
+            'device_name' => 'HP Jamaah',
+            'platform' => 'android',
+        ])->assertOk();
+
+        $token = $this->postJson('/api/mobile/activation/status', [
+            'public_id' => $claim->json('data.public_id'),
+            'claim_secret' => $claim->json('data.claim_secret'),
+            'device_uuid' => 'logout-device-001',
+        ])->assertOk()->json('data.access_token');
+
+        PilgrimLocation::create([
+            'pilgrim_id' => $context['pilgrim']->id,
+            'branch_id' => $context['branch']->id,
+            'group_id' => $context['group']->id,
+            'latitude' => 21.422487,
+            'longitude' => 39.826206,
+            'gps_status' => 'online',
+            'recorded_at' => now(),
+            'device_recorded_at' => now(),
+            'server_received_at' => now(),
+        ]);
+
+        $this->withToken($token)
+            ->postJson('/api/mobile/logout')
+            ->assertOk();
+
+        $this->assertDatabaseMissing('pilgrim_locations', [
+            'pilgrim_id' => $context['pilgrim']->id,
+        ]);
+        $this->assertNotNull(MobileDevice::where('device_uuid', 'logout-device-001')->firstOrFail()->revoked_at);
     }
 
     public function test_staff_profile_is_read_only_in_mobile_api(): void

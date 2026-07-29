@@ -128,9 +128,9 @@ document.querySelectorAll('[data-location-picker]').forEach((picker) => {
         iconAnchor: [18, 18],
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: 'OpenStreetMap contributors',
-        maxZoom: 19,
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        maxZoom: 20,
     }).addTo(map);
 
     const radiusInput = document.querySelector('input[name="geofence_radius_meters"]');
@@ -273,9 +273,9 @@ if (monitoringMapElement) {
     let activeRequest = null;
     let latestPayload = { markers: [], staff: [], checkpoints: [] };
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: 'OpenStreetMap contributors',
-        maxZoom: 19,
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        maxZoom: 20,
     }).addTo(map);
 
     const elements = {
@@ -593,9 +593,9 @@ if (sosDetailMapElement) {
     const name = sosDetailMapElement.dataset.name || 'Lokasi SOS';
     const map = L.map(sosDetailMapElement, { zoomControl: true }).setView([lat, lng], 17);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: 'OpenStreetMap contributors',
-        maxZoom: 19,
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        maxZoom: 20,
     }).addTo(map);
 
     const icon = L.divIcon({
@@ -621,9 +621,9 @@ if (trackingMapElement) {
     const timeline = document.getElementById('tracking-timeline');
     const person = document.getElementById('tracking-person');
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: 'OpenStreetMap contributors',
-        maxZoom: 19,
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        maxZoom: 20,
     }).addTo(map);
 
     const setText = (id, value) => {

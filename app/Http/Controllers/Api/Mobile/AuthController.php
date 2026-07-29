@@ -6,6 +6,8 @@ use App\Enums\MobileRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Mobile\LoginRequest;
 use App\Http\Resources\Mobile\ProfileResource;
+use App\Models\MobileDevice;
+use App\Models\PilgrimLocation;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -56,7 +58,25 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()?->delete();
+        $user = $request->user();
+        $token = $user->currentAccessToken();
+
+        if ($user->pilgrim) {
+            PilgrimLocation::query()
+                ->where('pilgrim_id', $user->pilgrim->id)
+                ->delete();
+
+            $tokenName = (string) ($token?->name ?? '');
+            if (str_starts_with($tokenName, 'activation-')) {
+                MobileDevice::query()
+                    ->where('user_id', $user->id)
+                    ->where('device_uuid', substr($tokenName, strlen('activation-')))
+                    ->whereNull('revoked_at')
+                    ->update(['revoked_at' => now()]);
+            }
+        }
+
+        $token?->delete();
 
         return response()->json(['message' => 'Logout berhasil.']);
     }

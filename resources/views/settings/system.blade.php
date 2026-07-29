@@ -25,7 +25,15 @@
                     @foreach ($items as $setting)
                         <label class="block">
                             <span class="mb-1.5 block text-sm font-medium">{{ $setting->label }}</span>
-                            @if ($setting->type === 'textarea')
+                            @if ($setting->type === 'boolean')
+                                <input type="hidden" name="{{ $setting->key }}" value="0">
+                                <label class="inline-flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold dark:border-slate-700">
+                                    <input type="checkbox" name="{{ $setting->key }}" value="1"
+                                           @checked((bool) old($setting->key, filter_var($setting->value, FILTER_VALIDATE_BOOL)))
+                                           class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                    Aktif
+                                </label>
+                            @elseif ($setting->type === 'textarea')
                                 <textarea name="{{ $setting->key }}" rows="4"
                                           class="w-full rounded-xl border-slate-300 text-sm dark:border-slate-700 dark:bg-slate-950">{{ old($setting->key, $setting->value) }}</textarea>
                             @else

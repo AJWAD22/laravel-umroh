@@ -86,7 +86,10 @@ class StaffLocationsScreen extends StatelessWidget {
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate:
+                    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+                subdomains: const ['a', 'b', 'c', 'd'],
+                maxZoom: 20,
                 userAgentPackageName: 'id.umrahmonitor.umrah_jamaah',
               ),
               MarkerLayer(
@@ -127,6 +130,7 @@ class StaffLocationsScreen extends StatelessWidget {
               RichAttributionWidget(
                 attributions: const [
                   TextSourceAttribution('OpenStreetMap contributors'),
+                  TextSourceAttribution('CARTO'),
                 ],
               ),
             ],
