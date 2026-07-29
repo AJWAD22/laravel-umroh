@@ -16,7 +16,6 @@ use App\Models\Pilgrim;
 use App\Models\PilgrimLocation;
 use App\Models\PilgrimRegistration;
 use App\Models\SosReport;
-use App\Models\StaffLocation;
 use App\Models\TourLeader;
 use App\Models\User;
 use App\Services\MobileActivationService;
@@ -191,35 +190,6 @@ class MobileApiTest extends TestCase
             AdminNotificationCreated::class,
             fn (AdminNotificationCreated $event) => $event->type === 'geofence_exit'
                 && $event->data['geofence_name'] === 'Titik Kumpul Uji',
-        );
-    }
-
-    public function test_staff_position_can_be_used_as_dynamic_geofence(): void
-    {
-        Event::fake([AdminNotificationCreated::class]);
-        $context = $this->scenario();
-        $token = $this->login($context['pilgrimUser']);
-
-        StaffLocation::create([
-            'user_id' => $context['leaderUser']->id,
-            'branch_id' => $context['branch']->id,
-            'role' => MobileRole::TourLeader->value,
-            'latitude' => 21.422487,
-            'longitude' => 39.826206,
-            'recorded_at' => now(),
-            'device_recorded_at' => now(),
-            'server_received_at' => now(),
-        ]);
-
-        $this->withToken($token)->postJson('/api/mobile/send-location', [
-            'latitude' => 21.428487,
-            'longitude' => 39.826206,
-        ])->assertCreated();
-
-        Event::assertDispatched(
-            AdminNotificationCreated::class,
-            fn (AdminNotificationCreated $event) => $event->type === 'geofence_exit'
-                && str_contains($event->data['geofence_name'], 'Tour Leader'),
         );
     }
 

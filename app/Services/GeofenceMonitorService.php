@@ -6,7 +6,6 @@ use App\Models\Checkpoint;
 use App\Models\Group;
 use App\Models\Hotel;
 use App\Models\Pilgrim;
-use App\Models\StaffLocation;
 use Illuminate\Support\Facades\Cache;
 
 class GeofenceMonitorService
@@ -71,44 +70,7 @@ class GeofenceMonitorService
                 ]);
         }
 
-        $staffGeofences = collect();
-        if ((bool) $this->settings->get('staff_geofence_enabled', true)) {
-            $group->loadMissing([
-                'tourLeader:id,user_id,full_name',
-                'muthawwif:id,user_id,full_name',
-            ]);
-
-            $staffUserIds = collect([
-                $group->tourLeader?->user_id,
-                $group->muthawwif?->user_id,
-            ])->filter()->values();
-
-            if ($staffUserIds->isNotEmpty()) {
-                $staffFreshAfter = now()->subMinutes(
-                    max(1, (int) $this->settings->get('staff_geofence_fresh_minutes', 5))
-                );
-                $staffRadius = max(10, (int) $this->settings->get('staff_geofence_radius_meters', 150));
-
-                $staffGeofences = StaffLocation::query()
-                    ->whereIn('user_id', $staffUserIds)
-                    ->get(['user_id', 'latitude', 'longitude', 'server_received_at', 'recorded_at'])
-                    ->filter(fn (StaffLocation $location): bool => ($location->server_received_at ?? $location->recorded_at)?->gte($staffFreshAfter) === true)
-                    ->map(function (StaffLocation $location) use ($group, $staffRadius): array {
-                        $name = (int) $location->user_id === (int) $group->tourLeader?->user_id
-                            ? 'Radius Tour Leader '.$group->tourLeader->full_name
-                            : 'Radius Muthawwif '.$group->muthawwif?->full_name;
-
-                        return [
-                            'name' => $name,
-                            'latitude' => (float) $location->latitude,
-                            'longitude' => (float) $location->longitude,
-                            'radius' => $staffRadius,
-                        ];
-                    });
-            }
-        }
-
-        $geofences = $checkpoints->concat($hotels)->concat($staffGeofences)->values();
+        $geofences = $checkpoints->concat($hotels)->values();
 
         $stateKey = "geofence:pilgrim:{$pilgrim->id}:group:{$group->id}";
 
