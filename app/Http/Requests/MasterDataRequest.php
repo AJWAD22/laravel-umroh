@@ -128,6 +128,8 @@ class MasterDataRequest extends FormRequest
                 'arrival_airport' => ['nullable', 'string', 'max:100'],
                 'airline' => ['nullable', 'string', 'max:120'],
                 'flight_number' => ['nullable', 'string', 'max:80'],
+                'tour_leader_id' => ['nullable', Rule::exists('tour_leaders', 'id')->where('branch_id', $branchId)],
+                'muthawwif_id' => ['nullable', Rule::exists('muthawwifs', 'id')->where('branch_id', $branchId)],
                 'price' => ['nullable', 'integer', 'min:0'],
                 'is_public' => ['required', 'boolean'],
                 'hotel_ids' => ['nullable', 'array'],

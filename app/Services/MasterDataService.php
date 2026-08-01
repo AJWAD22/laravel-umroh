@@ -228,10 +228,15 @@ class MasterDataService
 
             $hotelIds = [];
             $itineraryPlan = null;
+            $departureStaff = [];
             if ($resource === 'departures') {
                 $hotelIds = array_values(array_filter($data['hotel_ids'] ?? []));
                 $itineraryPlan = $data['itinerary_plan'] ?? null;
-                unset($data['hotel_ids'], $data['itinerary_plan']);
+                $departureStaff = [
+                    'tour_leader_id' => $data['tour_leader_id'] ?? null,
+                    'muthawwif_id' => $data['muthawwif_id'] ?? null,
+                ];
+                unset($data['hotel_ids'], $data['itinerary_plan'], $data['tour_leader_id'], $data['muthawwif_id']);
             }
 
             if (! $record && in_array($resource, ['pilgrims', 'departures', 'groups'], true)) {
@@ -265,6 +270,7 @@ class MasterDataService
             if ($resource === 'departures' && $model instanceof Departure) {
                 $this->syncDepartureHotels($model, $hotelIds);
                 $this->syncDepartureItinerary($model, $itineraryPlan);
+                $this->syncDepartureGroupStaff($model, $departureStaff, $actor);
 
                 if (in_array($model->status, ['completed', 'cancelled'], true)) {
                     $this->closeDepartureAccess($model);
@@ -481,6 +487,48 @@ class MasterDataService
             ->delete();
 
         $rows->each(fn (array $row) => $departure->itineraries()->create($row));
+    }
+
+    /**
+     * @param array{tour_leader_id: int|string|null, muthawwif_id: int|string|null} $staff
+     */
+    private function syncDepartureGroupStaff(Departure $departure, array $staff, User $actor): void
+    {
+        if (! $staff['tour_leader_id'] && ! $staff['muthawwif_id']) {
+            $departure->groups()
+                ->where('is_active', true)
+                ->update([
+                    'tour_leader_id' => null,
+                    'muthawwif_id' => null,
+                ]);
+
+            return;
+        }
+
+        $group = $departure->groups()
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->first();
+
+        if ($group) {
+            $group->update([
+                'tour_leader_id' => $staff['tour_leader_id'] ?: null,
+                'muthawwif_id' => $staff['muthawwif_id'] ?: null,
+            ]);
+
+            return;
+        }
+
+        $this->save('groups', [
+            'branch_id' => $departure->branch_id,
+            'departure_id' => $departure->id,
+            'name' => 'Rombongan '.$departure->program_name,
+            'capacity' => $departure->quota,
+            'notes' => 'Rombongan otomatis dari pilihan petugas paket.',
+            'is_active' => true,
+            'tour_leader_id' => $staff['tour_leader_id'] ?: null,
+            'muthawwif_id' => $staff['muthawwif_id'] ?: null,
+        ], $actor);
     }
 
     /**

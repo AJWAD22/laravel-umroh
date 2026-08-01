@@ -8,6 +8,8 @@
                 => $record?->hotels?->pluck('id')->all() ?? $default,
             $resource === 'departures' && $key === 'itinerary_plan'
                 => $record?->itineraries?->map(fn ($item) => "{$item->day_number}|{$item->title}|{$item->city}|{$item->description}")->implode("\n") ?? $default,
+            $resource === 'departures' && in_array($key, ['tour_leader_id', 'muthawwif_id'], true)
+                => data_get($record?->groups?->firstWhere('is_active', true), $key, $default),
             $resource === 'pilgrims' && $key === 'group_id'
                 => data_get($record?->groupMemberships?->firstWhere('status', 'active'), 'group_id', $default),
             $resource === 'pilgrims' && $key === 'payment_status'
@@ -105,7 +107,10 @@
             ['departure_date','Tanggal Berangkat','date'],
             ['return_date','Tanggal Pulang','date'], ['departure_airport','Bandara Berangkat','text'],
             ['arrival_airport','Bandara Kedatangan','text'], ['airline','Maskapai','text'],
-            ['flight_number','Nomor Penerbangan','text'], ['price','Harga Paket','number'],
+            ['flight_number','Nomor Penerbangan','text'],
+            ['tour_leader_id','Tour Leader','select',$options['tourLeaders']],
+            ['muthawwif_id','Muthawwif','select',$options['muthawwifs']],
+            ['price','Harga Paket','number'],
             ['hotel_ids','Hotel Makkah/Madinah','multiselect',$options['hotels']],
             ['itinerary_plan','Jadwal Perjalanan per Hari','itinerary'],
             ['quota','Kuota','number'], ['is_public','Tampil di Landing Page','boolean'],
